@@ -377,6 +377,7 @@ def stream(
     source: Any = 0,
     time_threshold: int = 5,
     frame_threshold: int = 5,
+    silent: bool = False,
 ) -> None:
     """
     Run real time face recognition and facial attribute analysis

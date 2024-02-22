@@ -24,6 +24,7 @@ def analysis(
     source=0,
     time_threshold=5,
     frame_threshold=5,
+    silent: bool = False,
 ):
     # global variables
     text_color = (255, 255, 255)
@@ -178,7 +179,7 @@ def analysis(
                                 img_path=custom_face,
                                 detector_backend=detector_backend,
                                 enforce_detection=False,
-                                silent=True,
+                                silent=silent,
                             )
 
                             if len(demographies) > 0:
@@ -414,7 +415,7 @@ def analysis(
                             detector_backend=detector_backend,
                             distance_metric=distance_metric,
                             enforce_detection=False,
-                            silent=True,
+                            silent=silent,
                         )
 
                         if len(dfs) > 0:
