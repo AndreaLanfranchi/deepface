@@ -84,7 +84,7 @@ def analysis(
                     img_path=img,
                     target_size=target_size,
                     detector_backend=detector_backend,
-                    enforce_detection=False,
+                    enforce_detection=True,
                 )
                 faces = []
                 for face_obj in face_objs:
@@ -99,8 +99,10 @@ def analysis(
                             facial_area["h"],
                         )
                     )
-            except:  # to avoid exception if no face detected
-                faces = []
+            except ValueError:
+                faces = [] # expected when no face detected
+            except Exception as ex:
+                raise RuntimeError("Something went wrong in face detection! Please check your webcam or video file!") from ex
 
             if len(faces) == 0:
                 face_included_frames = 0
