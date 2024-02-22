@@ -170,8 +170,8 @@ def find(
     # Should we have no representations bailout
     if len(representations) == 0:
         if not silent:
-            toc = time.time()
-            logger.info(f"find function duration {toc - tic} seconds")
+            elapsed = time.time() - tic
+            logger.info(f"find function duration {elapsed:0.5f} seconds")
         return []
 
     # ----------------------------
@@ -264,8 +264,8 @@ def find(
     # -----------------------------------
 
     if not silent:
-        toc = time.time()
-        logger.info(f"find function duration {toc - tic} seconds")
+        elapsed = time.time() - tic
+        logger.info(f"find function duration {elapsed:0.5f} seconds")
 
     return resp_obj
 
