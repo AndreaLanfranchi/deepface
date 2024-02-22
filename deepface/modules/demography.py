@@ -134,7 +134,7 @@ def analyze(
             obj = {}
             # facial attribute analysis
             pbar = tqdm(
-                range(0, len(actions)),
+                range(len(actions)),
                 desc="Finding actions",
                 disable=silent if len(actions) > 1 else True,
             )
