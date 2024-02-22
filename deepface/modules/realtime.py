@@ -64,7 +64,11 @@ def analysis(
     freezed_frame = 0
     tic = time.time()
 
+    logger.info("Starting capture source ...")
     cap = cv2.VideoCapture(source)  # webcam
+    elapsed = time.time() - tic
+    logger.info(f"Started capture source in {elapsed:.5f} seconds")
+
     while True:
         has_frame, img = cap.read()
         if not has_frame:
