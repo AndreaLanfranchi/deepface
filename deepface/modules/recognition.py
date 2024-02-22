@@ -1,5 +1,6 @@
 # built-in dependencies
 import os
+import re
 import pickle
 from typing import List, Union, Optional
 import time
@@ -279,11 +280,10 @@ def __list_images(path: str) -> List[str]:
         images (list): list of exact image paths
     """
     images = []
-    for r, _, f in os.walk(path):
-        for file in f:
-            if file.lower().endswith((".jpg", ".jpeg", ".png")):
-                exact_path = os.path.join(r, file)
-                images.append(exact_path)
+    pattern = re.compile(r".*\.(jpg|jpeg|png)$", re.IGNORECASE)
+    for file_name in os.listdir(path):
+        if pattern.match(file_name):
+            images.append(os.path.join(path, file_name))
     return images
 
 
