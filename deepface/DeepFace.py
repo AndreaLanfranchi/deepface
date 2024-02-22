@@ -419,6 +419,7 @@ def stream(
         source=source,
         time_threshold=time_threshold,
         frame_threshold=frame_threshold,
+        silent=silent,
     )
 
 

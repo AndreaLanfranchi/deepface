@@ -2,9 +2,11 @@
 from typing import Any
 
 # project dependencies
+from deepface.commons.logger import Logger
 from deepface.basemodels import VGGFace, OpenFace, FbDeepFace, DeepID, ArcFace, SFace, Dlib, Facenet
 from deepface.extendedmodels import Age, Gender, Race, Emotion
 
+logger = Logger(module="modules.modeling")
 
 def build_model(model_name: str) -> Any:
     """
@@ -44,6 +46,7 @@ def build_model(model_name: str) -> Any:
         model = models.get(model_name)
         if model:
             model_obj[model_name] = model()
+            logger.info(message=f"Built model : {model_name}")
         else:
             raise ValueError(f"Invalid model_name passed - {model_name}")
 

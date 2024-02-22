@@ -40,15 +40,10 @@ def analysis(
     # find custom values for this input set
     target_size = model.input_shape
 
-    logger.info(f"facial recognition model {model_name} is just built")
-
     if enable_face_analysis:
         DeepFace.build_model(model_name="Age")
-        logger.info("Age model is just built")
         DeepFace.build_model(model_name="Gender")
-        logger.info("Gender model is just built")
         DeepFace.build_model(model_name="Emotion")
-        logger.info("Emotion model is just built")
     # -----------------------
     # call a dummy find function for db_path once to create embeddings in the initialization
     DeepFace.find(
@@ -58,6 +53,7 @@ def analysis(
         detector_backend=detector_backend,
         distance_metric=distance_metric,
         enforce_detection=False,
+        silent=silent,
     )
     # -----------------------
     # visualization
