@@ -41,6 +41,7 @@ def analysis(
     target_size = model.input_shape
 
     if enable_face_analysis:
+        DeepFace.build_model(model_name="Race")
         DeepFace.build_model(model_name="Age")
         DeepFace.build_model(model_name="Gender")
         DeepFace.build_model(model_name="Emotion")
