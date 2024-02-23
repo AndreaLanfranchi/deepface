@@ -164,56 +164,17 @@ def analysis(
 
         # Perform facial attribute analysis and face recognition
         for item in best_faces:
-            face_image = __crop_face(best_capture, item["facial_area"])
-            x: int = face["facial_area"]["x"]
-            y: int = face["facial_area"]["y"]
-            w: int = face["facial_area"]["w"]
-            h: int = face["facial_area"]["h"]
-
-
-            # TODO Facial attribute analysis
-
-            # Face recognition
-            matching_results = DeepFace.find(
-                img_path=face_image,
-                db_path=db_path,
-                model_name=model_name,
-                detector_backend=detector_backend,
-                distance_metric=distance_metric,
-                enforce_detection=False,
-                silent=silent,
-            )
-            if len(matching_results) == 0:
-                logger.info("No matches found")
-                continue
-            matching_result = matching_results[0]
-            if matching_result.shape[0] == 0:
-                logger.info("No matches found")
-                continue
-
-            matching_item = matching_result.iloc[0]
-            matching_identity = matching_item["identity"]
-            extracted_faces = DeepFace.extract_faces(
-                img_path=matching_identity,
-                target_size=(pivot_img_size,pivot_img_size),
-                detector_backend=detector_backend,
-                enforce_detection=False,
-                align=False,
+            best_capture = __process_matches(
+                best_capture,
+                item["facial_area"],
+                pivot_img_size,
+                db_path,
+                model_name,
+                detector_backend,
+                distance_metric,
+                silent,
             )
 
-            if len(extracted_faces) == 0:
-                logger.info("No face found in matching picture")
-                continue
-
-            pivot_img = extracted_faces[0]["face"]
-            pivot_img *= 255
-            pivot_img = pivot_img[:, :, ::-1]
-
-            # Draw the matching picture and the facial attribute analysis
-            # in the frozen frame
-            best_capture[
-                y - pivot_img_size : y ,
-                x + w : x + w + pivot_img_size] = pivot_img
             cv2.imshow(capture_window_title, best_capture)
             should_stop = __cv2_trap_q(should_stop)
 
@@ -250,7 +211,7 @@ def __box_faces(
         y: int = face["facial_area"]["y"]
         w: int = face["facial_area"]["w"]
         h: int = face["facial_area"]["h"]
-        cv2.rectangle(picture, (x, y), (x + w, y + h), (67, 67, 67), 1)
+        picture = __box_face(picture, (x, y, w, h))
         if number is not None:
             cv2.putText(
                 picture,
@@ -264,6 +225,18 @@ def __box_faces(
             )
     return picture
 
+# Draws a box around the provided region
+def __box_face(
+    picture: MatLike, 
+    region: Tuple[int, int, int, int] # (x, y, w, h)
+    ) -> MatLike:
+    x: int = region[0]
+    y: int = region[1]
+    w: int = region[2]
+    h: int = region[3]
+    cv2.rectangle(picture, (x, y), (x + w, y + h), (67, 67, 67), 1)
+    return picture
+
 # Crop the face from the picture
 def __crop_face(
     picture: MatLike, 
@@ -274,3 +247,72 @@ def __crop_face(
     w: int = region["w"]
     h: int = region["h"]
     return picture[y : y + h, x : x + w]
+
+def __process_matches(
+        picture: MatLike,
+        facial_area: Dict[str, Any],
+        match_size: int,
+        db_path: str,
+        model_name: str,
+        detector_backend: str,
+        distance_metric: str,
+        silent: bool,
+) -> MatLike:
+    if picture.data is None:
+        return picture
+    
+    cropped_face = __crop_face(picture, facial_area)
+
+    # Face recognition
+    matching_results = DeepFace.find(
+        img_path=cropped_face,
+        db_path=db_path,
+        model_name=model_name,
+        detector_backend=detector_backend,
+        distance_metric=distance_metric,
+        enforce_detection=False,
+        silent=silent,
+    )
+    if len(matching_results) == 0:
+        if not silent:
+            logger.info("No matches found")
+        return picture
+    
+    matching_result = matching_results[0]
+    if matching_result.shape[0] == 0:
+        if not silent:
+            logger.info("No matches found")
+        return picture
+
+    matching_item = matching_result.iloc[0]
+    matching_identity = matching_item["identity"]
+    extracted_faces = DeepFace.extract_faces(
+        img_path=matching_identity,
+        target_size=(cropped_face.shape[0],cropped_face.shape[1]),
+        detector_backend=detector_backend,
+        enforce_detection=False,
+        align=False,
+    )
+
+    if len(extracted_faces) == 0:
+        if not silent:
+            logger.info("No matches found")
+        return picture
+
+    matching_face = extracted_faces[0]["face"]
+    matching_face = cv2.resize(matching_face, (match_size, match_size))
+    matching_face *= 255
+    matching_face = matching_face[:, :, ::-1]
+
+    # Stitch the matching face to the original picture
+    # into the lower left corner of the facial area
+    x: int = facial_area["x"]
+    y: int = facial_area["y"]
+    w: int = facial_area["w"]
+    h: int = facial_area["h"]
+
+    picture[
+        y : y + match_size,
+        x : x + match_size] = matching_face
+
+    return picture
