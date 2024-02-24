@@ -192,7 +192,7 @@ def find(
             align=align,
             expand_percentage=expand_percentage,
         )
-    except ValueError as err:
+    except ValueError:
         source_objs = []
 
     resp_obj = []
