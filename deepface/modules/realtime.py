@@ -222,6 +222,7 @@ def __process_frame(
             target_size=target_size,
             detector_backend=detector_backend,
             enforce_detection=True, # Must find a face or raise an error
+            align=False, # Do not align the detected face
         )
 
         # Remove too small detected faces
@@ -388,7 +389,7 @@ def __process_matches(
     # Stick the matching face to the original picture
     # in the lower-right corner of the boxed face
     picture[
-        y + h - matching_face.shape[1] : y + h,
-        x + w - matching_face.shape[0] : x + w] = matching_face
+        y + h - matching_face.shape[0] : y + h,
+        x + w - matching_face.shape[1] : x + w] = matching_face
 
     return True

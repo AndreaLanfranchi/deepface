@@ -1,4 +1,5 @@
-from typing import Any, List, Tuple, Dict
+import math
+from typing import Any, List, Tuple
 import numpy as np
 from deepface.modules import detection
 from deepface.models.Detector import Detector, DetectedFace, FacialAreaRegion
@@ -105,20 +106,22 @@ def detect_faces(
         right_eye = facial_area.right_eye
         confidence = facial_area.confidence
 
-        # expand the facial area to be extracted and stay within img.shape limits
-        x2 = max(0, x - int((w * expand_percentage) / 100))  # expand left
-        y2 = max(0, y - int((h * expand_percentage) / 100))  # expand top
-        w2 = min(img.shape[1], w + int((w * 2 * expand_percentage) / 100))  # expand right
-        h2 = min(img.shape[0], h + int((h * 2 * expand_percentage) / 100))  # expand bottom
+        # Expand the facial area to be extracted and recompute the height and width
+        # keeping the same aspect ratio and ensuring that the expanded area is within
+        # img.shape limits
+        if expand_percentage > 0:
+            current_area = w * h
+            expanded_area = current_area + int((current_area * expand_percentage) / 100)
+            scale_factor = math.sqrt(expanded_area / current_area)
+            expanded_w = int(w * scale_factor)
+            expanded_h = int(h * scale_factor)
+            x = max(0, x - int((expanded_w - w) / 2))
+            y = max(0, y - int((expanded_h - h) / 2))
+            w = min(img.shape[1] - x, expanded_w)
+            h = min(img.shape[0] - y, expanded_h)
 
         # extract detected face unaligned
-        detected_face = img[int(y2) : int(y2 + h2), int(x2) : int(x2 + w2)]
-
-        # aligning detected face causes a lot of black pixels
-        # if align is True:
-        #     detected_face, _ = detection.align_face(
-        #         img=detected_face, left_eye=left_eye, right_eye=right_eye
-        #     )
+        detected_face = img[y : y + h, x : x + w]
 
         # align original image, then find projection of detected face area after alignment
         if align is True:  # and left_eye is not None and right_eye is not None:
@@ -126,7 +129,7 @@ def detect_faces(
                 img=img, left_eye=left_eye, right_eye=right_eye
             )
             x1_new, y1_new, x2_new, y2_new = rotate_facial_area(
-                facial_area=(x2, y2, x2 + w2, y2 + h2), angle=angle, direction=1, size=img.shape
+                facial_area=(x, y, x + w, y + h), angle=angle, direction=1, size=(img.shape[0], img.shape[1])
             )
             detected_face = aligned_img[int(y1_new) : int(y2_new), int(x1_new) : int(x2_new)]
 
