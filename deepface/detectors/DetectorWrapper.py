@@ -56,7 +56,10 @@ def build_model(detector_backend: str) -> Any:
 
 
 def detect_faces(
-    detector_backend: str, img: np.ndarray, align: bool = True, expand_percentage: int = 0
+    img: np.ndarray,
+    detector_backend: str,
+    align: bool = True,
+    expand_percentage: int = 0
 ) -> List[DetectedFace]:
     """
     Detect face(s) from a given image

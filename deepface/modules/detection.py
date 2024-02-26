@@ -82,8 +82,8 @@ def extract_faces(
         face_objs = [DetectedFace(img=img, facial_area=base_region, confidence=0)]
     else:
         face_objs = DetectorWrapper.detect_faces(
-            detector_backend=detector_backend,
             img=img,
+            detector_backend=detector_backend,
             align=align,
             expand_percentage=expand_percentage,
         )
