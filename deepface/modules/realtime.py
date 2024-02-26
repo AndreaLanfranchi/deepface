@@ -19,25 +19,27 @@ logger = Logger(module="commons.realtime")
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
 def analysis(
-    db_path,
-    model_name="VGG-Face",
-    detector_backend="opencv",
-    distance_metric="cosine",
-    enable_face_analysis=True,
-    source=0,
+    db_path:str,
+    model_name:str ="VGG-Face",
+    detector_backend:str="opencv",
+    distance_metric:str="cosine",
+    enable_face_analysis:bool=True,
+    source:int=0,
     time_threshold: int =3,
-    frame_threshold=5,
+    frame_threshold: int =5,
     silent: bool = False,
 ):
 
-    time_threshold = max(1, time_threshold) # At least 1 second
+    # Parameter validation
+    time_threshold = max(1, min(time_threshold, 10)) # In range [1, 10]
+    frame_threshold = max(1, min(frame_threshold, 5)) # In range [1, 5]
 
-    # global variables
-    capture_window_title = "Capture"
+    # Constants
+    capture_window_title: str = "Capture"
     text_color = (255, 255, 255)
-
     enable_emotion = True
     enable_age_gender = True
+
     # ------------------------
     # build models once to store them in the memory
     # otherwise, they will be built after cam started and this will cause delays
@@ -57,7 +59,7 @@ def analysis(
     # -----------------------
     # call a dummy find function for db_path once to create embeddings in the initialization
     DeepFace.find(
-        img_path=np.zeros([224, 224, 3]),
+        img_path=np.zeros(target_size),
         db_path=db_path,
         model_name=model_name,
         detector_backend=detector_backend,
