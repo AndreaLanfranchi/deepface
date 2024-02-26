@@ -491,7 +491,7 @@ def cli() -> None:
 
 def detectFace(
     img_path: Union[str, np.ndarray],
-    target_size: tuple = (224, 224),
+    target_size: Tuple[int, int] = (224, 224),
     detector_backend: str = "opencv",
     enforce_detection: bool = True,
     align: bool = True,
