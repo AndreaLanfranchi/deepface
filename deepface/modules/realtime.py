@@ -241,7 +241,7 @@ def __process_frame(
         good_captures.append((frame.copy(), extracted_faces))
 
         # Draw boxes around the detected faces
-        cv2.imshow(display_window_title, __box_faces(frame, extracted_faces, len(good_captures)))
+        cv2.imshow(display_window_title, __box_faces(frame, extracted_faces))
         __cv2_refresh()
 
     # We only catch the ValueError exception here to reset the good_captures
