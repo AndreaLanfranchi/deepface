@@ -1,4 +1,4 @@
-from typing import Any, List, Tuple
+from typing import Any, List, Tuple, Dict
 import numpy as np
 from deepface.modules import detection
 from deepface.models.Detector import Detector, DetectedFace, FacialAreaRegion
@@ -26,34 +26,33 @@ def build_model(detector_backend: str) -> Any:
     Returns:
         built detector (Any)
     """
-    global face_detector_obj  # singleton design pattern
 
-    backends = {
-        "opencv": OpenCv.OpenCvClient,
-        "mtcnn": MtCnn.MtCnnClient,
-        "ssd": Ssd.SsdClient,
-        "dlib": Dlib.DlibClient,
-        "retinaface": RetinaFace.RetinaFaceClient,
-        "mediapipe": MediaPipe.MediaPipeClient,
-        "yolov8": Yolo.YoloClient,
-        "yunet": YuNet.YuNetClient,
-        "fastmtcnn": FastMtCnn.FastMtCnnClient,
-    }
+    global built_face_detector_objs   # singleton design pattern
+    if not "built_face_detector_objs" in globals():
+        built_face_detector_objs = {}
 
-    if not "face_detector_obj" in globals():
-        face_detector_obj = {}
+    global avaliable_face_detector_objs
+    if not "avaliable_face_detector_objs" in globals():
+        avaliable_face_detector_objs = {
+            "opencv": OpenCv.OpenCvClient,
+            "mtcnn": MtCnn.MtCnnClient,
+            "ssd": Ssd.SsdClient,
+            "dlib": Dlib.DlibClient,
+            "retinaface": RetinaFace.RetinaFaceClient,
+            "mediapipe": MediaPipe.MediaPipeClient,
+            "yolov8": Yolo.YoloClient,
+            "yunet": YuNet.YuNetClient,
+            "fastmtcnn": FastMtCnn.FastMtCnnClient,
+        }
 
-    built_models = list(face_detector_obj.keys())
-    if detector_backend not in built_models:
-        face_detector = backends.get(detector_backend)
+    if detector_backend not in avaliable_face_detector_objs.keys():
+        raise KeyError(f"Invalid detector_backend passed - {detector_backend}")
 
-        if face_detector:
-            face_detector = face_detector()
-            face_detector_obj[detector_backend] = face_detector
-        else:
-            raise ValueError("invalid detector_backend passed - " + detector_backend)
+    if detector_backend not in built_face_detector_objs.keys():
+        detector_obj = avaliable_face_detector_objs[detector_backend]()
+        built_face_detector_objs[detector_backend] = detector_obj
 
-    return face_detector_obj[detector_backend]
+    return built_face_detector_objs[detector_backend]
 
 
 def detect_faces(
