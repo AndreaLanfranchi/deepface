@@ -1,5 +1,6 @@
 import os
 import time
+import traceback
 from typing import Any, Dict, List, Tuple, Union
 
 import numpy as np
@@ -174,6 +175,7 @@ def analysis(
             break
         except Exception as ex:
             logger.error(f"Unexpected error: {ex.args[0]}")
+            traceback.print_exc()
             break
 
     # Clean up
