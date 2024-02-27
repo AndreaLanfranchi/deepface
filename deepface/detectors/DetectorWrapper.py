@@ -138,10 +138,13 @@ def detect_faces(
             aligned_img, angle = detection.align_face(
                 img=img, left_eye=left_eye, right_eye=right_eye
             )
-            x1_new, y1_new, x2_new, y2_new = rotate_facial_area(
-                facial_area=(x, y, x + w, y + h), angle=angle, direction=1, size=(img.shape[0], img.shape[1])
+            rotated_x1, rotated_y1, rotated_x2, rotated_y2 = rotate_facial_area(
+                facial_area=(x, y, x + w, y + h), 
+                angle=angle, 
+                direction=1, 
+                size=(img.shape[0], img.shape[1])
             )
-            detected_face = aligned_img[int(y1_new) : int(y2_new), int(x1_new) : int(x2_new)]
+            detected_face = aligned_img[int(rotated_y1) : int(rotated_y2), int(rotated_x1) : int(rotated_x2)]
 
         result = DetectedFace(
             img=detected_face,
