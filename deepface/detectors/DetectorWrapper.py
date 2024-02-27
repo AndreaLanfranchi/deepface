@@ -141,7 +141,6 @@ def detect_faces(
             rotated_x1, rotated_y1, rotated_x2, rotated_y2 = rotate_facial_area(
                 facial_area=(x, y, x + w, y + h), 
                 angle=angle, 
-                direction=1, 
                 size=(img.shape[0], img.shape[1])
             )
             detected_face = aligned_img[int(rotated_y1) : int(rotated_y2), int(rotated_x1) : int(rotated_x2)]
@@ -158,7 +157,9 @@ def detect_faces(
 
 
 def rotate_facial_area(
-    facial_area: Tuple[int, int, int, int], angle: float, direction: int, size: Tuple[int, int]
+    facial_area: Tuple[int, int, int, int], 
+    angle: float,               # in degrees. The sign determines the direction of rotation
+    size: Tuple[int, int]       # (width, height)
 ) -> Tuple[int, int, int, int]:
     """
     Rotate the facial area around its center.
@@ -167,14 +168,22 @@ def rotate_facial_area(
     Args:
         facial_area (tuple of int): Representing the (x1, y1, x2, y2) of the facial area.
             x2 is equal to x1 + w1, and y2 is equal to y1 + h1
-        angle (float): Angle of rotation in degrees.
-        direction (int): Direction of rotation (-1 for clockwise, 1 for counterclockwise).
+        angle (float): Angle of rotation in degrees. Its sign determines the direction of rotation.
+                       Note that angles > 360 degrees are normalized to the range [0, 360).
         size (tuple of int): Tuple representing the size of the image (width, height).
 
     Returns:
         rotated_coordinates (tuple of int): Representing the new coordinates
             (x1, y1, x2, y2) or (x1, y1, x1+w1, y1+h1) of the rotated facial area.
     """
+
+    # Normalize the witdh of the angle so we don't have to
+    # worry about rotations greater than 360 degrees
+    angle = angle % 360
+    if angle == 0:
+        return facial_area # No rotation needed
+    direction = 1 if angle > 0 else -1
+
     # Angle in radians
     angle = angle * np.pi / 180
 
