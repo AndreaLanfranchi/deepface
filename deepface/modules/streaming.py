@@ -84,11 +84,11 @@ def analysis(
     #    must be continuous: if a frame does not contain a face, the
     #    counter is reset.
     # 2. Once the sequence of frames is detected, the frame with the
-    #    largest facial area is selected as the best capture. 
+    #    largest facial area is selected as the best capture.
     #    Consider more than one face can be detected so we sum
     #    the areas of all detected faces in a frame
     # 3. The best capture eventually undergoes facial recognition
-    #    which will produce the stiching of the matching face(s) 
+    #    which will produce the stiching of the matching face(s)
     #    to the boxed detected face(s) in the best capture.
     # 4. The best capture (altered) is then displayed for a few
     #    seconds with a countodown box till time_threshold is reached.

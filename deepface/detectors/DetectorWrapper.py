@@ -1,4 +1,3 @@
-import math
 from typing import Any, List, Tuple
 import numpy as np
 from deepface.modules import detection
