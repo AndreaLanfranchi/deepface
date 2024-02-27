@@ -78,8 +78,8 @@ def load_model(
         model (Model)
     """
     base_model = ResNet34()
-    inputs = base_model.inputs[0]
-    arcface_model = base_model.outputs[0]
+    inputs = base_model.inputs[0] if base_model.inputs else None
+    arcface_model = base_model.outputs[0] if base_model.outputs else None
     arcface_model = BatchNormalization(momentum=0.9, epsilon=2e-5)(arcface_model)
     arcface_model = Dropout(0.4)(arcface_model)
     arcface_model = Flatten()(arcface_model)
