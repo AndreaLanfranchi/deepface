@@ -107,31 +107,18 @@ def detect_faces(
         confidence = facial_area.confidence
 
         if expand_percentage > 0:
-            # Uncomment this if you want to :
-            # Expand the facial area to be extracted and recompute the height and width
-            # keeping the same aspect ratio and ensuring that the expanded area stays
-            # within img.shape limits
-
-            # current_area = w * h
-            # expanded_area = current_area + int((current_area * expand_percentage) / 100)
-            # scale_factor = math.sqrt(expanded_area / current_area)
-            # expanded_w = int(w * scale_factor)
-            # expanded_h = int(h * scale_factor)
-
-            # Or uncomment this if you want to :
             # Expand the facial region height and width by the provided percentage
             # ensuring that the expanded region stays within img.shape limits
-            expanded_w = int(w * expand_percentage / 100)
-            expanded_h = int(h * expand_percentage / 100)
+            expanded_w = w + int(w * expand_percentage / 100)
+            expanded_h = h + int(h * expand_percentage / 100)
 
             x = max(0, x - int((expanded_w - w) / 2))
             y = max(0, y - int((expanded_h - h) / 2))
             w = min(img.shape[1] - x, expanded_w)
             h = min(img.shape[0] - y, expanded_h)
-      
 
         # extract detected face unaligned
-        detected_face = img[y : y + h, x : x + w]
+        detected_face = img[int(y) : int(y + h), int(x) : int(x + w)]
 
         # align original image, then find projection of detected face area after alignment
         if align is True:  # and left_eye is not None and right_eye is not None:
@@ -139,11 +126,13 @@ def detect_faces(
                 img=img, left_eye=left_eye, right_eye=right_eye
             )
             rotated_x1, rotated_y1, rotated_x2, rotated_y2 = rotate_facial_area(
-                facial_area=(x, y, x + w, y + h), 
-                angle=angle, 
+                facial_area=(x, y, x + w, y + h),
+                angle=angle,
                 size=(img.shape[0], img.shape[1])
             )
-            detected_face = aligned_img[int(rotated_y1) : int(rotated_y2), int(rotated_x1) : int(rotated_x2)]
+            detected_face = aligned_img[
+                int(rotated_y1) : int(rotated_y2),
+                int(rotated_x1) : int(rotated_x2)]
 
         result = DetectedFace(
             img=detected_face,
@@ -157,9 +146,9 @@ def detect_faces(
 
 
 def rotate_facial_area(
-    facial_area: Tuple[int, int, int, int], 
-    angle: float,               # in degrees. The sign determines the direction of rotation
-    size: Tuple[int, int]       # (width, height)
+    facial_area: Tuple[int, int, int, int],
+    angle: float,
+    size: Tuple[int, int]
 ) -> Tuple[int, int, int, int]:
     """
     Rotate the facial area around its center.
@@ -178,11 +167,13 @@ def rotate_facial_area(
     """
 
     # Normalize the witdh of the angle so we don't have to
-    # worry about rotations greater than 360 degrees
-    angle = angle % 360
+    # worry about rotations greater than 360 degrees.
+    # We workaround the quirky behavior of the modulo operator
+    # for negative angle values.
+    direction = 1 if angle >= 0 else -1
+    angle = abs(angle) % 360
     if angle == 0:
-        return facial_area # No rotation needed
-    direction = 1 if angle > 0 else -1
+        return facial_area
 
     # Angle in radians
     angle = angle * np.pi / 180

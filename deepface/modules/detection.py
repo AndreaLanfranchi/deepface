@@ -66,7 +66,9 @@ def extract_faces(
 
         - "face" (np.ndarray): The detected face as a NumPy array.
 
-        - "facial_area" (List[float]): The detected face's regions represented as a list of floats.
+        - "facial_area" (Dict[str, Any]): The detected face's regions as a dictionary containing:
+            - keys 'x', 'y', 'w', 'h' with int values
+            - keys 'left_eye', 'right_eye' with a tuple of 2 ints as values
 
         - "confidence" (float): The confidence score associated with the detected face.
     """
@@ -75,6 +77,9 @@ def extract_faces(
 
     # img might be path, base64 or numpy array. Convert it to numpy whatever it is.
     img, img_name = preprocessing.load_image(img_path)
+
+    if img is None:
+        raise ValueError(f"Exception while loading {img_name}")
 
     base_region = FacialAreaRegion(x=0, y=0, w=img.shape[1], h=img.shape[0], confidence=0)
 
