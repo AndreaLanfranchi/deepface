@@ -132,7 +132,7 @@ def ResNet34() -> Model:
     return model
 
 
-def block1(x, filters, kernel_size=3, stride=1, conv_shortcut=True, name=None):
+def block1(x, filters, kernel_size=3, stride=1, conv_shortcut=True, name: str = str()):
     bn_axis = 3
 
     if conv_shortcut:
@@ -178,7 +178,7 @@ def block1(x, filters, kernel_size=3, stride=1, conv_shortcut=True, name=None):
     return x
 
 
-def stack1(x, filters, blocks, stride1=2, name=None):
+def stack1(x, filters, blocks, stride1=2, name: str=str()):
     x = block1(x, filters, stride=stride1, name=name + "_block1")
     for i in range(2, blocks + 1):
         x = block1(x, filters, conv_shortcut=False, name=name + "_block" + str(i))
