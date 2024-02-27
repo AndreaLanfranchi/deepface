@@ -77,7 +77,7 @@ def load_model(
     Returns:
         model (Model)
     """
-    base_model = ResNet34()
+    base_model = __ResNet34()
     inputs = base_model.inputs[0] if base_model.inputs else None
     arcface_model = base_model.outputs[0] if base_model.outputs else None
     arcface_model = BatchNormalization(momentum=0.9, epsilon=2e-5)(arcface_model)
@@ -111,7 +111,7 @@ def load_model(
     return model
 
 
-def ResNet34() -> Model:
+def __ResNet34() -> Model:
     """
     ResNet34 model
     Returns:
@@ -125,14 +125,14 @@ def ResNet34() -> Model:
     )(x)
     x = BatchNormalization(axis=3, epsilon=2e-5, momentum=0.9, name="conv1_bn")(x)
     x = PReLU(shared_axes=[1, 2], name="conv1_prelu")(x)
-    x = stack_fn(x)
+    x = __stack_fn(x)
 
     model = training.Model(img_input, x, name="ResNet34")
 
     return model
 
 
-def block1(x, filters, kernel_size=3, stride=1, conv_shortcut=True, name: str = str()):
+def __block1(x, filters, kernel_size=3, stride=1, conv_shortcut=True, name: str = str()):
     bn_axis = 3
 
     if conv_shortcut:
@@ -178,15 +178,15 @@ def block1(x, filters, kernel_size=3, stride=1, conv_shortcut=True, name: str = 
     return x
 
 
-def stack1(x, filters, blocks, stride1=2, name: str=str()):
-    x = block1(x, filters, stride=stride1, name=name + "_block1")
+def __stack1(x, filters, blocks, stride1=2, name: str=str()):
+    x = __block1(x, filters, stride=stride1, name=name + "_block1")
     for i in range(2, blocks + 1):
-        x = block1(x, filters, conv_shortcut=False, name=name + "_block" + str(i))
+        x = __block1(x, filters, conv_shortcut=False, name=name + "_block" + str(i))
     return x
 
 
-def stack_fn(x):
-    x = stack1(x, 64, 3, name="conv2")
-    x = stack1(x, 128, 4, name="conv3")
-    x = stack1(x, 256, 6, name="conv4")
-    return stack1(x, 512, 3, name="conv5")
+def __stack_fn(x):
+    x = __stack1(x, 64, 3, name="conv2")
+    x = __stack1(x, 128, 4, name="conv3")
+    x = __stack1(x, 256, 6, name="conv4")
+    return __stack1(x, 512, 3, name="conv5")
