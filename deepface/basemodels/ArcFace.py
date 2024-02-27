@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple
 import os
 import gdown
 import numpy as np
@@ -51,10 +51,10 @@ class ArcFaceClient(FacialRecognition):
     """
 
     def __init__(self):
-        self.model = load_model()
         self.model_name = "ArcFace"
         self.input_shape = (112, 112)
         self.output_shape = 512
+        self.model = __load_model(self.input_shape, self.output_shape)
 
     def find_embeddings(self, img: np.ndarray) -> List[float]:
         """
@@ -69,21 +69,23 @@ class ArcFaceClient(FacialRecognition):
         return self.model(img, training=False).numpy()[0].tolist()
 
 
-def load_model(
-    url="https://github.com/serengil/deepface_models/releases/download/v1.0/arcface_weights.h5",
+def __load_model(
+    input_shape: Tuple[int, int],
+    output_shape: int,
+    url:str ="https://github.com/serengil/deepface_models/releases/download/v1.0/arcface_weights.h5",
 ) -> Model:
     """
     Construct ArcFace model, download its weights and load
     Returns:
         model (Model)
     """
-    base_model = __ResNet34()
+    base_model = __ResNet34(input_shape=input_shape)
     inputs = base_model.inputs[0] if base_model.inputs else None
     arcface_model = base_model.outputs[0] if base_model.outputs else None
     arcface_model = BatchNormalization(momentum=0.9, epsilon=2e-5)(arcface_model)
     arcface_model = Dropout(0.4)(arcface_model)
     arcface_model = Flatten()(arcface_model)
-    arcface_model = Dense(512, activation=None, use_bias=True, kernel_initializer="glorot_normal")(
+    arcface_model = Dense(units=output_shape, activation=None, use_bias=True, kernel_initializer="glorot_normal")(
         arcface_model
     )
     embedding = BatchNormalization(momentum=0.9, epsilon=2e-5, name="embedding", scale=True)(
@@ -111,13 +113,15 @@ def load_model(
     return model
 
 
-def __ResNet34() -> Model:
+def __ResNet34(
+    input_shape: Tuple[int, int],
+) -> Model:
     """
     ResNet34 model
     Returns:
         model (Model)
     """
-    img_input = Input(shape=(112, 112, 3))
+    img_input = Input(shape=(input_shape[0], input_shape[1], 3))
 
     x = ZeroPadding2D(padding=1, name="conv1_pad")(img_input)
     x = Conv2D(
