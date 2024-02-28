@@ -14,13 +14,23 @@ def build_model(
         ) -> Any:
     """
     This function builds a deepface model
-    Parameters:
-            model_name (string): face recognition or facial attribute model
-                    VGG-Face, Facenet, OpenFace, DeepFace, DeepID for face recognition
-                    Age, Gender, Emotion, Race for facial attributes
+
+    Params:
+        model_name (string): face recognition or facial attribute model
+
+            For face recognition, available models are:\n
+            "VGG-Face", "Facenet", "OpenFace", "DeepFace", "DeepID", "Dlib", "ArcFace", "SFace"
+
+            For facial attribute analysis, available models are:\n
+            "Age", "Gender", "Emotion", "Race"
+        
+        silent (bool): whether to print logs or not
+    
+    Exception:
+        KeyError: if model_name is not in available_models
 
     Returns:
-            built model class
+        reference to built model class instance
     """
 
     global available_models
