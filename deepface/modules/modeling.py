@@ -8,7 +8,10 @@ from deepface.extendedmodels import Age, Gender, Race, Emotion
 
 logger = Logger(module="modules.modeling")
 
-def build_model(model_name: str) -> Any:
+def build_model(
+        model_name: str,
+        silent: bool = False
+        ) -> Any:
     """
     This function builds a deepface model
     Parameters:
@@ -20,10 +23,10 @@ def build_model(model_name: str) -> Any:
             built model class
     """
 
-    # singleton design pattern
-    global model_obj
-
-    models = {
+    global available_models
+    if not "available_models" in globals():
+        available_models = {
+        # Face recognition models
         "VGG-Face": VGGFace.VggFaceClient,
         "OpenFace": OpenFace.OpenFaceClient,
         "Facenet": Facenet.FaceNet128dClient,
@@ -33,21 +36,23 @@ def build_model(model_name: str) -> Any:
         "Dlib": Dlib.DlibClient,
         "ArcFace": ArcFace.ArcFaceClient,
         "SFace": SFace.SFaceClient,
+        
+        # Facial attribute analysis models
         "Emotion": Emotion.EmotionClient,
         "Age": Age.ApparentAgeClient,
         "Gender": Gender.GenderClient,
-        "Race": Race.RaceClient,
-    }
+        "Race": Race.RaceClient
+        }
 
-    if not "model_obj" in globals():
-        model_obj = {}
+    global model_instances
+    if not "model_instances" in globals():
+        model_instances = {}
 
-    if not model_name in model_obj.keys():
-        model = models.get(model_name)
-        if model:
-            model_obj[model_name] = model()
-            logger.info(message=f"Built model : {model_name}")
-        else:
-            raise ValueError(f"Invalid model_name passed - {model_name}")
+    if not model_name in model_instances.keys():
+        if not model_name in available_models.keys():
+            raise KeyError(f"Unknown model_name : - {model_name}")
+        if not silent:
+            logger.info(f"Instantiating model : {model_name}")
+        model_instances[model_name] = available_models[model_name]()
 
-    return model_obj[model_name]
+    return model_instances[model_name]
