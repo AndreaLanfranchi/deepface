@@ -115,6 +115,7 @@ def analysis(
             __process_frame(
                 frame=captured_frame,
                 target_size=target_size,
+                faces_count_threshold=faces_count_threshold,
                 detector_backend=detector_backend,
                 good_captures=good_captures,
                 display_window_title=capture_window_title,
@@ -139,7 +140,6 @@ def analysis(
                     db_path,
                     model_name,
                     distance_metric,
-                    faces_count_threshold,
                     silent,
                 )
                 if len(matching_results) > 0:
@@ -216,6 +216,7 @@ def __cv2_refresh(timeout:int = 1):
 def __process_frame(
         frame: MatLike,
         target_size: Tuple[int, int],
+        faces_count_threshold: int,
         detector_backend: str,
         good_captures: List[Tuple[MatLike, List[Dict[str, Any]]]],
         display_window_title: str,
@@ -237,9 +238,11 @@ def __process_frame(
             if w * h < (target_size[0] * target_size[1]) / 2:
                 extracted_faces.pop(i)
 
-        # Treat no-results as error
+        # Treat no-results or too many results as error
         if len(extracted_faces) == 0:
             raise ValueError("No face found")
+        if len(extracted_faces) > faces_count_threshold:
+            raise OverflowError("Too many faces found")
 
         # Store the good capture and its detection result
         good_captures.append((frame.copy(), extracted_faces))
@@ -248,10 +251,12 @@ def __process_frame(
         cv2.imshow(display_window_title, __box_faces(frame, extracted_faces))
         __cv2_refresh()
 
-    # We only catch the ValueError exception here to reset the good_captures
-    # list. Other exceptions are not caught here and will be raised to the
-    # caller.
+    # We only catch the ValueError and OverflowError exceptions here to reset
+    # the good_captures list. Other exceptions are not caught here and will be
+    # raised to the caller.
     except ValueError:
+        good_captures.clear()
+    except OverflowError:
         good_captures.clear()
 
 # Get the best capture from the list of good captures
@@ -331,7 +336,6 @@ def __get_face_matches(
     db_path: str,
     model_name: str,
     distance_metric: str,
-    faces_count_threshold: int,
     silent: bool,
 ) -> List[pd.DataFrame]:
 
@@ -346,14 +350,8 @@ def __get_face_matches(
             enforce_detection=True,
             silent=silent,
         )
-        if len(matching_results) > faces_count_threshold:
-            raise AssertionError("Too many faces found")
         return matching_results
     except ValueError:
-        return []
-    except AssertionError as ex:
-        if not silent:
-            logger.error(ex.args[0])
         return []
 
 # Process the matches and stick the matching face
