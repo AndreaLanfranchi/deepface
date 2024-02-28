@@ -1,7 +1,11 @@
 from typing import Any, List, Tuple
 import numpy as np
 from deepface.modules import detection
-from deepface.models.Detector import Detector, DetectedFace, FacialAreaRegion
+from deepface.models.Detector import (
+    Detector,
+    DetectedFace,
+    FacialAreaRegion,
+    DonotDetect)
 from deepface.detectors import (
     FastMtCnn,
     MediaPipe,
@@ -18,7 +22,10 @@ from deepface.commons.logger import Logger
 logger = Logger(module="deepface/detectors/DetectorWrapper.py")
 
 
-def build_model(detector_backend: str) -> Any:
+def get_detector(
+        name: str,
+        silent: bool = False
+) -> Any:
     """
     Build a face detector model
     Args:
@@ -27,13 +34,17 @@ def build_model(detector_backend: str) -> Any:
         built detector (Any)
     """
 
-    global built_face_detector_objs   # singleton design pattern
-    if not "built_face_detector_objs" in globals():
-        built_face_detector_objs = {}
+    name = name.replace(" ", "")
+    if len(name) == 0:
+        raise KeyError("Empty detector name")
 
-    global avaliable_face_detector_objs
-    if not "avaliable_face_detector_objs" in globals():
-        avaliable_face_detector_objs = {
+    global detectors_instances   # singleton design pattern
+    if not "detectors_instances" in globals():
+        detectors_instances = {}
+
+    global avaliable_detectors
+    if not "avaliable_detectors" in globals():
+        avaliable_detectors = {
             "opencv": OpenCv.OpenCvClient,
             "mtcnn": MtCnn.MtCnnClient,
             "ssd": Ssd.SsdClient,
@@ -43,16 +54,18 @@ def build_model(detector_backend: str) -> Any:
             "yolov8": Yolo.YoloClient,
             "yunet": YuNet.YuNetClient,
             "fastmtcnn": FastMtCnn.FastMtCnnClient,
+            "donotdetect": DonotDetect
         }
 
-    if detector_backend not in avaliable_face_detector_objs.keys():
-        raise KeyError(f"Invalid detector_backend passed - {detector_backend}")
 
-    if detector_backend not in built_face_detector_objs.keys():
-        detector_obj = avaliable_face_detector_objs[detector_backend]()
-        built_face_detector_objs[detector_backend] = detector_obj
+    if name not in detectors_instances.keys():
+        if name not in avaliable_detectors.keys():
+            raise KeyError(f"Unknown detector : {name}")
+        if not silent:
+            logger.info(f"Instantiating detector : {name}")
+        detectors_instances[name] = avaliable_detectors[name]()
 
-    return built_face_detector_objs[detector_backend]
+    return detectors_instances[name]
 
 
 def detect_faces(
@@ -82,7 +95,7 @@ def detect_faces(
 
         - confidence (float): The confidence score associated with the detected face.
     """
-    face_detector: Detector = build_model(detector_backend)
+    face_detector: Detector = get_detector(detector_backend)
 
     # validate expand percentage score
     if expand_percentage < 0:
