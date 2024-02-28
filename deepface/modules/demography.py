@@ -143,7 +143,7 @@ def analyze(
                 pbar.set_description(f"Action: {action}")
 
                 if action == "emotion":
-                    emotion_predictions = modeling.build_model("Emotion").predict(img_content)
+                    emotion_predictions = modeling.get_analysis_model("Emotion").predict(img_content)
                     sum_of_predictions = emotion_predictions.sum()
 
                     obj["emotion"] = {}
@@ -154,12 +154,12 @@ def analyze(
                     obj["dominant_emotion"] = Emotion.labels[np.argmax(emotion_predictions)]
 
                 elif action == "age":
-                    apparent_age = modeling.build_model("Age").predict(img_content)
+                    apparent_age = modeling.get_analysis_model("Age").predict(img_content)
                     # int cast is for exception - object of type 'float32' is not JSON serializable
                     obj["age"] = int(apparent_age)
 
                 elif action == "gender":
-                    gender_predictions = modeling.build_model("Gender").predict(img_content)
+                    gender_predictions = modeling.get_analysis_model("Gender").predict(img_content)
                     obj["gender"] = {}
                     for i, gender_label in enumerate(Gender.labels):
                         gender_prediction = 100 * gender_predictions[i]
@@ -168,7 +168,7 @@ def analyze(
                     obj["dominant_gender"] = Gender.labels[np.argmax(gender_predictions)]
 
                 elif action == "race":
-                    race_predictions = modeling.build_model("Race").predict(img_content)
+                    race_predictions = modeling.get_analysis_model("Race").predict(img_content)
                     sum_of_predictions = race_predictions.sum()
 
                     obj["race"] = {}

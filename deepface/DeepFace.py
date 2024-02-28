@@ -39,19 +39,53 @@ if tf_version == 2:
 # create required folders if necessary to store model weights
 folder_utils.initialize_folder()
 
-
-def build_model(model_name: str) -> Any:
+def get_recognition_model(
+        name: str,
+        silent: bool = False
+        ) -> Any:
     """
-    This function builds a deepface model
-    Args:
-        model_name (string): face recognition or facial attribute model
-            VGG-Face, Facenet, OpenFace, DeepFace, DeepID for face recognition
-            Age, Gender, Emotion, Race for facial attributes
+    This function retturns a face recognition model.
+    Eventually the model instance is lazily initialized.
+
+    Params:
+        name (string): The name of the face recognition model to be returned
+            Valid values are any of the following:\n
+            "VGG-Face", "Facenet", "OpenFace", "DeepFace", "DeepID", "Dlib", "ArcFace", "SFace"
+        
+        silent (bool): whether to print logs or not
+    
+    Exception:
+        KeyError: when name is not known
+
     Returns:
-        built_model
+        reference to built model class instance
     """
-    return modeling.build_model(model_name=model_name)
 
+    return modeling.get_recognition_model(name=name, silent=silent)
+
+def get_analysis_model(
+        name: str,
+        silent: bool = False
+        ) -> Any:
+    """
+    This function retturns a face analisys model.
+    Eventually the model instance is lazily initialized.
+
+    Params:
+        name (string): The name of the face analisys model to be returned
+            Valid values are any of the following:\n
+            "Age", "Gender", "Emotion", "Race"
+        
+        silent (bool): whether to print logs or not
+    
+    Exception:
+        KeyError: when name is not known
+
+    Returns:
+        reference to built model class instance
+    """
+
+    return modeling.get_analysis_model(name=name, silent=silent)
 
 def verify(
     img1_path: Union[str, np.ndarray],

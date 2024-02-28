@@ -59,7 +59,7 @@ def represent(
     """
     resp_objs = []
 
-    model: FacialRecognition = modeling.build_model(model_name)
+    model: FacialRecognition = modeling.get_recognition_model(model_name)
 
     # ---------------------------------
     # we have run pre-process in verification. so, this can be skipped if it is coming from verify.

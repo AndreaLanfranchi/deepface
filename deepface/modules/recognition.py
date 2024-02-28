@@ -93,7 +93,7 @@ def find(
     if os.path.isdir(db_path) is not True:
         raise ValueError("Passed db_path does not exist!")
 
-    model: FacialRecognition = modeling.build_model(model_name)
+    model: FacialRecognition = modeling.get_recognition_model(model_name)
     target_size = model.input_shape
 
     # ---------------------------------------

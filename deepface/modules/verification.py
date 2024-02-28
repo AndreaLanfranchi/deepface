@@ -82,7 +82,7 @@ def verify(
     tic = time.time()
 
     # --------------------------------
-    model: FacialRecognition = modeling.build_model(model_name)
+    model: FacialRecognition = modeling.get_recognition_model(model_name)
     target_size = model.input_shape
 
     # img pairs might have many faces

@@ -46,18 +46,18 @@ def analysis(
     # ------------------------
     # build models once to store them in the memory
     # otherwise, they will be built after cam started and this will cause delays
-    model: FacialRecognition = DeepFace.build_model(model_name=model_name)
+    model: FacialRecognition = DeepFace.get_recognition_model(name=model_name)
 
     # find custom values for this input set
     target_size = model.input_shape
 
     if enable_face_analysis:
-        DeepFace.build_model(model_name="Race")
+        _ = DeepFace.get_analysis_model(name="Race")
         if enable_age_gender:
-            DeepFace.build_model(model_name="Age")
-            DeepFace.build_model(model_name="Gender")
+            _ = DeepFace.get_analysis_model(name="Age")
+            _ = DeepFace.get_analysis_model(name="Gender")
         if enable_emotion:
-            DeepFace.build_model(model_name="Emotion")
+            _ = DeepFace.get_analysis_model(name="Emotion")
 
     # -----------------------
     # call a dummy find function for db_path once to create embeddings in the initialization
