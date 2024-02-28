@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import List
 import os
 import gdown
 import numpy as np
@@ -84,9 +84,9 @@ class ArcFaceClient(FacialRecognition):
         arcface_model = Dropout(0.4)(arcface_model)
         arcface_model = Flatten()(arcface_model)
         arcface_model = Dense(
-            units=self.output_shape, 
-            activation=None, 
-            use_bias=True, 
+            units=self.output_shape,
+            activation=None,
+            use_bias=True,
             kernel_initializer="glorot_normal")(arcface_model)
         embedding = BatchNormalization(momentum=0.9, epsilon=2e-5, name="embedding", scale=True)(
             arcface_model
