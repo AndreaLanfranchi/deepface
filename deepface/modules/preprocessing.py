@@ -70,9 +70,13 @@ def __load_base64(uri: str) -> np.ndarray:
     Returns:
         numpy array: the loaded image.
     """
-    encoded_data = uri.split(",")[1]
+    split_data = uri.split(",")
+    if len(split_data) != 2:
+        raise ValueError("Invalid base64 input")
+    
+    encoded_string = uri.split(",")[1]
     try:
-        decoded = base64.b64decode(encoded_data, validate=True)
+        decoded = base64.b64decode(encoded_string, validate=True)
         nparr = np.frombuffer(buffer=decoded, dtype=np.uint8)
         return cv2.imdecode(nparr, cv2.IMREAD_COLOR)
     except binascii.Error as ex:
