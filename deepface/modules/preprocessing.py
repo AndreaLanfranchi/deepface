@@ -1,5 +1,6 @@
 import os
-from typing import Union, Tuple
+import binascii
+from typing import Any, Tuple
 import base64
 from pathlib import Path
 
@@ -8,49 +9,42 @@ import numpy as np
 import cv2
 import requests
 
-
-def load_image(img: Union[str, np.ndarray]) -> Tuple[np.ndarray, str]:
+def load_image(source: Any) -> Tuple[np.ndarray, str]:
     """
     Load image from path, url, base64 or numpy array.
+
     Args:
-        img: a path, url, base64 or numpy array.
+        source: the origin of image data to be loaded
+
     Returns:
-        image (numpy array): the loaded image in BGR format
-        image name (str): image name itself
+        A tuple of :\n
+        image (numpy array): the loaded image in BGR format\n
+        name (str): image name itself\n
+
+    Raises:
+        ValueError: if the input is somewhat invalid
+        TypeError: if the input is not a supported type
+        HTTPError: if the input is a url and the response status code is not 200
+        FileNotFoundError: if the input is a path and the file does not exist
     """
 
-    # The image is already a numpy array
-    if isinstance(img, np.ndarray):
-        return img, "numpy array"
+    if source is None:
+        raise ValueError("Invalid source. Cannot be None.")
+    if isinstance(source, np.ndarray):
+        return source, "numpy array"
+    if isinstance(source, Path):
+        source = str(source)
+    elif not isinstance(source, str):
+        raise TypeError(f"Unsupoorted source type {type(source)}")
 
-    if isinstance(img, Path):
-        img = str(img)
+    if len(source.replace(" ", "")) == 0:
+        raise ValueError("Invalid source. Empty string.")
+    if source.lower().startswith("data:image/"):
+        return load_base64(uri=source), "base64 encoded string"
+    if source.lower().startswith("http"):
+        return load_image_from_web(url=source), source
 
-    if not isinstance(img, str):
-        raise ValueError(f"img must be numpy array or str but it is {type(img)}")
-
-    # The image is a base64 string
-    if img.startswith("data:image/"):
-        return load_base64(img), "base64 encoded string"
-
-    # The image is a url
-    if img.startswith("http"):
-        return load_image_from_web(url=img), img
-
-    # The image is a path
-    if os.path.isfile(img) is not True:
-        raise ValueError(f"Confirm that {img} exists")
-
-    # image must be a file on the system then
-
-    # image name must have english characters
-    if img.isascii() is False:
-        raise ValueError(f"Input image must not have non-english characters - {img}")
-
-    img_obj_bgr = cv2.imread(img)
-    # img_obj_rgb = cv2.cvtColor(img_obj_bgr, cv2.COLOR_BGR2RGB)
-    return img_obj_bgr, img
-
+    return load_image_from_file(filename=source), source
 
 def load_image_from_web(url: str) -> np.ndarray:
     """
@@ -77,11 +71,35 @@ def load_base64(uri: str) -> np.ndarray:
         numpy array: the loaded image.
     """
     encoded_data = uri.split(",")[1]
-    nparr = np.fromstring(base64.b64decode(encoded_data), np.uint8)
-    img_bgr = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-    # img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
-    return img_bgr
+    try:
+        decoded = base64.b64decode(encoded_data, validate=True)
+        nparr = np.frombuffer(buffer=decoded, dtype=np.uint8)
+        return cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+    except binascii.Error as ex:
+        raise ValueError("Invalid base64 input") from ex
 
+def load_image_from_file(filename: str) -> np.ndarray:
+    """Load image from file.
+
+    Args:
+        filename: full or relative path to the image file.
+
+    Returns:
+        numpy array: the loaded image.
+
+    Raises:
+        FileNotFoundError: if the file does not exist.
+    """
+    _, ext = os.path.splitext(filename)
+    ext = ext.lower()
+    if not ext in [".jpg", ".jpeg", ".png"]:
+        raise ValueError(f"Unsupported file type {ext}")
+    if not os.path.isfile(filename):
+        raise FileNotFoundError(f"File {filename} does not exist")
+    if os.path.getsize(filename) == 0:
+        raise ValueError(f"File {filename} is empty")
+
+    return cv2.imread(filename)
 
 def normalize_input(img: np.ndarray, normalization: str = "base") -> np.ndarray:
     """Normalize input image.
@@ -93,6 +111,9 @@ def normalize_input(img: np.ndarray, normalization: str = "base") -> np.ndarray:
 
     Returns:
         numpy array: the normalized image.
+
+    Raises:
+        NotImplementedError: if the normalization technique is not implemented.
     """
 
     # issue 131 declares that some normalization techniques improves the accuracy
@@ -136,6 +157,6 @@ def normalize_input(img: np.ndarray, normalization: str = "base") -> np.ndarray:
         img -= 127.5
         img /= 128
     else:
-        raise ValueError(f"unimplemented normalization type - {normalization}")
+        raise NotImplementedError(f"Unimplemented normalization type - {normalization}")
 
     return img
