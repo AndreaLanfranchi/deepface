@@ -1,6 +1,6 @@
 from deepface import DeepFace
 
-DeepFace.stream("dataset") #opencv
+DeepFace.stream("dataset", model_name="ArcFace") #opencv
 #DeepFace.stream("dataset", detector_backend = 'opencv')
 #DeepFace.stream("dataset", detector_backend = 'ssd')
 #DeepFace.stream("dataset", detector_backend = 'mtcnn')
