@@ -73,7 +73,7 @@ def extract_faces(
         - "confidence" (float): The confidence score associated with the detected face.
     """
 
-    resp_objs = []
+    results: List[Dict[str, Any]] = []
 
     # img might be path, base64 or numpy array. Convert it to numpy whatever it is.
     img, img_name = preprocessing.load_image(img_path)
@@ -168,7 +168,7 @@ def extract_faces(
         if human_readable is True and len(img_pixels.shape) == 4:
             img_pixels = img_pixels[0]
 
-        resp_objs.append(
+        results.append(
             {
                 "face": img_pixels[:, :, ::-1] if human_readable is True else img_pixels,
                 "facial_area": {
@@ -183,13 +183,13 @@ def extract_faces(
             }
         )
 
-    if len(resp_objs) == 0 and enforce_detection == True:
+    if len(results) == 0 and enforce_detection == True:
         raise ValueError(
             f"Exception while extracting faces from {img_name}."
             "Consider to set enforce_detection arg to False."
         )
 
-    return resp_objs
+    return results
 
 
 def align_face(
