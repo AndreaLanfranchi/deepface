@@ -40,9 +40,13 @@ def load_image(source: Any) -> Tuple[np.ndarray, str]:
 
     if len(source.replace(" ", "")) == 0:
         raise ValueError("Invalid source. Empty string.")
-    if source.lower().startswith("data:image/"):
+    
+    base64_pattern = re.compile(r"^data:image\/.*", re.IGNORECASE)
+    if base64_pattern.match(source):
         return __load_base64(uri=source), "base64 encoded string"
-    if source.lower().startswith("http"):
+    
+    http_pattern = re.compile(r"^http(s)?://.*", re.IGNORECASE)
+    if http_pattern.match(source):
         return __load_image_from_web(url=source), source
 
     return __load_image_from_file(filename=source), source
@@ -50,10 +54,16 @@ def load_image(source: Any) -> Tuple[np.ndarray, str]:
 def __load_image_from_web(url: str) -> np.ndarray:
     """
     Loading an image from web
+
     Args:
+
         url: link for the image
+
     Returns:
         img (np.ndarray): equivalent to pre-loaded image from opencv (BGR format)
+
+    Raises:
+        HTTPError: if the response status code is not 200
     """
     response = requests.get(url, stream=True, timeout=60)
     response.raise_for_status()
