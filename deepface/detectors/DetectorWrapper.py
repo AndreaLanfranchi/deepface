@@ -27,11 +27,24 @@ def get_detector(
         silent: bool = False
 ) -> Any:
     """
-    Build a face detector model
-    Args:
-        detector_backend (str): backend detector name
+    This function retturns a face detector model.
+    Eventually the model instance is lazily initialized.
+
+    Params:
+        name (string): The name of the detector model to be returned
+            Valid values are any of the following:\n
+            "opencv", "mtcnn", "ssd", "dlib", "retinaface", "mediapipe", "yolov8", "yunet", "fastmtcnn", "donotdetect"
+      
+            Note! "donotdetect" is used to skip face detection and simply return the whole image as a face.
+            This is useful when the user wants to use a pre-detected face.
+            
+        silent (bool): whether to print logs or not
+    
+    Exception:
+        KeyError: when name is not known
+
     Returns:
-        built detector (Any)
+        reference to built model class instance
     """
 
     name = name.replace(" ", "")
