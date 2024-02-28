@@ -345,7 +345,7 @@ def __get_face_matches(
             img_path=cropped_face,
             db_path=db_path,
             model_name=model_name,
-            detector_backend="skip", # Skip detection, we already have the face
+            detector_backend="donotdetect", # Skip detection, we already have the face
             distance_metric=distance_metric,
             enforce_detection=True,
             silent=silent,

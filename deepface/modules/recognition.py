@@ -205,7 +205,7 @@ def find(
             img_path=source_img,
             model_name=model_name,
             enforce_detection=enforce_detection,
-            detector_backend="skip",
+            detector_backend="donotdetect",
             align=align,
             normalization=normalization,
         )
@@ -362,7 +362,7 @@ def __find_bulk_embeddings(
                     img_path=img_content,
                     model_name=model_name,
                     enforce_detection=enforce_detection,
-                    detector_backend="skip",
+                    detector_backend="donotdetect",
                     align=align,
                     normalization=normalization,
                 )

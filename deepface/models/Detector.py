@@ -38,7 +38,7 @@ class DonotDetect(Detector):
                 img.shape[0],
                 None,
                 None,
-                0.0
+                None,
                 )
         ]
 
@@ -47,9 +47,9 @@ class FacialAreaRegion:
     y: int
     w: int
     h: int
-    left_eye: Tuple[int, int]
-    right_eye: Tuple[int, int]
-    confidence: float
+    left_eye: Optional[Tuple[int, int]]
+    right_eye: Optional[Tuple[int, int]]
+    confidence: Optional[float]
 
     def __init__(
         self,

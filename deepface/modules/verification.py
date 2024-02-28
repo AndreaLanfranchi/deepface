@@ -119,7 +119,7 @@ def verify(
                 img_path=img1_content,
                 model_name=model_name,
                 enforce_detection=enforce_detection,
-                detector_backend="skip",
+                detector_backend="donotdetect",
                 align=align,
                 normalization=normalization,
             )
@@ -128,7 +128,7 @@ def verify(
                 img_path=img2_content,
                 model_name=model_name,
                 enforce_detection=enforce_detection,
-                detector_backend="skip",
+                detector_backend="donotdetect",
                 align=align,
                 normalization=normalization,
             )
