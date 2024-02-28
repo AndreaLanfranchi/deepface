@@ -27,7 +27,7 @@ elif tf_major_version == 2:
 
 def extract_faces(
     img_path: Union[str, np.ndarray],
-    target_size: Optional[Tuple[int, int]] = (224, 224),
+    target_size: Optional[Tuple[int, int]],
     detector_backend: str = "opencv",
     enforce_detection: bool = True,
     align: bool = True,
