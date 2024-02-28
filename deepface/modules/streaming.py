@@ -26,15 +26,15 @@ def analysis(
     distance_metric:str="cosine",
     enable_face_analysis:bool=True,
     source:int=0,
-    time_threshold: int =3,
-    frame_threshold: int =5,
+    freeze_time_seconds: int = 3,
+    valid_frames_count: int = 5,
     faces_count_threshold: int = sys.maxsize,
     silent: bool = False,
 ):
 
     # Parameter validation
-    time_threshold = max(1, min(time_threshold, 10))              # In range [1, 10] positive
-    frame_threshold = max(1, min(frame_threshold, 5))             # In range [1, 5] positive
+    freeze_time_seconds = max(1, min(freeze_time_seconds, 10))    # In range [1, 10] positive
+    valid_frames_count = max(1, min(valid_frames_count, 5))       # In range [1, 5] positive
     faces_count_threshold = max(1, faces_count_threshold)         # In range [1, inf] positive
 
     # Constants
@@ -120,7 +120,7 @@ def analysis(
                 display_window_title=capture_window_title,
             )
 
-            if len(good_captures) < frame_threshold:
+            if len(good_captures) < valid_frames_count:
                 continue
 
             # This also resets the good_captures list
@@ -158,7 +158,7 @@ def analysis(
                 # Count back from time_threshold to 0
                 # Display the best capture for a few seconds
                 # with a counting box
-                for i in range(time_threshold, 0, -1):
+                for i in range(freeze_time_seconds, 0, -1):
                     cv2.rectangle(best_capture, (10, 10), (70, 50), (67, 67, 67), -10)
                     cv2.putText(
                         best_capture,

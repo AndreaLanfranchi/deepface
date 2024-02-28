@@ -376,8 +376,8 @@ def stream(
     distance_metric: str = "cosine",
     enable_face_analysis: bool = True,
     source: Any = 0,
-    time_threshold: int = 5,
-    frame_threshold: int = 5,
+    freeze_time_seconds: int = 3,
+    valid_frames_count: int = 5,
     faces_count_threshold: int = sys.maxsize,
     silent: bool = False,
 ) -> None:
@@ -402,9 +402,13 @@ def stream(
         source (Any): The source for the video stream (default is 0, which represents the
             default camera).
 
-        time_threshold (int): The time threshold (in seconds) for face recognition (default is 5).
+        freeze_time_seconds (int): How much time (seconds) to freeze the captured face(s)
+            which receive matches from find function (default is 3). This is useful to
+            allow operators to visualize the detected face(s) and the matching results.
 
-        frame_threshold (int): The frame threshold for face recognition (default is 5).
+        valid_frames_count (int): The number of continuos valid frames to be considered as a
+            positive face recognition. A valid frame is a frame that contains
+            at least one face. Valid value in range of [1, 5] (default is 5).
 
         faces_count_threshold (int): The maximum number of faces to be detected in a frame.
             If the number of detected faces exceeds this threshold, the frame will be skipped
@@ -416,8 +420,8 @@ def stream(
         None
     """
 
-    time_threshold = max(1, time_threshold)
-    frame_threshold = max(1, frame_threshold)
+    freeze_time_seconds = max(1, freeze_time_seconds)
+    valid_frames_count = max(1, valid_frames_count)
     faces_count_threshold = max(1, faces_count_threshold)
 
     streaming.analysis(
@@ -427,8 +431,8 @@ def stream(
         distance_metric=distance_metric,
         enable_face_analysis=enable_face_analysis,
         source=source,
-        time_threshold=time_threshold,
-        frame_threshold=frame_threshold,
+        freeze_time_seconds=freeze_time_seconds,
+        valid_frames_count=valid_frames_count,
         faces_count_threshold=faces_count_threshold,
         silent=silent,
     )
