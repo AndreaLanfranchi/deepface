@@ -24,6 +24,23 @@ class Detector(ABC):
         """
         pass
 
+class DonotDetect(Detector):
+    """
+    This class is used to skip face detection. It is used when the user
+    wants to use a pre-detected face.
+    """
+    def detect_faces(self, img: np.ndarray) -> List["FacialAreaRegion"]:
+        return [
+            FacialAreaRegion(
+                0,
+                0,
+                img.shape[1],
+                img.shape[0],
+                None,
+                None,
+                0.0
+                )
+        ]
 
 class FacialAreaRegion:
     x: int
