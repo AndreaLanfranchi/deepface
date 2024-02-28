@@ -1,7 +1,8 @@
+import base64
+import re
 import os
 import binascii
 from typing import Any, Tuple
-import base64
 from pathlib import Path
 
 # 3rd party
@@ -69,14 +70,19 @@ def __load_base64(uri: str) -> np.ndarray:
 
     Returns:
         numpy array: the loaded image.
+
+    Raises:
+        ValueError: if the input is invalid.
     """
+
     split_data = uri.split(",")
     if len(split_data) != 2:
         raise ValueError("Invalid base64 input")
-    
-    encoded_string = uri.split(",")[1]
+    pattern = re.compile(r"^data:image\/(jpeg|jpg|png)?(;base64)$", re.IGNORECASE)
+    if not pattern.match(split_data[0]):
+        raise ValueError("Invalid base64 input or unsupported image type. Supported types: jpeg, jpg, png.")
     try:
-        decoded = base64.b64decode(encoded_string, validate=True)
+        decoded = base64.b64decode(split_data[1], validate=True)
         nparr = np.frombuffer(buffer=decoded, dtype=np.uint8)
         return cv2.imdecode(nparr, cv2.IMREAD_COLOR)
     except binascii.Error as ex:
