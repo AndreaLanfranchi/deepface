@@ -1,5 +1,6 @@
 # common dependencies
 import os
+import sys
 import warnings
 import logging
 from typing import Any, Dict, List, Tuple, Union, Optional
@@ -377,6 +378,7 @@ def stream(
     source: Any = 0,
     time_threshold: int = 5,
     frame_threshold: int = 5,
+    faces_count_threshold: int = sys.maxsize,
     silent: bool = False,
 ) -> None:
     """
@@ -403,12 +405,20 @@ def stream(
         time_threshold (int): The time threshold (in seconds) for face recognition (default is 5).
 
         frame_threshold (int): The frame threshold for face recognition (default is 5).
+
+        faces_count_threshold (int): The maximum number of faces to be detected in a frame.
+            If the number of detected faces exceeds this threshold, the frame will be skipped
+            for face recognition (default is 1).
+
+        silent (bool): When True, suppresses some log messages for a quieter analysis process
+
     Returns:
         None
     """
 
-    time_threshold = max(time_threshold, 1)
-    frame_threshold = max(frame_threshold, 1)
+    time_threshold = max(1, time_threshold)
+    frame_threshold = max(1, frame_threshold)
+    faces_count_threshold = max(1, faces_count_threshold)
 
     streaming.analysis(
         db_path=db_path,
@@ -419,6 +429,7 @@ def stream(
         source=source,
         time_threshold=time_threshold,
         frame_threshold=frame_threshold,
+        faces_count_threshold=faces_count_threshold,
         silent=silent,
     )
 

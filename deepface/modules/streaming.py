@@ -1,3 +1,4 @@
+import sys
 import os
 import time
 import traceback
@@ -27,12 +28,14 @@ def analysis(
     source:int=0,
     time_threshold: int =3,
     frame_threshold: int =5,
+    faces_count_threshold: int = sys.maxsize,
     silent: bool = False,
 ):
 
     # Parameter validation
-    time_threshold = max(1, min(time_threshold, 10)) # In range [1, 10]
-    frame_threshold = max(1, min(frame_threshold, 5)) # In range [1, 5]
+    time_threshold = max(1, min(time_threshold, 10))              # In range [1, 10] positive
+    frame_threshold = max(1, min(frame_threshold, 5))             # In range [1, 5] positive
+    faces_count_threshold = max(1, faces_count_threshold)         # In range [1, inf] positive
 
     # Constants
     capture_window_title: str = "Capture"
@@ -136,6 +139,7 @@ def analysis(
                     db_path,
                     model_name,
                     distance_metric,
+                    faces_count_threshold,
                     silent,
                 )
                 if len(matching_results) > 0:
@@ -327,6 +331,7 @@ def __get_face_matches(
     db_path: str,
     model_name: str,
     distance_metric: str,
+    faces_count_threshold: int,
     silent: bool,
 ) -> List[pd.DataFrame]:
 
@@ -341,8 +346,14 @@ def __get_face_matches(
             enforce_detection=True,
             silent=silent,
         )
+        if len(matching_results) > faces_count_threshold:
+            raise AssertionError("Too many faces found")
         return matching_results
     except ValueError:
+        return []
+    except AssertionError as ex:
+        if not silent:
+            logger.error(ex.args[0])
         return []
 
 # Process the matches and stick the matching face
