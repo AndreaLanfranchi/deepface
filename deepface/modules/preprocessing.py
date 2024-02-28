@@ -40,13 +40,13 @@ def load_image(source: Any) -> Tuple[np.ndarray, str]:
     if len(source.replace(" ", "")) == 0:
         raise ValueError("Invalid source. Empty string.")
     if source.lower().startswith("data:image/"):
-        return load_base64(uri=source), "base64 encoded string"
+        return __load_base64(uri=source), "base64 encoded string"
     if source.lower().startswith("http"):
-        return load_image_from_web(url=source), source
+        return __load_image_from_web(url=source), source
 
-    return load_image_from_file(filename=source), source
+    return __load_image_from_file(filename=source), source
 
-def load_image_from_web(url: str) -> np.ndarray:
+def __load_image_from_web(url: str) -> np.ndarray:
     """
     Loading an image from web
     Args:
@@ -61,7 +61,7 @@ def load_image_from_web(url: str) -> np.ndarray:
     return image
 
 
-def load_base64(uri: str) -> np.ndarray:
+def __load_base64(uri: str) -> np.ndarray:
     """Load image from base64 string.
 
     Args:
@@ -78,7 +78,7 @@ def load_base64(uri: str) -> np.ndarray:
     except binascii.Error as ex:
         raise ValueError("Invalid base64 input") from ex
 
-def load_image_from_file(filename: str) -> np.ndarray:
+def __load_image_from_file(filename: str) -> np.ndarray:
     """Load image from file.
 
     Args:
