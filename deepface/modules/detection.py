@@ -78,9 +78,6 @@ def extract_faces(
     # img might be path, base64 or numpy array. Convert it to numpy whatever it is.
     img, img_name = preprocessing.load_image(img_path)
 
-    if img is None:
-        raise ValueError(f"Exception while loading {img_name}")
-
     base_region = FacialAreaRegion(x=0, y=0, w=img.shape[1], h=img.shape[0], confidence=0)
 
     if detector_backend == "skip":
@@ -179,7 +176,7 @@ def extract_faces(
                     "left_eye": current_region.left_eye,
                     "right_eye": current_region.right_eye,
                 },
-                "confidence": round(current_region.confidence, 2),
+                "confidence": current_region.confidence,
             }
         )
 

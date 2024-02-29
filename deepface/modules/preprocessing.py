@@ -2,7 +2,7 @@ import base64
 import re
 import os
 import binascii
-from typing import Any, Tuple
+from typing import Union, Tuple
 from pathlib import Path
 
 # 3rd party
@@ -10,7 +10,7 @@ import numpy as np
 import cv2
 import requests
 
-def load_image(source: Any) -> Tuple[np.ndarray, str]:
+def load_image(source: Union[str, np.ndarray]) -> Tuple[np.ndarray, str]:
     """
     Load image from path, url, base64 or numpy array.
 
@@ -29,13 +29,9 @@ def load_image(source: Any) -> Tuple[np.ndarray, str]:
         FileNotFoundError: if the input is a path and the file does not exist
     """
 
-    if source is None:
-        raise ValueError("Invalid source. Cannot be None.")
     if isinstance(source, np.ndarray):
         return source, "numpy array"
-    if isinstance(source, Path):
-        source = str(source)
-    elif not isinstance(source, str):
+    if not isinstance(source, str):
         raise TypeError(f"Unsupoorted source type {type(source)}")
 
     if len(source.replace(" ", "")) == 0:
