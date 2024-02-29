@@ -16,6 +16,7 @@ logger = Logger(module="detectors.SsdWrapper")
 
 class SsdClient(Detector):
     def __init__(self):
+        self.name = "ssd"
         self.model = self.build_model()
 
     def build_model(self) -> dict:

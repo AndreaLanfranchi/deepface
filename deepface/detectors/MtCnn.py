@@ -10,6 +10,7 @@ class MtCnnClient(Detector):
     """
 
     def __init__(self):
+        self.name = "mtcnn"
         self.model = MTCNN()
 
     def detect_faces(self, img: np.ndarray) -> List[FacialAreaRegion]:

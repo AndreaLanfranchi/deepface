@@ -9,6 +9,7 @@ from deepface.models.Detector import Detector, FacialAreaRegion
 
 class FastMtCnnClient(Detector):
     def __init__(self):
+        self.name = "fastmtcnn"
         self.model = self.build_model()
 
     def detect_faces(self, img: np.ndarray) -> List[FacialAreaRegion]:

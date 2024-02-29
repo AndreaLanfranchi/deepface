@@ -11,7 +11,9 @@ logger = Logger(module="detectors.DlibWrapper")
 
 
 class DlibClient(Detector):
+    
     def __init__(self):
+        self.name = "dlib"
         self.model = self.build_model()
 
     def build_model(self) -> dict:

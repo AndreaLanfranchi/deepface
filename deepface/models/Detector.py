@@ -7,6 +7,8 @@ import numpy as np
 
 # pylint: disable=unnecessary-pass, too-few-public-methods
 class Detector(ABC):
+    name: str
+
     @abstractmethod
     def detect_faces(self, img: np.ndarray) -> List["FacialAreaRegion"]:
         """
@@ -29,6 +31,9 @@ class DonotDetect(Detector):
     This class is used to skip face detection. It is used when the user
     wants to use a pre-detected face.
     """
+    def __init__(self):
+        self.name = "DonotDetect"
+        
     def detect_faces(self, img: np.ndarray) -> List["FacialAreaRegion"]:
         return [
             FacialAreaRegion(

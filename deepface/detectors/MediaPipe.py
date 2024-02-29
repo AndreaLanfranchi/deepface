@@ -7,6 +7,7 @@ from deepface.models.Detector import Detector, FacialAreaRegion
 
 class MediaPipeClient(Detector):
     def __init__(self):
+        self.name = "mediapipe"
         self.model = self.build_model()
 
     def build_model(self) -> Any:

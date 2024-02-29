@@ -21,6 +21,7 @@ LANDMARKS_CONFIDENCE_THRESHOLD = 0.5
 
 class YoloClient(Detector):
     def __init__(self):
+        self.name = "yolo"
         self.model = self.build_model()
 
     def build_model(self) -> Any:

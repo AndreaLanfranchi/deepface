@@ -6,6 +6,7 @@ from deepface.models.Detector import Detector, FacialAreaRegion
 # pylint: disable=too-few-public-methods
 class RetinaFaceClient(Detector):
     def __init__(self):
+        self.name = "retinaface"
         self.model = rf.build_model()
 
     def detect_faces(self, img: np.ndarray) -> List[FacialAreaRegion]:

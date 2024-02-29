@@ -12,6 +12,7 @@ logger = Logger(module="detectors.YunetWrapper")
 
 class YuNetClient(Detector):
     def __init__(self):
+        self.name = "yunet"
         self.model = self.build_model()
 
     def build_model(self) -> Any:

@@ -11,6 +11,7 @@ class OpenCvClient(Detector):
     """
 
     def __init__(self):
+        self.name = "opencv"
         self.model = self.build_model()
 
     def build_model(self):
