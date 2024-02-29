@@ -108,11 +108,8 @@ def analysis(
     tic = time.time()
     logger.info("Starting capture source ...")
     stream = Stream(source=source)
-    # Wait for the stream to start - 1 second
-    time.sleep(1)
-
-    elapsed = time.time() - tic
-    logger.info(f"Started capture source in {elapsed:.5f} seconds")
+    time.sleep(1) # Wait for the stream to start - 1 second should be enough
+    logger.info(f"Started capture source in {(time.time() - tic):.5f} seconds")
 
     # Logic descritpion:
     # --------------------------------
@@ -225,8 +222,7 @@ def analysis(
     stream.join()
     cv2.destroyAllWindows()
 
-    elapsed = time.time() - tic
-    logger.info(f"Total duration {elapsed:.5f} seconds")
+    logger.info(f"Total duration {(time.time() - tic):.5f} seconds")
 
 
 # The only way for OpenCV to refresh displayed window(s)
