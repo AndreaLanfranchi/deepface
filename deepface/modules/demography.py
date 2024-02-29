@@ -13,7 +13,6 @@ from deepface.extendedmodels import Gender, Race, Emotion
 def analyze(
     img_path: Union[str, np.ndarray],
     actions: Union[tuple, list] = ("emotion", "age", "gender", "race"),
-    enforce_detection: bool = True,
     detector_backend: str = "opencv",
     align: bool = True,
     expand_percentage: int = 0
@@ -28,9 +27,6 @@ def analyze(
 
         actions (tuple): Attributes to analyze. The default is ('age', 'gender', 'emotion', 'race').
             You can exclude some of these attributes from the analysis if needed.
-
-        enforce_detection (boolean): If no face is detected in an image, raise an exception.
-            Set to False to avoid the exception for low-resolution images (default is True).
 
         detector_backend (string): face detector backend. Options: 'opencv', 'retinaface',
             'mtcnn', 'ssd', 'dlib', 'mediapipe', 'yolov8' (default is opencv).
@@ -117,7 +113,6 @@ def analyze(
         target_size=(224, 224),
         detector_backend=detector_backend,
         grayscale=False,
-        enforce_detection=enforce_detection,
         align=align,
         expand_percentage=expand_percentage,
     )

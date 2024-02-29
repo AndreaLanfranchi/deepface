@@ -114,7 +114,7 @@ def test_analyze_for_different_detectors():
     for img_path in img_paths:
         for detector in detectors:
             results = DeepFace.analyze(
-                img_path, actions=("gender",), detector_backend=detector, enforce_detection=False
+                img_path, actions=("gender",), detector_backend=detector
             )
             for result in results:
                 logger.debug(result)

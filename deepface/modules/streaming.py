@@ -94,13 +94,12 @@ def analysis(
 
     # -----------------------
     # call a dummy find function for db_path once to create embeddings in the initialization
-    DeepFace.find(
+    _ = DeepFace.find(
         img_path=np.zeros(target_size),
         db_path=db_path,
         model_name=model_name,
         detector_backend=detector_backend,
-        distance_metric=distance_metric,
-        enforce_detection=False, # This fake image does not contain a face
+        distance_metric=distance_metric
     )
     # -----------------------
     # visualization
@@ -258,7 +257,6 @@ def __process_frame(
             img_path=frame,
             target_size=target_size,
             detector_backend=detector_backend,
-            enforce_detection=True, # Must find a face or raise an error
             align=False, # Do not align the detected face
         )
 
@@ -370,19 +368,15 @@ def __get_face_matches(
     distance_metric: str
 ) -> List[pd.DataFrame]:
 
-    try:
-        cropped_face = __crop_face(picture, facial_area)
-        matching_results = DeepFace.find(
-            img_path=cropped_face,
-            db_path=db_path,
-            model_name=model_name,
-            detector_backend="donotdetect", # Skip detection, we already have the face
-            distance_metric=distance_metric,
-            enforce_detection=True
-        )
-        return matching_results
-    except ValueError:
-        return []
+    cropped_face = __crop_face(picture, facial_area)
+    matching_results = DeepFace.find(
+        img_path=cropped_face,
+        db_path=db_path,
+        model_name=model_name,
+        detector_backend="donotdetect", # Skip detection, we already have the face
+        distance_metric=distance_metric
+    )
+    return matching_results
 
 # Process the matches and stick the matching face
 # (if any)
@@ -409,9 +403,10 @@ def __process_matches(
             img_path=matching_identity,
             target_size=target_size,
             detector_backend=detector_backend,
-            enforce_detection=True,
             align=False,
         )
+        if len(matching_faces) == 0:
+            return False
     except ValueError:
         return False
 

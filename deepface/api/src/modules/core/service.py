@@ -3,14 +3,13 @@ from deepface import DeepFace
 # pylint: disable=broad-except
 
 
-def represent(img_path, model_name, detector_backend, enforce_detection, align):
+def represent(img_path, model_name, detector_backend, align):
     try:
         result = {}
         embedding_objs = DeepFace.represent(
             img_path=img_path,
             model_name=model_name,
             detector_backend=detector_backend,
-            enforce_detection=enforce_detection,
             align=align,
         )
         result["results"] = embedding_objs
@@ -20,7 +19,7 @@ def represent(img_path, model_name, detector_backend, enforce_detection, align):
 
 
 def verify(
-    img1_path, img2_path, model_name, detector_backend, distance_metric, enforce_detection, align
+    img1_path, img2_path, model_name, detector_backend, distance_metric, align
 ):
     try:
         obj = DeepFace.verify(
@@ -29,22 +28,20 @@ def verify(
             model_name=model_name,
             detector_backend=detector_backend,
             distance_metric=distance_metric,
-            align=align,
-            enforce_detection=enforce_detection,
+            align=align
         )
         return obj
     except Exception as err:
         return {"error": f"Exception while verifying: {str(err)}"}, 400
 
 
-def analyze(img_path, actions, detector_backend, enforce_detection, align):
+def analyze(img_path, actions, detector_backend, align):
     try:
         result = {}
         demographies = DeepFace.analyze(
             img_path=img_path,
             actions=actions,
             detector_backend=detector_backend,
-            enforce_detection=enforce_detection,
             align=align
         )
         result["results"] = demographies

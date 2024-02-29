@@ -13,7 +13,6 @@ from deepface.models.FacialRecognition import FacialRecognition
 def represent(
     img_path: Union[str, np.ndarray],
     model_name: str = "VGG-Face",
-    enforce_detection: bool = True,
     detector_backend: str = "opencv",
     align: bool = True,
     expand_percentage: int = 0,
@@ -29,9 +28,6 @@ def represent(
 
         model_name (str): Model for face recognition. Options: VGG-Face, Facenet, Facenet512,
             OpenFace, DeepFace, DeepID, Dlib, ArcFace and SFace
-
-        enforce_detection (boolean): If no face is detected in an image, raise an exception.
-            Default is True. Set to False to avoid the exception for low-resolution images.
 
         detector_backend (string): face detector backend. Options: 'opencv', 'retinaface',
             'mtcnn', 'ssd', 'dlib', 'mediapipe', 'yolov8'.
@@ -70,7 +66,6 @@ def represent(
             target_size=(target_size[1], target_size[0]),
             detector_backend=detector_backend,
             grayscale=False,
-            enforce_detection=enforce_detection,
             align=align,
             expand_percentage=expand_percentage,
         )

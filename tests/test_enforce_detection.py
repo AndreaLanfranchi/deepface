@@ -20,7 +20,7 @@ def test_enabled_enforce_detection_for_non_facial_input():
 
 def test_disabled_enforce_detection_for_non_facial_input_on_represent():
     black_img = np.zeros([224, 224, 3])
-    objs = DeepFace.represent(img_path=black_img, enforce_detection=False)
+    objs = DeepFace.represent(img_path=black_img)
 
     assert isinstance(objs, list)
     assert len(objs) > 0
@@ -40,7 +40,7 @@ def test_disabled_enforce_detection_for_non_facial_input_on_represent():
 
 def test_disabled_enforce_detection_for_non_facial_input_on_verify():
     black_img = np.zeros([224, 224, 3])
-    obj = DeepFace.verify(img1_path=black_img, img2_path=black_img, enforce_detection=False)
+    obj = DeepFace.verify(img1_path=black_img, img2_path=black_img)
     assert isinstance(obj, dict)
 
     logger.info("✅ disabled enforce detection with non facial input test for verify tests done")

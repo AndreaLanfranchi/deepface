@@ -80,7 +80,6 @@ def verify(
     model_name: str = "VGG-Face",
     detector_backend: str = "opencv",
     distance_metric: str = "cosine",
-    enforce_detection: bool = True,
     align: bool = True,
     expand_percentage: int = 0,
     normalization: str = "base",
@@ -102,9 +101,6 @@ def verify(
 
         distance_metric (string): Metric for measuring similarity. Options: 'cosine',
             'euclidean', 'euclidean_l2' (default is cosine).
-
-        enforce_detection (boolean): If no face is detected in an image, raise an exception.
-            Set to False to avoid the exception for low-resolution images (default is True).
 
         align (bool): Flag to enable face alignment (default is True).
 
@@ -144,7 +140,6 @@ def verify(
         model_name=model_name,
         detector_backend=detector_backend,
         distance_metric=distance_metric,
-        enforce_detection=enforce_detection,
         align=align,
         expand_percentage=expand_percentage,
         normalization=normalization,
@@ -154,7 +149,6 @@ def verify(
 def analyze(
     img_path: Union[str, np.ndarray],
     actions: Union[tuple, list] = ("emotion", "age", "gender", "race"),
-    enforce_detection: bool = True,
     detector_backend: str = "opencv",
     align: bool = True,
     expand_percentage: int = 0,
@@ -168,9 +162,6 @@ def analyze(
 
         actions (tuple): Attributes to analyze. The default is ('age', 'gender', 'emotion', 'race').
             You can exclude some of these attributes from the analysis if needed.
-
-        enforce_detection (boolean): If no face is detected in an image, raise an exception.
-            Set to False to avoid the exception for low-resolution images (default is True).
 
         detector_backend (string): face detector backend. Options: 'opencv', 'retinaface',
             'mtcnn', 'ssd', 'dlib', 'mediapipe', 'yolov8' (default is opencv).
@@ -233,7 +224,6 @@ def analyze(
     return demography.analyze(
         img_path=img_path,
         actions=actions,
-        enforce_detection=enforce_detection,
         detector_backend=detector_backend,
         align=align,
         expand_percentage=expand_percentage
@@ -245,7 +235,6 @@ def find(
     db_path: str,
     model_name: str = "VGG-Face",
     distance_metric: str = "cosine",
-    enforce_detection: bool = True,
     detector_backend: str = "opencv",
     align: bool = True,
     expand_percentage: int = 0,
@@ -267,9 +256,6 @@ def find(
 
         distance_metric (string): Metric for measuring similarity. Options: 'cosine',
             'euclidean', 'euclidean_l2' (default is cosine).
-
-        enforce_detection (boolean): If no face is detected in an image, raise an exception.
-            Set to False to avoid the exception for low-resolution images (default is True).
 
         detector_backend (string): face detector backend. Options: 'opencv', 'retinaface',
             'mtcnn', 'ssd', 'dlib', 'mediapipe', 'yolov8' (default is opencv).
@@ -309,7 +295,6 @@ def find(
         db_path=db_path,
         model_name=model_name,
         distance_metric=distance_metric,
-        enforce_detection=enforce_detection,
         detector_backend=detector_backend,
         align=align,
         expand_percentage=expand_percentage,
@@ -321,7 +306,6 @@ def find(
 def represent(
     img_path: Union[str, np.ndarray],
     model_name: str = "VGG-Face",
-    enforce_detection: bool = True,
     detector_backend: str = "opencv",
     align: bool = True,
     expand_percentage: int = 0,
@@ -337,10 +321,6 @@ def represent(
 
         model_name (str): Model for face recognition. Options: VGG-Face, Facenet, Facenet512,
             OpenFace, DeepFace, DeepID, Dlib, ArcFace and SFace (default is VGG-Face.).
-
-        enforce_detection (boolean): If no face is detected in an image, raise an exception.
-            Default is True. Set to False to avoid the exception for low-resolution images
-            (default is True).
 
         detector_backend (string): face detector backend. Options: 'opencv', 'retinaface',
             'mtcnn', 'ssd', 'dlib', 'mediapipe', 'yolov8' (default is opencv).
@@ -372,7 +352,6 @@ def represent(
     return representation.represent(
         img_path=img_path,
         model_name=model_name,
-        enforce_detection=enforce_detection,
         detector_backend=detector_backend,
         align=align,
         expand_percentage=expand_percentage,
@@ -450,7 +429,6 @@ def extract_faces(
     img_path: Union[str, np.ndarray],
     target_size: Optional[Tuple[int, int]] = (224, 224),
     detector_backend: str = "opencv",
-    enforce_detection: bool = True,
     align: bool = True,
     expand_percentage: int = 0,
     grayscale: bool = False,
@@ -467,9 +445,6 @@ def extract_faces(
 
         detector_backend (string): face detector backend. Options: 'opencv', 'retinaface',
             'mtcnn', 'ssd', 'dlib', 'mediapipe', 'yolov8' (default is opencv).
-
-        enforce_detection (boolean): If no face is detected in an image, raise an exception.
-            Set to False to avoid the exception for low-resolution images (default is True).
 
         align (bool): Flag to enable face alignment (default is True).
 
@@ -494,7 +469,6 @@ def extract_faces(
         img_path=img_path,
         target_size=target_size,
         detector_backend=detector_backend,
-        enforce_detection=enforce_detection,
         align=align,
         expand_percentage=expand_percentage,
         grayscale=grayscale,
@@ -518,7 +492,6 @@ def detectFace(
     img_path: Union[str, np.ndarray],
     target_size: Tuple[int, int] = (224, 224),
     detector_backend: str = "opencv",
-    enforce_detection: bool = True,
     align: bool = True,
 ) -> Union[np.ndarray, None]:
     """
@@ -534,9 +507,6 @@ def detectFace(
         detector_backend (string): face detector backend. Options: 'opencv', 'retinaface',
             'mtcnn', 'ssd', 'dlib', 'mediapipe', 'yolov8' (default is opencv).
 
-        enforce_detection (boolean): If no face is detected in an image, raise an exception.
-            Set to False to avoid the exception for low-resolution images (default is True).
-
         align (bool): Flag to enable face alignment (default is True).
 
     Returns:
@@ -547,7 +517,6 @@ def detectFace(
         img_path=img_path,
         target_size=target_size,
         detector_backend=detector_backend,
-        enforce_detection=enforce_detection,
         align=align,
         grayscale=False,
     )

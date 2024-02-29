@@ -26,7 +26,6 @@ def extract_faces(
     img_path: Union[str, np.ndarray],
     target_size: Optional[Tuple[int, int]],
     detector_backend: str = "opencv",
-    enforce_detection: bool = True,
     align: bool = True,
     expand_percentage: int = 0,
     grayscale: bool = False,
@@ -44,9 +43,6 @@ def extract_faces(
 
         detector_backend (string): face detector backend. Options: 'opencv', 'retinaface',
             'mtcnn', 'ssd', 'dlib', 'mediapipe', 'yolov8' (default is opencv)
-
-        enforce_detection (boolean): If no face is detected in an image, raise an exception.
-            Default is True. Set to False to avoid the exception for low-resolution images.
 
         align (bool): Flag to enable face alignment (default is True).
 
@@ -86,23 +82,6 @@ def extract_faces(
             align=align,
             expand_percentage=expand_percentage,
         )
-
-    # in case of no face found
-    if len(face_objs) == 0 and enforce_detection is True:
-        if img_name is not None:
-            raise ValueError(
-                f"Face could not be detected in {img_name}."
-                "Please confirm that the picture is a face photo "
-                "or consider to set enforce_detection param to False."
-            )
-        else:
-            raise ValueError(
-                "Face could not be detected. Please confirm that the picture is a face photo "
-                "or consider to set enforce_detection param to False."
-            )
-
-    if len(face_objs) == 0 and enforce_detection is False:
-        face_objs = [DetectedFace(img=img, facial_area=base_region, confidence=0)]
 
     for face_obj in face_objs:
         current_img = face_obj.img
@@ -175,12 +154,6 @@ def extract_faces(
                 },
                 "confidence": current_region.confidence,
             }
-        )
-
-    if len(results) == 0 and enforce_detection == True:
-        raise ValueError(
-            f"Exception while extracting faces from {img_name}."
-            "Consider to set enforce_detection arg to False."
         )
 
     return results

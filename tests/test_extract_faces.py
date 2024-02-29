@@ -7,7 +7,6 @@ logger = Logger("tests/test_extract_faces.py")
 
 detectors = ["opencv", "mtcnn"]
 
-
 def test_different_detectors():
     for detector in detectors:
         img_objs = DeepFace.extract_faces(img_path="dataset/img11.jpg", detector_backend=detector)
@@ -38,7 +37,7 @@ def test_backends_for_not_enforced_detection_with_non_facial_inputs():
     black_img = np.zeros([224, 224, 3])
     for detector in detectors:
         objs = DeepFace.extract_faces(
-            img_path=black_img, detector_backend=detector, enforce_detection=False
+            img_path=black_img, detector_backend=detector
         )
         assert objs[0]["face"].shape == (224, 224, 3)
     logger.info("✅ extract_faces for not enforced detection and non-facial image test is done")

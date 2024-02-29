@@ -16,7 +16,6 @@ def verify(
     model_name: str = "VGG-Face",
     detector_backend: str = "opencv",
     distance_metric: str = "cosine",
-    enforce_detection: bool = True,
     align: bool = True,
     expand_percentage: int = 0,
     normalization: str = "base",
@@ -43,9 +42,6 @@ def verify(
 
         distance_metric (string): Metric for measuring similarity. Options: 'cosine',
             'euclidean', 'euclidean_l2' (default is cosine).
-
-        enforce_detection (boolean): If no face is detected in an image, raise an exception.
-            Set to False to avoid the exception for low-resolution images (default is True).
 
         align (bool): Flag to enable face alignment (default is True).
 
@@ -91,7 +87,6 @@ def verify(
         target_size=target_size,
         detector_backend=detector_backend,
         grayscale=False,
-        enforce_detection=enforce_detection,
         align=align,
         expand_percentage=expand_percentage,
     )
@@ -101,7 +96,6 @@ def verify(
         target_size=target_size,
         detector_backend=detector_backend,
         grayscale=False,
-        enforce_detection=enforce_detection,
         align=align,
         expand_percentage=expand_percentage,
     )
@@ -126,7 +120,6 @@ def verify(
         img1_embedding_obj = representation.represent(
             img_path=img1_content,
             model_name=model_name,
-            enforce_detection=enforce_detection,
             detector_backend="donotdetect",
             align=align,
             normalization=normalization,
@@ -140,7 +133,6 @@ def verify(
             img2_embedding_obj = representation.represent(
                 img_path=img2_content,
                 model_name=model_name,
-                enforce_detection=enforce_detection,
                 detector_backend="donotdetect",
                 align=align,
                 normalization=normalization,

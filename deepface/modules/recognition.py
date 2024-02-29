@@ -23,7 +23,6 @@ def find(
     db_path: str,
     model_name: str = "VGG-Face",
     distance_metric: str = "cosine",
-    enforce_detection: bool = True,
     detector_backend: str = "opencv",
     align: bool = True,
     expand_percentage: int = 0,
@@ -46,9 +45,6 @@ def find(
 
         distance_metric (string): Metric for measuring similarity. Options: 'cosine',
             'euclidean', 'euclidean_l2'.
-
-        enforce_detection (boolean): If no face is detected in an image, raise an exception.
-            Default is True. Set to False to avoid the exception for low-resolution images.
 
         detector_backend (string): face detector backend. Options: 'opencv', 'retinaface',
             'mtcnn', 'ssd', 'dlib', 'mediapipe', 'yolov8'.
@@ -152,7 +148,6 @@ def find(
             model_name=model_name,
             target_size=target_size,
             detector_backend=detector_backend,
-            enforce_detection=enforce_detection,
             align=align,
             normalization=normalization
         ) # add new images
@@ -182,7 +177,6 @@ def find(
             target_size=target_size,
             detector_backend=detector_backend,
             grayscale=False,
-            enforce_detection=enforce_detection,
             align=align,
             expand_percentage=expand_percentage,
         )
@@ -197,7 +191,6 @@ def find(
         target_embedding_obj = representation.represent(
             img_path=source_img,
             model_name=model_name,
-            enforce_detection=enforce_detection,
             detector_backend="donotdetect",
             align=align,
             normalization=normalization,
@@ -285,7 +278,6 @@ def __find_bulk_embeddings(
     model_name: str = "VGG-Face",
     target_size: tuple = (224, 224),
     detector_backend: str = "opencv",
-    enforce_detection: bool = True,
     align: bool = True,
     expand_percentage: int = 0,
     normalization: str = "base"
@@ -301,9 +293,6 @@ def __find_bulk_embeddings(
         target_size (tuple): expected input shape of facial recognition model
 
         detector_backend (str): face detector model name
-
-        enforce_detection (bool): set this to False if you
-            want to proceed when you cannot detect any face
 
         align (bool): enable or disable alignment of image
             before feeding to facial recognition model
@@ -328,7 +317,6 @@ def __find_bulk_embeddings(
                 target_size=target_size,
                 detector_backend=detector_backend,
                 grayscale=False,
-                enforce_detection=enforce_detection,
                 align=align,
                 expand_percentage=expand_percentage,
             )
@@ -348,7 +336,6 @@ def __find_bulk_embeddings(
                 embedding_obj = representation.represent(
                     img_path=img_content,
                     model_name=model_name,
-                    enforce_detection=enforce_detection,
                     detector_backend="donotdetect",
                     align=align,
                     normalization=normalization,
