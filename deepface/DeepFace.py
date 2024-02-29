@@ -385,8 +385,8 @@ def stream(
     model_name: str = "VGG-Face",
     detector_backend: str = "opencv",
     distance_metric: str = "cosine",
-    enable_face_analysis: bool = True,
-    source: Any = 0,
+    analyzers:List[str] = ["Age", "Emotion", "Gender"],
+    source: Union[str, int] = int(0),
     freeze_time_seconds: int = 3,
     valid_frames_count: int = 5,
     faces_count_threshold: int = sys.maxsize
@@ -407,7 +407,8 @@ def stream(
         distance_metric (string): Metric for measuring similarity. Options: 'cosine',
             'euclidean', 'euclidean_l2' (default is cosine).
 
-        enable_face_analysis (bool): Flag to enable face analysis (default is True).
+        analyzers (List[str]): List of face analyzers to be used. Default is
+        ["Age", "Emotion", "Gender"]
 
         source (Any): The source for the video stream (default is 0, which represents the
             default camera).
@@ -437,7 +438,7 @@ def stream(
         model_name=model_name,
         detector_backend=detector_backend,
         distance_metric=distance_metric,
-        enable_face_analysis=enable_face_analysis,
+        analyzers=analyzers,
         source=source,
         freeze_time_seconds=freeze_time_seconds,
         valid_frames_count=valid_frames_count,

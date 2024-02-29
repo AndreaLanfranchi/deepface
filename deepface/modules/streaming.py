@@ -64,7 +64,7 @@ def analysis(
     model_name:str ="VGG-Face",
     detector_backend:str="opencv",
     distance_metric:str="cosine",
-    enable_face_analysis:bool=True,
+    analyzers:List[str]= [],
     source: Union[str, int] = int(0),
     freeze_time_seconds: int = 3,
     valid_frames_count: int = 5,
@@ -79,8 +79,6 @@ def analysis(
     # Constants
     capture_window_title: str = "Capture"
     text_color = (255, 255, 255)
-    enable_emotion = True
-    enable_age_gender = True
 
     # ------------------------
     # build models once to store them in the memory
@@ -90,13 +88,9 @@ def analysis(
     # find custom values for this input set
     target_size = model.input_shape
 
-    if enable_face_analysis:
-        _ = DeepFace.get_analysis_model(name="Race")
-        if enable_age_gender:
-            _ = DeepFace.get_analysis_model(name="Age")
-            _ = DeepFace.get_analysis_model(name="Gender")
-        if enable_emotion:
-            _ = DeepFace.get_analysis_model(name="Emotion")
+    # Lazy load the analysis models (if needed)
+    for analyzer in analyzers:
+        _ = DeepFace.get_analysis_model(name=analyzer)
 
     # -----------------------
     # call a dummy find function for db_path once to create embeddings in the initialization
