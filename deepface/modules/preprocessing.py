@@ -3,7 +3,6 @@ import re
 import os
 import binascii
 from typing import Union, Tuple
-from pathlib import Path
 
 # 3rd party
 import numpy as np
@@ -36,11 +35,11 @@ def load_image(source: Union[str, np.ndarray]) -> Tuple[np.ndarray, str]:
 
     if len(source.replace(" ", "")) == 0:
         raise ValueError("Invalid source. Empty string.")
-    
+
     base64_pattern = re.compile(r"^data:image\/.*", re.IGNORECASE)
     if base64_pattern.match(source):
         return __load_base64(uri=source), "base64 encoded string"
-    
+
     http_pattern = re.compile(r"^http(s)?://.*", re.IGNORECASE)
     if http_pattern.match(source):
         return __load_image_from_web(url=source), source
@@ -86,7 +85,7 @@ def __load_base64(uri: str) -> np.ndarray:
         raise ValueError("Invalid base64 input")
     pattern = re.compile(r"^data:image\/(jpeg|jpg|png)?(;base64)$", re.IGNORECASE)
     if not pattern.match(split_data[0]):
-        raise ValueError("Invalid base64 input or unsupported image type. Supported types: jpeg, jpg, png.")
+        raise ValueError("Invalid mime-type. Supported types are jpeg, jpg and png.")
     try:
         decoded = base64.b64decode(split_data[1], validate=True)
         nparr = np.frombuffer(buffer=decoded, dtype=np.uint8)
@@ -173,6 +172,6 @@ def normalize_input(img: np.ndarray, normalization: str = "base") -> np.ndarray:
         img -= 127.5
         img /= 128
     else:
-        raise NotImplementedError(f"Unimplemented normalization type - {normalization}")
+        raise NotImplementedError(f"Unimplemented normalization type : {normalization}")
 
     return img
