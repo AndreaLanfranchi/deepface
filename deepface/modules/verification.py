@@ -108,21 +108,34 @@ def verify(
     # --------------------------------
     distances = []
     regions = []
+
+    if distance_metric == "cosine":
+        distance_fn = find_cosine_distance
+    elif distance_metric == "euclidean":
+        distance_fn = find_euclidean_distance
+    elif distance_metric == "euclidean_l2":
+        distance_fn = find_euclidean_l2_distance
+    else:
+        raise NotImplementedError("Invalid distance_metric passed : ", distance_metric)
+
     # now we will find the face pair with minimum distance
     for img1_obj in img1_objs:
         img1_content = img1_obj["face"]
         img1_region = img1_obj["facial_area"]
+
+        img1_embedding_obj = representation.represent(
+            img_path=img1_content,
+            model_name=model_name,
+            enforce_detection=enforce_detection,
+            detector_backend="donotdetect",
+            align=align,
+            normalization=normalization,
+        )
+        img1_representation = img1_embedding_obj[0]["embedding"]
+
         for img2_obj in img2_objs:
             img2_content = img2_obj["face"]
             img2_region = img2_obj["facial_area"]
-            img1_embedding_obj = representation.represent(
-                img_path=img1_content,
-                model_name=model_name,
-                enforce_detection=enforce_detection,
-                detector_backend="donotdetect",
-                align=align,
-                normalization=normalization,
-            )
 
             img2_embedding_obj = representation.represent(
                 img_path=img2_content,
@@ -133,20 +146,8 @@ def verify(
                 normalization=normalization,
             )
 
-            img1_representation = img1_embedding_obj[0]["embedding"]
             img2_representation = img2_embedding_obj[0]["embedding"]
-
-            if distance_metric == "cosine":
-                distance = find_cosine_distance(img1_representation, img2_representation)
-            elif distance_metric == "euclidean":
-                distance = find_euclidean_distance(img1_representation, img2_representation)
-            elif distance_metric == "euclidean_l2":
-                distance = find_euclidean_distance(
-                    l2_normalize(img1_representation), l2_normalize(img2_representation)
-                )
-            else:
-                raise ValueError("Invalid distance_metric passed - ", distance_metric)
-
+            distance = distance_fn(img1_representation, img2_representation)
             distances.append(distance)
             regions.append((img1_region, img2_region))
 
@@ -154,8 +155,6 @@ def verify(
     threshold = find_threshold(model_name, distance_metric)
     distance = min(distances)  # best distance
     facial_areas = regions[np.argmin(distances)]
-
-    toc = time.time()
 
     # pylint: disable=simplifiable-if-expression
     resp_obj = {
@@ -166,7 +165,7 @@ def verify(
         "detector_backend": detector_backend,
         "similarity_metric": distance_metric,
         "facial_areas": {"img1": facial_areas[0], "img2": facial_areas[1]},
-        "time": round(toc - tic, 2),
+        "time": round(time.time() - tic, 2),
     }
 
     return resp_obj
@@ -217,6 +216,10 @@ def find_euclidean_distance(
     euclidean_distance = np.sqrt(euclidean_distance)
     return euclidean_distance
 
+def find_euclidean_l2_distance(
+    source_representation: Union[np.ndarray, list], test_representation: Union[np.ndarray, list]
+) -> np.float64:
+    return find_euclidean_distance(l2_normalize(source_representation), l2_normalize(test_representation))
 
 def l2_normalize(x: Union[np.ndarray, list]) -> np.ndarray:
     """
