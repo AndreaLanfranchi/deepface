@@ -36,10 +36,7 @@ if tf_version == 2:
     tf.get_logger().setLevel(logging.ERROR)
 # -----------------------------------
 
-def get_recognition_model(
-        name: str,
-        silent: bool = False
-        ) -> Any:
+def get_recognition_model(name: str) -> Any:
     """
     This function retturns a face recognition model.
     Eventually the model instance is lazily initialized.
@@ -48,9 +45,7 @@ def get_recognition_model(
         name (string): The name of the face recognition model to be returned
             Valid values are any of the following:\n
             "VGG-Face", "Facenet", "OpenFace", "DeepFace", "DeepID", "Dlib", "ArcFace", "SFace"
-        
-        silent (bool): whether to print logs or not
-    
+            
     Exception:
         KeyError: when name is not known
 
@@ -58,12 +53,9 @@ def get_recognition_model(
         reference to built model class instance
     """
 
-    return modeling.get_recognition_model(name=name, silent=silent)
+    return modeling.get_recognition_model(name=name)
 
-def get_analysis_model(
-        name: str,
-        silent: bool = False
-        ) -> Any:
+def get_analysis_model(name: str) -> Any:
     """
     This function retturns a face analisys model.
     Eventually the model instance is lazily initialized.
@@ -72,9 +64,7 @@ def get_analysis_model(
         name (string): The name of the face analisys model to be returned
             Valid values are any of the following:\n
             "Age", "Gender", "Emotion", "Race"
-        
-        silent (bool): whether to print logs or not
-    
+
     Exception:
         KeyError: when name is not known
 
@@ -82,7 +72,7 @@ def get_analysis_model(
         reference to built model class instance
     """
 
-    return modeling.get_analysis_model(name=name, silent=silent)
+    return modeling.get_analysis_model(name=name)
 
 def verify(
     img1_path: Union[str, np.ndarray],
@@ -168,7 +158,6 @@ def analyze(
     detector_backend: str = "opencv",
     align: bool = True,
     expand_percentage: int = 0,
-    silent: bool = False,
 ) -> List[Dict[str, Any]]:
     """
     Analyze facial attributes such as age, gender, emotion, and race in the provided image.
@@ -192,9 +181,6 @@ def analyze(
         align (boolean): Perform alignment based on the eye positions (default is True).
 
         expand_percentage (int): expand detected facial area with a percentage (default is 0).
-
-        silent (boolean): Suppress or allow some log messages for a quieter analysis process
-            (default is False).
 
     Returns:
         results (List[Dict[str, Any]]): A list of dictionaries, where each dictionary represents
@@ -250,8 +236,7 @@ def analyze(
         enforce_detection=enforce_detection,
         detector_backend=detector_backend,
         align=align,
-        expand_percentage=expand_percentage,
-        silent=silent,
+        expand_percentage=expand_percentage
     )
 
 
@@ -265,8 +250,7 @@ def find(
     align: bool = True,
     expand_percentage: int = 0,
     threshold: Optional[float] = None,
-    normalization: str = "base",
-    silent: bool = False,
+    normalization: str = "base"
 ) -> List[pd.DataFrame]:
     """
     Identify individuals in a database
@@ -302,9 +286,6 @@ def find(
         normalization (string): Normalize the input image before feeding it to the model.
             Options: base, raw, Facenet, Facenet2018, VGGFace, VGGFace2, ArcFace (default is base).
 
-        silent (boolean): Suppress or allow some log messages for a quieter analysis process
-            (default is False).
-
     Returns:
         results (List[pd.DataFrame]): A list of pandas dataframes. Each dataframe corresponds
             to the identity information for an individual detected in the source image.
@@ -333,8 +314,7 @@ def find(
         align=align,
         expand_percentage=expand_percentage,
         threshold=threshold,
-        normalization=normalization,
-        silent=silent,
+        normalization=normalization
     )
 
 
@@ -409,8 +389,7 @@ def stream(
     source: Any = 0,
     freeze_time_seconds: int = 3,
     valid_frames_count: int = 5,
-    faces_count_threshold: int = sys.maxsize,
-    silent: bool = False,
+    faces_count_threshold: int = sys.maxsize
 ) -> None:
     """
     Run real time face recognition and facial attribute analysis
@@ -445,8 +424,6 @@ def stream(
             If the number of detected faces exceeds this threshold, the frame will be skipped
             for face recognition (default is 1).
 
-        silent (bool): When True, suppresses some log messages for a quieter analysis process
-
     Returns:
         None
     """
@@ -464,8 +441,7 @@ def stream(
         source=source,
         freeze_time_seconds=freeze_time_seconds,
         valid_frames_count=valid_frames_count,
-        faces_count_threshold=faces_count_threshold,
-        silent=silent,
+        faces_count_threshold=faces_count_threshold
     )
 
 

@@ -28,8 +28,7 @@ def find(
     align: bool = True,
     expand_percentage: int = 0,
     threshold: Optional[float] = None,
-    normalization: str = "base",
-    silent: bool = False,
+    normalization: str = "base"
 ) -> List[pd.DataFrame]:
     """
     Identify individuals in a database
@@ -65,8 +64,6 @@ def find(
 
         normalization (string): Normalize the input image before feeding it to the model.
             Default is base. Options: base, raw, Facenet, Facenet2018, VGGFace, VGGFace2, ArcFace
-
-        silent (boolean): Suppress or allow some log messages for a quieter analysis process.
 
     Returns:
         results (List[pd.DataFrame]): A list of pandas dataframes. Each dataframe corresponds
@@ -140,7 +137,7 @@ def find(
     new_images = list(set(storage_images) - set(pickled_images)) # images added to storage
     old_images = list(set(pickled_images) - set(storage_images)) # images removed from storage
 
-    if not silent and (len(new_images) > 0 or len(old_images) > 0):
+    if len(new_images) > 0 or len(old_images) > 0:
         logger.info(f"Found {len(new_images)} new images and {len(old_images)} removed images")
 
     # remove old images first
@@ -157,22 +154,18 @@ def find(
             detector_backend=detector_backend,
             enforce_detection=enforce_detection,
             align=align,
-            normalization=normalization,
-            silent=silent,
+            normalization=normalization
         ) # add new images
         must_save_pickle = True
 
     if must_save_pickle:
         with open(datastore_path, "wb") as f:
             pickle.dump(representations, f)
-        if not silent:
             logger.info(f"There are now {len(representations)} representations in {file_name}")
 
     # Should we have no representations bailout
     if len(representations) == 0:
-        if not silent:
-            elapsed = time.time() - tic
-            logger.info(f"find function duration {elapsed:0.5f} seconds")
+        logger.debug(f"find function duration {(time.time() - tic):0.5f} seconds")
         return []
 
     # ----------------------------
@@ -267,10 +260,7 @@ def find(
 
     # -----------------------------------
 
-    if not silent:
-        elapsed = time.time() - tic
-        logger.info(f"find function duration {elapsed:0.5f} seconds")
-
+    logger.debug(f"find function duration {(time.time() - tic):0.5f} seconds")
     return resp_obj
 
 
@@ -298,8 +288,7 @@ def __find_bulk_embeddings(
     enforce_detection: bool = True,
     align: bool = True,
     expand_percentage: int = 0,
-    normalization: str = "base",
-    silent: bool = False,
+    normalization: str = "base"
 ):
     """
     Find embeddings of a list of images
@@ -324,7 +313,6 @@ def __find_bulk_embeddings(
 
         normalization (bool): normalization technique
 
-        silent (bool): enable or disable informative logging
     Returns:
         representations (list): pivot list of embeddings with
             image name and detected face area's coordinates
@@ -332,8 +320,7 @@ def __find_bulk_embeddings(
     representations = []
     for employee in tqdm(
         employees,
-        desc="Finding representations",
-        disable=silent,
+        desc="Finding representations"
     ):
         try:
             img_objs = detection.extract_faces(

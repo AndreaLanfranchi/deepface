@@ -16,8 +16,7 @@ def analyze(
     enforce_detection: bool = True,
     detector_backend: str = "opencv",
     align: bool = True,
-    expand_percentage: int = 0,
-    silent: bool = False,
+    expand_percentage: int = 0
 ) -> List[Dict[str, Any]]:
     """
     Analyze facial attributes such as age, gender, emotion, and race in the provided image.
@@ -42,9 +41,6 @@ def analyze(
         align (boolean): Perform alignment based on the eye positions (default is True).
 
         expand_percentage (int): expand detected facial area with a percentage (default is 0).
-
-        silent (boolean): Suppress or allow some log messages for a quieter analysis process
-            (default is False).
 
     Returns:
         results (List[Dict[str, Any]]): A list of dictionaries, where each dictionary represents
@@ -135,8 +131,7 @@ def analyze(
             # facial attribute analysis
             pbar = tqdm(
                 range(len(actions)),
-                desc="Finding actions",
-                disable=silent if len(actions) > 1 else True,
+                desc="Finding actions"
             )
             for index in pbar:
                 action = actions[index]

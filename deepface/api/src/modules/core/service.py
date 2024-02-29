@@ -45,8 +45,7 @@ def analyze(img_path, actions, detector_backend, enforce_detection, align):
             actions=actions,
             detector_backend=detector_backend,
             enforce_detection=enforce_detection,
-            align=align,
-            silent=True,
+            align=align
         )
         result["results"] = demographies
         return result

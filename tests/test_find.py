@@ -12,7 +12,7 @@ threshold = verification.find_threshold(model_name="VGG-Face", distance_metric="
 
 def test_find_with_exact_path():
     img_path = os.path.join("dataset","img1.jpg")
-    dfs = DeepFace.find(img_path=img_path, db_path="dataset", silent=True)
+    dfs = DeepFace.find(img_path=img_path, db_path="dataset")
     assert len(dfs) > 0
     for df in dfs:
         assert isinstance(df, pd.DataFrame)
@@ -33,7 +33,7 @@ def test_find_with_exact_path():
 def test_find_with_array_input():
     img_path = os.path.join("dataset","img1.jpg")
     img1 = cv2.imread(img_path)
-    dfs = DeepFace.find(img1, db_path="dataset", silent=True)
+    dfs = DeepFace.find(img1, db_path="dataset")
     assert len(dfs) > 0
     for df in dfs:
         assert isinstance(df, pd.DataFrame)
@@ -56,7 +56,7 @@ def test_find_with_extracted_faces():
     img_path = os.path.join("dataset","img1.jpg")
     face_objs = DeepFace.extract_faces(img_path)
     img = face_objs[0]["face"]
-    dfs = DeepFace.find(img, db_path="dataset", detector_backend="donotdetect", silent=True)
+    dfs = DeepFace.find(img, db_path="dataset", detector_backend="donotdetect")
     assert len(dfs) > 0
     for df in dfs:
         assert isinstance(df, pd.DataFrame)

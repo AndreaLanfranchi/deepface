@@ -1,3 +1,4 @@
+import time
 from typing import Any, List, Tuple
 import numpy as np
 from deepface.modules import detection
@@ -22,10 +23,7 @@ from deepface.commons.logger import Logger
 logger = Logger(module="deepface/detectors/DetectorWrapper.py")
 
 
-def get_detector(
-        name: str,
-        silent: bool = False
-) -> Any:
+def get_detector(name: str) -> Any:
     """
     This function retturns a face detector model.
     Eventually the model instance is lazily initialized.
@@ -37,9 +35,7 @@ def get_detector(
       
             Note! "donotdetect" is used to skip face detection and simply return the whole image as a face.
             This is useful when the user wants to use a pre-detected face.
-            
-        silent (bool): whether to print logs or not
-    
+                
     Exception:
         KeyError: when name is not known
 
@@ -74,9 +70,9 @@ def get_detector(
     if name not in detectors_instances.keys():
         if name not in avaliable_detectors.keys():
             raise KeyError(f"Unknown detector : {name}")
-        if not silent:
-            logger.info(f"Instantiating detector : {name}")
+        tic = time.time()
         detectors_instances[name] = avaliable_detectors[name]()
+        logger.debug(f"Instantiated detector : {name} ({time.time() - tic:.3f} seconds)")
 
     return detectors_instances[name]
 

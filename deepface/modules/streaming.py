@@ -68,8 +68,7 @@ def analysis(
     source: Union[str, int] = int(0),
     freeze_time_seconds: int = 3,
     valid_frames_count: int = 5,
-    faces_count_threshold: int = sys.maxsize,
-    silent: bool = False,
+    faces_count_threshold: int = sys.maxsize
 ):
 
     # Parameter validation
@@ -108,7 +107,6 @@ def analysis(
         detector_backend=detector_backend,
         distance_metric=distance_metric,
         enforce_detection=False, # This fake imae does not contain a face
-        silent=silent,
     )
     # -----------------------
     # visualization
@@ -183,8 +181,7 @@ def analysis(
                     item["facial_area"],
                     db_path,
                     model_name,
-                    distance_metric,
-                    silent,
+                    distance_metric
                 )
                 if len(matching_results) > 0:
                     # Applies matches to the best capture
@@ -380,8 +377,7 @@ def __get_face_matches(
     facial_area: Dict[str, Any],
     db_path: str,
     model_name: str,
-    distance_metric: str,
-    silent: bool,
+    distance_metric: str
 ) -> List[pd.DataFrame]:
 
     try:
@@ -392,8 +388,7 @@ def __get_face_matches(
             model_name=model_name,
             detector_backend="donotdetect", # Skip detection, we already have the face
             distance_metric=distance_metric,
-            enforce_detection=True,
-            silent=silent,
+            enforce_detection=True
         )
         return matching_results
     except ValueError:
