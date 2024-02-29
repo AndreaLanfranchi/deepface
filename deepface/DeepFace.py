@@ -11,7 +11,7 @@ import pandas as pd
 import tensorflow as tf
 
 # package dependencies
-from deepface.commons import package_utils, folder_utils
+from deepface.commons import package_utils
 from deepface.commons.logger import Logger
 from deepface.modules import (
     modeling,
@@ -35,9 +35,6 @@ tf_version = package_utils.get_tf_major_version()
 if tf_version == 2:
     tf.get_logger().setLevel(logging.ERROR)
 # -----------------------------------
-
-# create required folders if necessary to store model weights
-folder_utils.initialize_folder()
 
 def get_recognition_model(
         name: str,
