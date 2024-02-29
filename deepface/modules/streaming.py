@@ -1,6 +1,7 @@
 import sys
 import os
 import time
+import threading
 import traceback
 from typing import Any, Dict, List, Tuple, Union
 
@@ -18,6 +19,45 @@ logger = Logger(module="commons.realtime")
 
 # dependency configuration
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
+
+class Stream(threading.Thread):
+    """
+        A class to read frames from a video capture source in a separate thread.
+        This is necessary due to the "freeze" feature of this module which
+        causes the capture source to accumulate frames in the read queue which
+        cannot be processed fast enoungh when the main thread resumes.
+        The higher FPS connected cameras can provide the more the problem is
+        noticeable. 
+        Credits for the implementation of this class go to the following:
+        https://stackoverflow.com/a/65191619
+    """
+
+    def __init__(self, 
+                 source: Union[str, int] = int(0),
+                 buffer_frame_size: int = 3
+                 ):
+        self.__vc = cv2.VideoCapture(source)
+        self.__vc.set(cv2.CAP_PROP_BUFFERSIZE, buffer_frame_size)
+        self.__last_read: bool = True
+        self.__last_frame: MatLike = np.array([])
+        self.__should_stop: bool = False
+        super(Stream, self).__init__(name="VideoStream")
+        self.start()
+
+    def run(self):
+        while not self.__should_stop:
+            self.__last_read, self.__last_frame = self.__vc.read()
+            if not self.__last_read:
+                self.__vc.release()
+                break
+
+    def read(self) -> Tuple[bool, MatLike]:
+        return (self.__last_read, self.__last_frame)
+    
+    def stop(self):
+        self.__should_stop = True
+    
 
 def analysis(
     db_path:str,
@@ -25,7 +65,7 @@ def analysis(
     detector_backend:str="opencv",
     distance_metric:str="cosine",
     enable_face_analysis:bool=True,
-    source:int=0,
+    source: Union[str, int] = int(0),
     freeze_time_seconds: int = 3,
     valid_frames_count: int = 5,
     faces_count_threshold: int = sys.maxsize,
@@ -75,7 +115,10 @@ def analysis(
 
     tic = time.time()
     logger.info("Starting capture source ...")
-    cap = cv2.VideoCapture(source)  # webcam
+    stream = Stream(source=source)
+    # Wait for the stream to start - 1 second
+    time.sleep(1)
+
     elapsed = time.time() - tic
     logger.info(f"Started capture source in {elapsed:.5f} seconds")
 
@@ -105,10 +148,11 @@ def analysis(
 
     while True:
         try:
-            capture_successful, captured_frame = cap.read()
+            capture_successful, captured_frame = stream.read()
             if not capture_successful:
                 raise IOError("Capture from source failed")
 
+            captured_frame = cv2.resize(captured_frame, (640, 480))
             cv2.imshow(capture_window_title, captured_frame)
             __cv2_refresh()
 
@@ -186,7 +230,8 @@ def analysis(
 
     # Clean up
     good_captures.clear()
-    cap.release()
+    stream.stop()
+    stream.join()
     cv2.destroyAllWindows()
 
     elapsed = time.time() - tic
@@ -231,12 +276,12 @@ def __process_frame(
         )
 
         # Remove too small detected faces
-        for i in range(len(extracted_faces)-1, -1, -1):
-            item = extracted_faces[i]
-            w: int = item["facial_area"]["w"]
-            h: int = item["facial_area"]["h"]
-            if w * h < (target_size[0] * target_size[1]) / 2:
-                extracted_faces.pop(i)
+        # for i in range(len(extracted_faces)-1, -1, -1):
+        #     item = extracted_faces[i]
+        #     w: int = item["facial_area"]["w"]
+        #     h: int = item["facial_area"]["h"]
+        #     if w * h < (target_size[0] * target_size[1]) / 2:
+        #         extracted_faces.pop(i)
 
         # Treat no-results or too many results as error
         if len(extracted_faces) == 0:
