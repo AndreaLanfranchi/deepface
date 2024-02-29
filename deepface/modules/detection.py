@@ -15,9 +15,6 @@ from deepface.commons.logger import Logger
 
 logger = Logger(module="deepface/modules/detection.py")
 
-# pylint: disable=no-else-raise
-
-
 tf_major_version = package_utils.get_tf_major_version()
 if tf_major_version == 1:
     from keras.preprocessing import image
