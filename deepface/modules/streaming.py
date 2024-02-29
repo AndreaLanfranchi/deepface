@@ -100,7 +100,7 @@ def analysis(
         model_name=model_name,
         detector_backend=detector_backend,
         distance_metric=distance_metric,
-        enforce_detection=False, # This fake imae does not contain a face
+        enforce_detection=False, # This fake image does not contain a face
     )
     # -----------------------
     # visualization
