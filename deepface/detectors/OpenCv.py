@@ -35,7 +35,9 @@ class OpenCvClient(Detector):
         Returns:
             results (List[FacialAreaRegion]): A list of FacialAreaRegion objects
         """
-        resp = []
+        results = []
+        if img.shape[0] == 0 or img.shape[1] == 0:
+            return results
 
         detected_face = None
 
@@ -63,9 +65,9 @@ class OpenCvClient(Detector):
                     right_eye=right_eye,
                     confidence=(100 - confidence) / 100,
                 )
-                resp.append(facial_area)
+                results.append(facial_area)
 
-        return resp
+        return results
 
     def find_eyes(self, img: np.ndarray) -> tuple:
         """

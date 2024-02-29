@@ -67,7 +67,9 @@ class YoloClient(Detector):
         Returns:
             results (List[FacialAreaRegion]): A list of FacialAreaRegion objects
         """
-        resp = []
+        results = []
+        if img.shape[0] == 0 or img.shape[1] == 0:
+            return results
 
         # Detect faces
         results = self.model.predict(img, verbose=False, show=False, conf=0.25)[0]
@@ -97,6 +99,6 @@ class YoloClient(Detector):
                 right_eye=right_eye,
                 confidence=confidence,
             )
-            resp.append(facial_area)
+            results.append(facial_area)
 
-        return resp
+        return results

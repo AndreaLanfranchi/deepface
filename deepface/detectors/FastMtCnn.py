@@ -22,7 +22,9 @@ class FastMtCnnClient(Detector):
         Returns:
             results (List[FacialAreaRegion]): A list of FacialAreaRegion objects
         """
-        resp = []
+        results = []
+        if img.shape[0] == 0 or img.shape[1] == 0:
+            return results
 
         img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)  # mtcnn expects RGB but OpenCV read BGR
         detections = self.model.detect(
@@ -45,9 +47,9 @@ class FastMtCnnClient(Detector):
                     right_eye=right_eye,
                     confidence=confidence,
                 )
-                resp.append(facial_area)
+                results.append(facial_area)
 
-        return resp
+        return results
 
     def build_model(self) -> Any:
         """

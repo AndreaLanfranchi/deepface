@@ -68,7 +68,9 @@ class DlibClient(Detector):
         Returns:
             results (List[FacialAreaRegion]): A list of FacialAreaRegion objects
         """
-        resp = []
+        results = []
+        if img.shape[0] == 0 or img.shape[1] == 0:
+            return results
 
         face_detector = self.model["face_detector"]
 
@@ -104,6 +106,6 @@ class DlibClient(Detector):
                     right_eye=right_eye,
                     confidence=min(max(0, confidence), 1.0),
                 )
-                resp.append(facial_area)
+                results.append(facial_area)
 
-        return resp
+        return results

@@ -39,7 +39,9 @@ class MediaPipeClient(Detector):
         Returns:
             results (List[FacialAreaRegion]): A list of FacialAreaRegion objects
         """
-        resp = []
+        results = []
+        if img.shape[0] == 0 or img.shape[1] == 0:
+            return results
 
         img_width = img.shape[1]
         img_height = img.shape[0]
@@ -48,7 +50,7 @@ class MediaPipeClient(Detector):
 
         # If no face has been detected, return an empty list
         if results.detections is None:
-            return resp
+            return results
 
         # Extract the bounding box, the landmarks and the confidence score
         for current_detection in results.detections:
@@ -72,6 +74,6 @@ class MediaPipeClient(Detector):
             facial_area = FacialAreaRegion(
                 x=x, y=y, w=w, h=h, left_eye=left_eye, right_eye=right_eye, confidence=confidence
             )
-            resp.append(facial_area)
+            results.append(facial_area)
 
-        return resp
+        return results

@@ -83,7 +83,9 @@ class SsdClient(Detector):
         """
         opencv_module: OpenCv.OpenCvClient = self.model["opencv_module"]
 
-        resp = []
+        results = []
+        if img.shape[0] == 0 or img.shape[1] == 0:
+            return results
 
         detected_face = None
 
@@ -142,6 +144,6 @@ class SsdClient(Detector):
                     right_eye=right_eye,
                     confidence=confidence,
                 )
-                resp.append(facial_area)
+                results.append(facial_area)
 
-        return resp
+        return results

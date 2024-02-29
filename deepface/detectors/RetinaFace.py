@@ -19,12 +19,14 @@ class RetinaFaceClient(Detector):
         Returns:
             results (List[FacialAreaRegion]): A list of FacialAreaRegion objects
         """
-        resp = []
+        results = []
+        if img.shape[0] == 0 or img.shape[1] == 0:
+            return results
 
         obj = rf.detect_faces(img, model=self.model, threshold=0.9)
 
         if not isinstance(obj, dict):
-            return resp
+            return results
 
         for face_idx in obj.keys():
             identity = obj[face_idx]
@@ -55,6 +57,6 @@ class RetinaFaceClient(Detector):
                 confidence=confidence,
             )
 
-            resp.append(facial_area)
+            results.append(facial_area)
 
-        return resp
+        return results
