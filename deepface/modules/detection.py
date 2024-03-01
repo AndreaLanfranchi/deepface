@@ -72,17 +72,12 @@ def extract_faces(
     # img might be path, base64 or numpy array. Convert it to numpy whatever it is.
     img, _ = preprocessing.load_image(source)
 
-    base_region = FacialAreaRegion(x=0, y=0, w=img.shape[1], h=img.shape[0], confidence=0)
-
-    if detector == "donotdetect":
-        face_objs = [DetectedFace(img=img, facial_area=base_region)]
-    else:
-        face_objs = DetectorWrapper.detect_faces(
-            source=img,
-            detector=detector,
-            align=align,
-            expand_percentage=expand_percentage,
-        )
+    face_objs = DetectorWrapper.detect_faces(
+        source=img,
+        detector=detector,
+        align=align,
+        expand_percentage=expand_percentage,
+    )
 
     for face_obj in face_objs:
         current_img = face_obj.img
