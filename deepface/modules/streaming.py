@@ -150,8 +150,9 @@ def analysis(
             capture_successful, captured_frame = stream.read()
             if not capture_successful:
                 raise IOError("Capture from source failed")
+            if captured_frame.size == 0:
+                continue
 
-            captured_frame = cv2.resize(captured_frame, (640, 480))
             cv2.imshow(capture_window_title, captured_frame)
             __cv2_refresh()
 
