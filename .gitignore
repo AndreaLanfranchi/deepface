@@ -5,8 +5,9 @@ dist/
 Pipfile
 Pipfile.lock
 .mypy_cache/
-.idea/
-deepface.egg-info/
+.idea
+.vscode
+deepface.egg-info
 tests/dataset/*.pkl
 tests/*.ipynb
 tests/*.csv
