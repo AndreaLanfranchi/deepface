@@ -242,7 +242,7 @@ def analysis(
 # returns the ASCII code of the key pressed.
 # We use this as a trick to also check if the 'q' key
 # has been pressed by the user.
-def __cv2_refresh(timeout:int = 0):
+def __cv2_refresh(timeout:int = 1):
     timeout = max(1, timeout)
     result: int = cv2.waitKey(timeout) & 0xFF
     if result == ord("q"):
