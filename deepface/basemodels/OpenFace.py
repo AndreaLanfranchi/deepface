@@ -394,17 +394,14 @@ def load_model(
 
     # -----------------------------------
 
-    home = folder_utils.get_deepface_home()
+    file_name = "openface_weights.h5"
+    output = os.path.join(folder_utils.get_weights_dir(), file_name)
 
-    if os.path.isfile(home + "/.deepface/weights/openface_weights.h5") != True:
-        logger.info("openface_weights.h5 will be downloaded...")
-
-        output = home + "/.deepface/weights/openface_weights.h5"
+    if os.path.isfile(output) != True:
+        logger.info(f"Download : {file_name}")
         gdown.download(url, output, quiet=False)
 
-    # -----------------------------------
-
-    model.load_weights(home + "/.deepface/weights/openface_weights.h5")
+    model.load_weights(output)
 
     # -----------------------------------
 

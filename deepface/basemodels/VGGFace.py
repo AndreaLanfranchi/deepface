@@ -129,11 +129,11 @@ def load_model(
 
     model = base_model()
 
-    home = folder_utils.get_deepface_home()
-    output = home + "/.deepface/weights/vgg_face_weights.h5"
+    file_name = "vgg_face_weights.h5"
+    output = os.path.join(folder_utils.get_weights_dir(), file_name)
 
     if os.path.isfile(output) != True:
-        logger.info("vgg_face_weights.h5 will be downloaded...")
+        logger.info(f"Download : {file_name}")
         gdown.download(url, output, quiet=False)
 
     model.load_weights(output)

@@ -96,14 +96,11 @@ class ArcFaceClient(FacialRecognition):
         # ---------------------------------------
         # check the availability of pre-trained weights
 
-        home = folder_utils.get_deepface_home()
-
         file_name = "arcface_weights.h5"
-        output = home + "/.deepface/weights/" + file_name
+        output = os.path.join(folder_utils.get_weights_dir(), file_name)
 
         if os.path.isfile(output) != True:
-
-            logger.info(f"{file_name} will be downloaded to {output}")
+            logger.info(f"Download : {file_name}")
             gdown.download(url, output, quiet=False)
 
         # ---------------------------------------

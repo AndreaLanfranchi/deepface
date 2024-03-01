@@ -1689,17 +1689,14 @@ def load_facenet128d_model(
 
     # -----------------------------------
 
-    home = folder_utils.get_deepface_home()
+    file_name = "facenet_weights.h5"
+    output = os.path.join(folder_utils.get_weights_dir(), file_name)
 
-    if os.path.isfile(home + "/.deepface/weights/facenet_weights.h5") != True:
-        logger.info("facenet_weights.h5 will be downloaded...")
-
-        output = home + "/.deepface/weights/facenet_weights.h5"
+    if os.path.isfile(output) != True:
+        logger.info(f"Download : {file_name}")
         gdown.download(url, output, quiet=False)
 
-    # -----------------------------------
-
-    model.load_weights(home + "/.deepface/weights/facenet_weights.h5")
+    model.load_weights(output)
 
     # -----------------------------------
 
@@ -1719,17 +1716,14 @@ def load_facenet512d_model(
 
     # -------------------------
 
-    home = folder_utils.get_deepface_home()
+    file_name = "facenet512_weights.h5"
+    output = os.path.join(folder_utils.get_weights_dir(), file_name)
 
-    if os.path.isfile(home + "/.deepface/weights/facenet512_weights.h5") != True:
-        logger.info("facenet512_weights.h5 will be downloaded...")
-
-        output = home + "/.deepface/weights/facenet512_weights.h5"
+    if os.path.isfile(output) != True:
+        logger.info(f"Download : {file_name}")
         gdown.download(url, output, quiet=False)
 
-    # -------------------------
-
-    model.load_weights(home + "/.deepface/weights/facenet512_weights.h5")
+    model.load_weights(output)
 
     # -------------------------
 

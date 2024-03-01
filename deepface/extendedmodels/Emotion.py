@@ -88,7 +88,7 @@ def load_model(
 
     # ----------------------------
 
-    home = folder_utils.get_deepface_home()
+    home = folder_utils.get_data_dir()
 
     if os.path.isfile(home + "/.deepface/weights/facial_expression_model_weights.h5") != True:
         logger.info("facial_expression_model_weights.h5 will be downloaded...")

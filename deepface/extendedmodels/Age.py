@@ -64,7 +64,7 @@ def load_model(
 
     # load weights
 
-    home = folder_utils.get_deepface_home()
+    home = folder_utils.get_data_dir()
 
     if os.path.isfile(home + "/.deepface/weights/age_model_weights.h5") != True:
         logger.info("age_model_weights.h5 will be downloaded...")

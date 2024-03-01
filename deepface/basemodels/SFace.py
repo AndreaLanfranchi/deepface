@@ -50,18 +50,14 @@ def load_model(
     Construct SFace model, download its weights and load
     """
 
-    home = folder_utils.get_deepface_home()
+    file_name = "face_recognition_sface_2021dec.onnx"
+    output = os.path.join(folder_utils.get_weights_dir(), file_name)
 
-    file_name = home + "/.deepface/weights/face_recognition_sface_2021dec.onnx"
+    if not os.path.isfile(output):
+        logger.info(f"Download : {file_name}")
+        gdown.download(url, output, quiet=False)
 
-    if not os.path.isfile(file_name):
-
-        logger.info("sface weights will be downloaded...")
-
-        gdown.download(url, file_name, quiet=False)
-
-    model = SFaceWrapper(model_path=file_name)
-
+    model = SFaceWrapper(model_path=output)
     return model
 
 

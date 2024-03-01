@@ -40,7 +40,7 @@ class YoloClient(Detector):
                 Please install using 'pip install ultralytics' "
             ) from e
 
-        weight_path = f"{folder_utils.get_deepface_home()}{PATH}"
+        weight_path = f"{folder_utils.get_data_dir()}{PATH}"
 
         # Download the model's weights if they don't exist
         if not os.path.isfile(weight_path):

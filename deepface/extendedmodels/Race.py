@@ -63,7 +63,7 @@ def load_model(
 
     # load weights
 
-    home = folder_utils.get_deepface_home()
+    home = folder_utils.get_data_dir()
 
     if os.path.isfile(home + "/.deepface/weights/race_model_single_batch.h5") != True:
         logger.info("race_model_single_batch.h5 will be downloaded...")

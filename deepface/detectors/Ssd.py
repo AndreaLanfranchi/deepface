@@ -26,7 +26,7 @@ class SsdClient(Detector):
             model (dict)
         """
 
-        home = folder_utils.get_deepface_home()
+        home = folder_utils.get_data_dir()
 
         # model structure
         if os.path.isfile(home + "/.deepface/weights/deploy.prototxt") != True:
