@@ -74,7 +74,7 @@ def extract_faces(
     base_region = FacialAreaRegion(x=0, y=0, w=img.shape[1], h=img.shape[0], confidence=0)
 
     if detector_backend == "donotdetect":
-        face_objs = [DetectedFace(img=img, facial_area=base_region, confidence=0)]
+        face_objs = [DetectedFace(img=img, facial_area=base_region)]
     else:
         face_objs = DetectorWrapper.detect_faces(
             img=img,

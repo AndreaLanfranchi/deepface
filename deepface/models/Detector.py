@@ -33,7 +33,7 @@ class DonotDetect(Detector):
     """
     def __init__(self):
         self.name = "DonotDetect"
-        
+
     def detect_faces(self, img: numpy.ndarray) -> List["FacialAreaRegion"]:
         return [
             FacialAreaRegion(
@@ -78,9 +78,7 @@ class FacialAreaRegion:
 class DetectedFace:
     img: numpy.ndarray
     facial_area: FacialAreaRegion
-    confidence: float
 
-    def __init__(self, img: numpy.ndarray, facial_area: FacialAreaRegion, confidence: float):
+    def __init__(self, img: numpy.ndarray, facial_area: FacialAreaRegion):
         self.img = img
         self.facial_area = facial_area
-        self.confidence = confidence

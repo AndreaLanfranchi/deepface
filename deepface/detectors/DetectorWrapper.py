@@ -157,8 +157,7 @@ def detect_faces(
             img=detected_face,
             facial_area=FacialAreaRegion(
                 x=x, y=y, h=h, w=w, confidence=confidence, left_eye=left_eye, right_eye=right_eye
-            ),
-            confidence=confidence,
+            )
         )
         results.append(result)
     return results
