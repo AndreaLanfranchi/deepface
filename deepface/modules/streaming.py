@@ -96,8 +96,12 @@ def analysis(
 
     # Lazy load the analysis models (if needed)
     if analyzers is not None:
-        for analyzer in analyzers:
-            _ = DeepFace.get_analysis_model(name=analyzer)
+        for i in range(len(analyzers)-1, -1, -1):
+            try:
+                _ = DeepFace.get_analysis_model(name=analyzers[i])
+            except KeyError as ex:
+                logger.error(ex.args[0])
+                analyzers.pop(i)
 
     # -----------------------
     # call a dummy find function for db_path once to create embeddings in the initialization
