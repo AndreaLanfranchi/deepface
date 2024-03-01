@@ -62,7 +62,7 @@ img_paths = ["dataset/img11.jpg"]
 for img_path in img_paths:
     # extract faces
     for detector_backend in detector_backends:
-        face_objs = DeepFace.extract_faces(
+        face_objs = DeepFace.detect_faces(
             img_path=img_path,
             detector_backend=detector_backend,
             align=True,

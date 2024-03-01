@@ -82,7 +82,7 @@ def represent(
             if img.max() > 1:
                 img = (img.astype(numpy.float32) / 255.0).astype(numpy.float32)
         # --------------------------------
-        # make dummy region and confidence to keep compatibility with `extract_faces`
+        # make dummy region and confidence to keep compatibility with `detect_faces`
         img_objs = [
             {
                 "face": img,

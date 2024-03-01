@@ -423,7 +423,7 @@ def stream(
         faces_count_threshold=faces_count_threshold
     )
 
-def extract_faces(
+def detect_faces(
     img_path: Union[str, numpy.ndarray],
     target_size: Optional[Tuple[int, int]] = (224, 224),
     detector_backend: str = "opencv",
@@ -480,41 +480,4 @@ def cli() -> None:
     import fire
 
     fire.Fire()
-
-# deprecated function(s)
-def detectFace(
-    img_path: Union[str, numpy.ndarray],
-    target_size: Tuple[int, int] = (224, 224),
-    detector_backend: str = "opencv",
-    align: bool = True,
-) -> Union[numpy.ndarray, None]:
-    """
-    Deprecated face detection function. Use extract_faces for same functionality.
-
-    Args:
-        img_path (str or numpy.ndarray): Path to the first image. Accepts exact image path
-            as a string, numpy array (BGR), or base64 encoded images.
-
-        target_size (tuple): final shape of facial image. black pixels will be
-            added to resize the image (default is (224, 224)).
-
-        detector_backend (string): face detector backend. Options: 'opencv', 'retinaface',
-            'mtcnn', 'ssd', 'dlib', 'mediapipe', 'yolov8' (default is opencv).
-
-        align (bool): Flag to enable face alignment (default is True).
-
-    Returns:
-        img (numpy.ndarray): detected (and aligned) facial area image as numpy array
-    """
-    logger.warn("Function detectFace is deprecated. Use extract_faces instead.")
-    face_objs = extract_faces(
-        img_path=img_path,
-        target_size=target_size,
-        detector_backend=detector_backend,
-        align=align,
-        grayscale=False,
-    )
-    extracted_face = None
-    if len(face_objs) > 0:
-        extracted_face = face_objs[0]["face"]
-    return extracted_face
+    

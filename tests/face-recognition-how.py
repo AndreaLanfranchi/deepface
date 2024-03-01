@@ -21,11 +21,11 @@ logger.info(f"target_size: {target_size}")
 # ----------------------------------------------
 # load images and find embeddings
 
-img1 = DeepFace.extract_faces(img_path="dataset/img1.jpg", target_size=target_size)[0]["face"]
+img1 = DeepFace.detect_faces(img_path="dataset/img1.jpg", target_size=target_size)[0]["face"]
 img1 = numpy.expand_dims(img1, axis=0)  # to (1, 224, 224, 3)
 img1_representation = model.find_embeddings(img1)
 
-img2 = DeepFace.extract_faces(img_path="dataset/img3.jpg", target_size=target_size)[0]["face"]
+img2 = DeepFace.detect_faces(img_path="dataset/img3.jpg", target_size=target_size)[0]["face"]
 img2 = numpy.expand_dims(img2, axis=0)
 img2_representation = model.find_embeddings(img2)
 

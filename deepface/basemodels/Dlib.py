@@ -30,7 +30,7 @@ class DlibClient(FacialRecognition):
         """
         # return self.model.predict(img)[0].tolist()
 
-        # extract_faces returns 4 dimensional images
+        # detect_faces returns 4 dimensional images
         if len(img.shape) == 4:
             img = img[0]
 

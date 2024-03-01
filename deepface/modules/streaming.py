@@ -265,7 +265,7 @@ def __process_frame(
         display_window_title: str,
 ):
     try:
-        extracted_faces = DeepFace.extract_faces(
+        extracted_faces = DeepFace.detect_faces(
             img_path=frame,
             target_size=target_size,
             detector_backend=detector_backend,
@@ -411,7 +411,7 @@ def __process_matches(
     # Wouldn't be possible to detect the matching
     # from the data returned by the matching_results ?
     try:
-        matching_faces = DeepFace.extract_faces(
+        matching_faces = DeepFace.detect_faces(
             img_path=matching_identity,
             target_size=target_size,
             detector_backend=detector_backend,
