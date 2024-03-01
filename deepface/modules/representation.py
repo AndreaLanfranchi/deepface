@@ -2,7 +2,7 @@
 from typing import Any, Dict, List, Union
 
 # 3rd party dependencies
-import numpy as np
+import numpy
 import cv2
 
 # project dependencies
@@ -11,9 +11,8 @@ from deepface.models.FacialRecognition import FacialRecognition
 
 
 def represent(
-    img_path: Union[str, np.ndarray],
+    img_path: Union[str, numpy.ndarray],
     model_name: str = "VGG-Face",
-    enforce_detection: bool = True,
     detector_backend: str = "opencv",
     align: bool = True,
     expand_percentage: int = 0,
@@ -23,15 +22,12 @@ def represent(
     Represent facial images as multi-dimensional vector embeddings.
 
     Args:
-        img_path (str or np.ndarray): The exact path to the image, a numpy array in BGR format,
+        img_path (str or numpy.ndarray): The exact path to the image, a numpy array in BGR format,
             or a base64 encoded image. If the source image contains multiple faces, the result will
             include information for each detected face.
 
         model_name (str): Model for face recognition. Options: VGG-Face, Facenet, Facenet512,
             OpenFace, DeepFace, DeepID, Dlib, ArcFace and SFace
-
-        enforce_detection (boolean): If no face is detected in an image, raise an exception.
-            Default is True. Set to False to avoid the exception for low-resolution images.
 
         detector_backend (string): face detector backend. Options: 'opencv', 'retinaface',
             'mtcnn', 'ssd', 'dlib', 'mediapipe', 'yolov8'.
@@ -59,18 +55,17 @@ def represent(
     """
     resp_objs = []
 
-    model: FacialRecognition = modeling.build_model(model_name)
+    model: FacialRecognition = modeling.get_recognition_model(model_name)
 
     # ---------------------------------
     # we have run pre-process in verification. so, this can be skipped if it is coming from verify.
     target_size = model.input_shape
-    if detector_backend != "skip":
-        img_objs = detection.extract_faces(
-            img_path=img_path,
+    if detector_backend != "donotdetect":
+        img_objs = detection.detect_faces(
+            source=img_path,
             target_size=(target_size[1], target_size[0]),
-            detector_backend=detector_backend,
+            detector=detector_backend,
             grayscale=False,
-            enforce_detection=enforce_detection,
             align=align,
             expand_percentage=expand_percentage,
         )
@@ -82,12 +77,12 @@ def represent(
             img = img[0]  # e.g. (1, 224, 224, 3) to (224, 224, 3)
         if len(img.shape) == 3:
             img = cv2.resize(img, target_size)
-            img = np.expand_dims(img, axis=0)
+            img = numpy.expand_dims(img, axis=0)
             # when called from verify, this is already normalized. But needed when user given.
             if img.max() > 1:
-                img = (img.astype(np.float32) / 255.0).astype(np.float32)
+                img = (img.astype(numpy.float32) / 255.0).astype(numpy.float32)
         # --------------------------------
-        # make dummy region and confidence to keep compatibility with `extract_faces`
+        # make dummy region and confidence to keep compatibility with `detect_faces`
         img_objs = [
             {
                 "face": img,

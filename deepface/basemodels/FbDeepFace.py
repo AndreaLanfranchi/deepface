@@ -2,7 +2,7 @@ from typing import List
 import os
 import zipfile
 import gdown
-import numpy as np
+import numpy
 from deepface.commons import package_utils, folder_utils
 from deepface.commons.logger import Logger
 from deepface.models.FacialRecognition import FacialRecognition
@@ -49,11 +49,11 @@ class DeepFaceClient(FacialRecognition):
         self.input_shape = (152, 152)
         self.output_shape = 4096
 
-    def find_embeddings(self, img: np.ndarray) -> List[float]:
+    def find_embeddings(self, img: numpy.ndarray) -> List[float]:
         """
         find embeddings with OpenFace model
         Args:
-            img (np.ndarray): pre-loaded image in BGR
+            img (numpy.ndarray): pre-loaded image in BGR
         Returns
             embeddings (list): multi-dimensional vector
         """
@@ -84,20 +84,21 @@ def load_model(
 
     # ---------------------------------
 
-    home = folder_utils.get_deepface_home()
+    file_name = "VGGFace2_DeepFace_weights_val-0.9034.h5"
+    weight_file = os.path.join(folder_utils.get_weights_dir(), file_name)
 
-    if os.path.isfile(home + "/.deepface/weights/VGGFace2_DeepFace_weights_val-0.9034.h5") != True:
-        logger.info("VGGFace2_DeepFace_weights_val-0.9034.h5 will be downloaded...")
+    if os.path.isfile(weight_file) != True:
+        logger.info(f"Download : {file_name}")
 
-        output = home + "/.deepface/weights/VGGFace2_DeepFace_weights_val-0.9034.h5.zip"
-
+        source_file = f"{file_name}.zip"
+        output = os.path.join(folder_utils.get_weights_dir(), source_file)
         gdown.download(url, output, quiet=False)
 
         # unzip VGGFace2_DeepFace_weights_val-0.9034.h5.zip
         with zipfile.ZipFile(output, "r") as zip_ref:
-            zip_ref.extractall(home + "/.deepface/weights/")
+            zip_ref.extractall(folder_utils.get_weights_dir())
 
-    base_model.load_weights(home + "/.deepface/weights/VGGFace2_DeepFace_weights_val-0.9034.h5")
+    base_model.load_weights(weight_file)
 
     # drop F8 and D0. F7 is the representation layer.
     deepface_model = Model(inputs=base_model.layers[0].input, outputs=base_model.layers[-3].output)

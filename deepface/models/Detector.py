@@ -1,19 +1,21 @@
 from typing import List, Tuple, Optional
 from abc import ABC, abstractmethod
-import numpy as np
+import numpy
 
 # Notice that all facial detector models must be inherited from this class
 
 
 # pylint: disable=unnecessary-pass, too-few-public-methods
 class Detector(ABC):
+    name: str
+
     @abstractmethod
-    def detect_faces(self, img: np.ndarray) -> List["FacialAreaRegion"]:
+    def detect_faces(self, img: numpy.ndarray) -> List["FacialAreaRegion"]:
         """
         Interface for detect and align face
 
         Args:
-            img (np.ndarray): pre-loaded image as numpy array
+            img (numpy.ndarray): pre-loaded image as numpy array
 
         Returns:
             results (List[FacialAreaRegion]): A list of FacialAreaRegion objects
@@ -24,15 +26,35 @@ class Detector(ABC):
         """
         pass
 
+class DonotDetect(Detector):
+    """
+    This class is used to skip face detection. It is used when the user
+    wants to use a pre-detected face.
+    """
+    def __init__(self):
+        self.name = "DonotDetect"
+
+    def detect_faces(self, img: numpy.ndarray) -> List["FacialAreaRegion"]:
+        return [
+            FacialAreaRegion(
+                0,
+                0,
+                img.shape[1],
+                img.shape[0],
+                None,
+                None,
+                None,
+                )
+        ]
 
 class FacialAreaRegion:
     x: int
     y: int
     w: int
     h: int
-    left_eye: Tuple[int, int]
-    right_eye: Tuple[int, int]
-    confidence: float
+    left_eye: Optional[Tuple[int, int]]
+    right_eye: Optional[Tuple[int, int]]
+    confidence: Optional[float]
 
     def __init__(
         self,
@@ -54,11 +76,9 @@ class FacialAreaRegion:
 
 
 class DetectedFace:
-    img: np.ndarray
+    img: numpy.ndarray
     facial_area: FacialAreaRegion
-    confidence: float
 
-    def __init__(self, img: np.ndarray, facial_area: FacialAreaRegion, confidence: float):
+    def __init__(self, img: numpy.ndarray, facial_area: FacialAreaRegion):
         self.img = img
         self.facial_area = facial_area
-        self.confidence = confidence

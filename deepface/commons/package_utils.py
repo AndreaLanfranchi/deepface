@@ -1,5 +1,5 @@
 # 3rd party dependencies
-import tensorflow as tf
+import tensorflow
 
 # package dependencies
 from deepface.commons.logger import Logger
@@ -13,4 +13,4 @@ def get_tf_major_version() -> int:
     Returns
         major_version (int)
     """
-    return int(tf.__version__.split(".", maxsplit=1)[0])
+    return int(tensorflow.__version__.split(".", maxsplit=1)[0])

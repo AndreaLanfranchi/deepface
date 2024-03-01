@@ -1,6 +1,6 @@
 import os
 from typing import Any, List
-import numpy as np
+import numpy
 import gdown
 from deepface.models.Detector import Detector, FacialAreaRegion
 from deepface.commons import folder_utils
@@ -21,6 +21,7 @@ LANDMARKS_CONFIDENCE_THRESHOLD = 0.5
 
 class YoloClient(Detector):
     def __init__(self):
+        self.name = "yolov8"
         self.model = self.build_model()
 
     def build_model(self) -> Any:
@@ -39,7 +40,7 @@ class YoloClient(Detector):
                 Please install using 'pip install ultralytics' "
             ) from e
 
-        weight_path = f"{folder_utils.get_deepface_home()}{PATH}"
+        weight_path = f"{folder_utils.get_data_dir()}{PATH}"
 
         # Download the model's weights if they don't exist
         if not os.path.isfile(weight_path):
@@ -56,17 +57,19 @@ class YoloClient(Detector):
         # Return face_detector
         return YOLO(weight_path)
 
-    def detect_faces(self, img: np.ndarray) -> List[FacialAreaRegion]:
+    def detect_faces(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
         """
         Detect and align face with yolo
 
         Args:
-            img (np.ndarray): pre-loaded image as numpy array
+            img (numpy.ndarray): pre-loaded image as numpy array
 
         Returns:
             results (List[FacialAreaRegion]): A list of FacialAreaRegion objects
         """
-        resp = []
+        results = []
+        if img.shape[0] == 0 or img.shape[1] == 0:
+            return results
 
         # Detect faces
         results = self.model.predict(img, verbose=False, show=False, conf=0.25)[0]
@@ -96,6 +99,6 @@ class YoloClient(Detector):
                 right_eye=right_eye,
                 confidence=confidence,
             )
-            resp.append(facial_area)
+            results.append(facial_area)
 
-        return resp
+        return results

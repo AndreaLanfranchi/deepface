@@ -1,7 +1,7 @@
 from typing import List
 import os
 import gdown
-import numpy as np
+import numpy
 from deepface.commons import package_utils, folder_utils
 from deepface.commons.logger import Logger
 from deepface.models.FacialRecognition import FacialRecognition
@@ -52,7 +52,7 @@ class DeepIdClient(FacialRecognition):
         self.input_shape = (47, 55)
         self.output_shape = 160
 
-    def find_embeddings(self, img: np.ndarray) -> List[float]:
+    def find_embeddings(self, img: numpy.ndarray) -> List[float]:
         """
         find embeddings with DeepId model
         Args:
@@ -100,14 +100,13 @@ def load_model(
 
     # ---------------------------------
 
-    home = folder_utils.get_deepface_home()
+    file_name = "deepid_keras_weights.h5"
+    output = os.path.join(folder_utils.get_weights_dir(), file_name)
 
-    if os.path.isfile(home + "/.deepface/weights/deepid_keras_weights.h5") != True:
-        logger.info("deepid_keras_weights.h5 will be downloaded...")
-
-        output = home + "/.deepface/weights/deepid_keras_weights.h5"
+    if os.path.isfile(output) != True:
+        logger.info(f"Download : {file_name}")
         gdown.download(url, output, quiet=False)
 
-    model.load_weights(home + "/.deepface/weights/deepid_keras_weights.h5")
+    model.load_weights(output)
 
     return model

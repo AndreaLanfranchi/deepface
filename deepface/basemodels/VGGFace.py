@@ -1,7 +1,7 @@
 from typing import List
 import os
 import gdown
-import numpy as np
+import numpy
 from deepface.commons import package_utils, folder_utils
 from deepface.modules import verification
 from deepface.models.FacialRecognition import FacialRecognition
@@ -47,11 +47,11 @@ class VggFaceClient(FacialRecognition):
         self.input_shape = (224, 224)
         self.output_shape = 4096
 
-    def find_embeddings(self, img: np.ndarray) -> List[float]:
+    def find_embeddings(self, img: numpy.ndarray) -> List[float]:
         """
         find embeddings with VGG-Face model
         Args:
-            img (np.ndarray): pre-loaded image in BGR
+            img (numpy.ndarray): pre-loaded image in BGR
         Returns
             embeddings (list): multi-dimensional vector
         """
@@ -129,11 +129,11 @@ def load_model(
 
     model = base_model()
 
-    home = folder_utils.get_deepface_home()
-    output = home + "/.deepface/weights/vgg_face_weights.h5"
+    file_name = "vgg_face_weights.h5"
+    output = os.path.join(folder_utils.get_weights_dir(), file_name)
 
     if os.path.isfile(output) != True:
-        logger.info("vgg_face_weights.h5 will be downloaded...")
+        logger.info(f"Download : {file_name}")
         gdown.download(url, output, quiet=False)
 
     model.load_weights(output)

@@ -2,8 +2,8 @@ from typing import List
 import os
 import gdown
 import cv2
-import pandas as pd
-import numpy as np
+import pandas
+import numpy
 from deepface.detectors import OpenCv
 from deepface.commons import folder_utils
 from deepface.models.Detector import Detector, FacialAreaRegion
@@ -16,6 +16,7 @@ logger = Logger(module="detectors.SsdWrapper")
 
 class SsdClient(Detector):
     def __init__(self):
+        self.name = "ssd"
         self.model = self.build_model()
 
     def build_model(self) -> dict:
@@ -25,7 +26,7 @@ class SsdClient(Detector):
             model (dict)
         """
 
-        home = folder_utils.get_deepface_home()
+        home = folder_utils.get_data_dir()
 
         # model structure
         if os.path.isfile(home + "/.deepface/weights/deploy.prototxt") != True:
@@ -70,19 +71,21 @@ class SsdClient(Detector):
 
         return detector
 
-    def detect_faces(self, img: np.ndarray) -> List[FacialAreaRegion]:
+    def detect_faces(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
         """
         Detect and align face with ssd
 
         Args:
-            img (np.ndarray): pre-loaded image as numpy array
+            img (numpy.ndarray): pre-loaded image as numpy array
 
         Returns:
             results (List[FacialAreaRegion]): A list of FacialAreaRegion objects
         """
         opencv_module: OpenCv.OpenCvClient = self.model["opencv_module"]
 
-        resp = []
+        results = []
+        if img.shape[0] == 0 or img.shape[1] == 0:
+            return results
 
         detected_face = None
 
@@ -103,7 +106,7 @@ class SsdClient(Detector):
         face_detector.setInput(imageBlob)
         detections = face_detector.forward()
 
-        detections_df = pd.DataFrame(detections[0][0], columns=ssd_labels)
+        detections_df = pandas.DataFrame(detections[0][0], columns=ssd_labels)
 
         detections_df = detections_df[detections_df["is_face"] == 1]  # 0: background, 1: face
         detections_df = detections_df[detections_df["confidence"] >= 0.90]
@@ -141,6 +144,6 @@ class SsdClient(Detector):
                     right_eye=right_eye,
                     confidence=confidence,
                 )
-                resp.append(facial_area)
+                results.append(facial_area)
 
-        return resp
+        return results

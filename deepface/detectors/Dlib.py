@@ -2,7 +2,7 @@ from typing import List
 import os
 import bz2
 import gdown
-import numpy as np
+import numpy
 from deepface.commons import folder_utils
 from deepface.models.Detector import Detector, FacialAreaRegion
 from deepface.commons.logger import Logger
@@ -11,7 +11,9 @@ logger = Logger(module="detectors.DlibWrapper")
 
 
 class DlibClient(Detector):
+    
     def __init__(self):
+        self.name = "dlib"
         self.model = self.build_model()
 
     def build_model(self) -> dict:
@@ -20,7 +22,7 @@ class DlibClient(Detector):
         Returns:
             model (Any)
         """
-        home = folder_utils.get_deepface_home()
+        home = folder_utils.get_data_dir()
 
         # this is not a must dependency. do not import it in the global level.
         try:
@@ -31,42 +33,46 @@ class DlibClient(Detector):
                 "Please install using 'pip install dlib' "
             ) from e
 
+        file_name = "shape_predictor_5_face_landmarks.dat"
+        output = os.path.join(folder_utils.get_weights_dir(), file_name)
+
         # check required file exists in the home/.deepface/weights folder
-        if os.path.isfile(home + "/.deepface/weights/shape_predictor_5_face_landmarks.dat") != True:
+        if os.path.isfile(output) != True:
+            
+            logger.info(f"Download : {file_name}")
+            
+            source_file = f"{file_name}.bz2"
+            
+            url = f"http://dlib.net/files/{source_file}"
+            dest = os.path.join(folder_utils.get_weights_dir(), source_file)
+            gdown.download(url, dest, quiet=False)
 
-            file_name = "shape_predictor_5_face_landmarks.dat.bz2"
-            logger.info(f"{file_name} is going to be downloaded")
-
-            url = f"http://dlib.net/files/{file_name}"
-            output = f"{home}/.deepface/weights/{file_name}"
-
-            gdown.download(url, output, quiet=False)
-
-            zipfile = bz2.BZ2File(output)
+            zipfile = bz2.BZ2File(dest)
             data = zipfile.read()
-            newfilepath = output[:-4]  # discard .bz2 extension
-            with open(newfilepath, "wb") as f:
+            with open(output, "wb") as f:
                 f.write(data)
 
         face_detector = dlib.get_frontal_face_detector()
-        sp = dlib.shape_predictor(home + "/.deepface/weights/shape_predictor_5_face_landmarks.dat")
+        sp = dlib.shape_predictor(output)
 
         detector = {}
         detector["face_detector"] = face_detector
         detector["sp"] = sp
         return detector
 
-    def detect_faces(self, img: np.ndarray) -> List[FacialAreaRegion]:
+    def detect_faces(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
         """
         Detect and align face with dlib
 
         Args:
-            img (np.ndarray): pre-loaded image as numpy array
+            img (numpy.ndarray): pre-loaded image as numpy array
 
         Returns:
             results (List[FacialAreaRegion]): A list of FacialAreaRegion objects
         """
-        resp = []
+        results = []
+        if img.shape[0] == 0 or img.shape[1] == 0:
+            return results
 
         face_detector = self.model["face_detector"]
 
@@ -102,6 +108,6 @@ class DlibClient(Detector):
                     right_eye=right_eye,
                     confidence=min(max(0, confidence), 1.0),
                 )
-                resp.append(facial_area)
+                results.append(facial_area)
 
-        return resp
+        return results

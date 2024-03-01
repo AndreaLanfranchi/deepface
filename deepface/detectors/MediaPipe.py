@@ -1,5 +1,5 @@
 from typing import Any, List
-import numpy as np
+import numpy
 from deepface.models.Detector import Detector, FacialAreaRegion
 
 # Link - https://google.github.io/mediapipe/solutions/face_detection
@@ -7,6 +7,7 @@ from deepface.models.Detector import Detector, FacialAreaRegion
 
 class MediaPipeClient(Detector):
     def __init__(self):
+        self.name = "mediapipe"
         self.model = self.build_model()
 
     def build_model(self) -> Any:
@@ -28,17 +29,19 @@ class MediaPipeClient(Detector):
         face_detection = mp_face_detection.FaceDetection(min_detection_confidence=0.7)
         return face_detection
 
-    def detect_faces(self, img: np.ndarray) -> List[FacialAreaRegion]:
+    def detect_faces(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
         """
         Detect and align face with mediapipe
 
         Args:
-            img (np.ndarray): pre-loaded image as numpy array
+            img (numpy.ndarray): pre-loaded image as numpy array
 
         Returns:
             results (List[FacialAreaRegion]): A list of FacialAreaRegion objects
         """
-        resp = []
+        results = []
+        if img.shape[0] == 0 or img.shape[1] == 0:
+            return results
 
         img_width = img.shape[1]
         img_height = img.shape[0]
@@ -47,7 +50,7 @@ class MediaPipeClient(Detector):
 
         # If no face has been detected, return an empty list
         if results.detections is None:
-            return resp
+            return results
 
         # Extract the bounding box, the landmarks and the confidence score
         for current_detection in results.detections:
@@ -71,6 +74,6 @@ class MediaPipeClient(Detector):
             facial_area = FacialAreaRegion(
                 x=x, y=y, w=w, h=h, left_eye=left_eye, right_eye=right_eye, confidence=confidence
             )
-            resp.append(facial_area)
+            results.append(facial_area)
 
-        return resp
+        return results

@@ -1,6 +1,6 @@
 from typing import Union
 from abc import ABC, abstractmethod
-import numpy as np
+import numpy
 from deepface.commons import package_utils
 
 tf_version = package_utils.get_tf_major_version()
@@ -18,5 +18,5 @@ class Demography(ABC):
     model_name: str
 
     @abstractmethod
-    def predict(self, img: np.ndarray) -> Union[np.ndarray, np.float64]:
+    def predict(self, img: numpy.ndarray) -> Union[numpy.ndarray, numpy.float64]:
         pass

@@ -1,7 +1,17 @@
-from typing import Any, List, Tuple
-import numpy as np
-from deepface.modules import detection
-from deepface.models.Detector import Detector, DetectedFace, FacialAreaRegion
+# built-in dependencies
+import time
+from typing import List, Tuple, Union
+
+# 3rd party dependencies
+import numpy
+
+# project dependencies
+from deepface.modules import detection, preprocessing
+from deepface.models.Detector import (
+    Detector,
+    DetectedFace,
+    FacialAreaRegion,
+    DonotDetect)
 from deepface.detectors import (
     FastMtCnn,
     MediaPipe,
@@ -17,81 +27,107 @@ from deepface.commons.logger import Logger
 
 logger = Logger(module="deepface/detectors/DetectorWrapper.py")
 
-
-def build_model(detector_backend: str) -> Any:
+def get_detector(name: str) -> Detector:
     """
-    Build a face detector model
-    Args:
-        detector_backend (str): backend detector name
+    This function retturns a face detector model.
+    Eventually the model instance is lazily initialized.
+
+    Params:
+        name (string): The name of the detector model to be returned
+            Valid values are any of the following:\n
+            "opencv", "mtcnn", "ssd", "dlib", "retinaface", "mediapipe", "yolov8", "yunet", "fastmtcnn", "donotdetect"
+      
+            Note! "donotdetect" is used to skip face detection and simply return the whole image as a face.
+            This is useful when the user wants to use a pre-detected face.
+                
+    Exception:
+        KeyError: when name is not known
+
     Returns:
-        built detector (Any)
+        reference to built model class instance
     """
-    global face_detector_obj  # singleton design pattern
 
-    backends = {
-        "opencv": OpenCv.OpenCvClient,
-        "mtcnn": MtCnn.MtCnnClient,
-        "ssd": Ssd.SsdClient,
-        "dlib": Dlib.DlibClient,
-        "retinaface": RetinaFace.RetinaFaceClient,
-        "mediapipe": MediaPipe.MediaPipeClient,
-        "yolov8": Yolo.YoloClient,
-        "yunet": YuNet.YuNetClient,
-        "fastmtcnn": FastMtCnn.FastMtCnnClient,
-    }
+    name = name.replace(" ", "")
+    if len(name) == 0:
+        raise KeyError("Empty detector name")
 
-    if not "face_detector_obj" in globals():
-        face_detector_obj = {}
+    global detectors_instances   # singleton design pattern
+    if not "detectors_instances" in globals():
+        detectors_instances = {}
 
-    built_models = list(face_detector_obj.keys())
-    if detector_backend not in built_models:
-        face_detector = backends.get(detector_backend)
+    global avaliable_detectors
+    if not "avaliable_detectors" in globals():
+        avaliable_detectors = {
+            "opencv": OpenCv.OpenCvClient,
+            "mtcnn": MtCnn.MtCnnClient,
+            "ssd": Ssd.SsdClient,
+            "dlib": Dlib.DlibClient,
+            "retinaface": RetinaFace.RetinaFaceClient,
+            "mediapipe": MediaPipe.MediaPipeClient,
+            "yolov8": Yolo.YoloClient,
+            "yunet": YuNet.YuNetClient,
+            "fastmtcnn": FastMtCnn.FastMtCnnClient,
+            "donotdetect": DonotDetect
+        }
 
-        if face_detector:
-            face_detector = face_detector()
-            face_detector_obj[detector_backend] = face_detector
-        else:
-            raise ValueError("invalid detector_backend passed - " + detector_backend)
 
-    return face_detector_obj[detector_backend]
+    if name not in detectors_instances.keys():
+        if name not in avaliable_detectors.keys():
+            raise KeyError(f"Unknown detector : {name}")
+        tic = time.time()
+        detectors_instances[name] = avaliable_detectors[name]()
+        logger.debug(f"Instantiated detector : {name} ({time.time() - tic:.3f} seconds)")
 
+    return detectors_instances[name]
 
 def detect_faces(
-    detector_backend: str, img: np.ndarray, align: bool = True, expand_percentage: int = 0
+    source: Union[str, numpy.ndarray],
+    detector: Union[str, Detector] = "opencv",
+    align: bool = True,
+    expand_percentage: int = 0
 ) -> List[DetectedFace]:
     """
-    Detect face(s) from a given image
+    
+    Tries to detect face(s) from a provided image.
+
     Args:
-        detector_backend (str): detector name
 
-        img (np.ndarray): pre-loaded image
+        source (str or numpy.ndarray): If a string is provided, it is assumed the image have
+        to be loaded/parsed from a file or base64 encoded string
 
-        align (bool): enable or disable alignment after detection
+        detector (str or Detector): If a string is provided, it is assumed the detector
+        instance have to be lazily initialized.
 
-        expand_percentage (int): expand detected facial area with a percentage (default is 0).
+        align (bool): wether to perform alignment after detection. Default is True.
+
+        expand_percentage (int): expand detected facial area with a percentage. Default is 0.
+        Negative values are clamped to 0.
 
     Returns:
         results (List[DetectedFace]): A list of DetectedFace objects
             where each object contains:
 
-        - img (np.ndarray): The detected face as a NumPy array.
+        - img (numpy.ndarray): The detected face as a NumPy array.
 
         - facial_area (FacialAreaRegion): The facial area region represented as x, y, w, h
-
-        - confidence (float): The confidence score associated with the detected face.
     """
-    face_detector: Detector = build_model(detector_backend)
 
-    # validate expand percentage score
-    if expand_percentage < 0:
-        logger.warn(
-            f"Expand percentage cannot be negative but you set it to {expand_percentage}."
-            "Overwritten it to 0."
-        )
-        expand_percentage = 0
+    # Validation
+    if isinstance(detector, str):
+        detector = get_detector(detector) # raise KeyError if detector is not known
+    if isinstance(source, str):
+        source, _ = preprocessing.load_image(source)
+
+    expand_percentage = max(0, expand_percentage) # clamp to 0
+
+    # If the image is too small, return an empty list
+    # TODO: Add a warning message here ?
+    # TODO: Maybe set a minimum size for the image globally ?
+    if source.shape[0] < 32 or source.shape[1] < 32:
+        return []
 
     # find facial areas of given image
-    facial_areas = face_detector.detect_faces(img=img)
+    facial_areas = detector.detect_faces(img=source)
 
     results = []
     for facial_area in facial_areas:
@@ -111,21 +147,21 @@ def detect_faces(
 
             x = max(0, x - int((expanded_w - w) / 2))
             y = max(0, y - int((expanded_h - h) / 2))
-            w = min(img.shape[1] - x, expanded_w)
-            h = min(img.shape[0] - y, expanded_h)
+            w = min(source.shape[1] - x, expanded_w)
+            h = min(source.shape[0] - y, expanded_h)
 
         # extract detected face unaligned
-        detected_face = img[int(y) : int(y + h), int(x) : int(x + w)]
+        detected_face = source[int(y) : int(y + h), int(x) : int(x + w)]
 
         # align original image, then find projection of detected face area after alignment
         if align is True:  # and left_eye is not None and right_eye is not None:
             aligned_img, angle = detection.align_face(
-                img=img, left_eye=left_eye, right_eye=right_eye
+                img=source, left_eye=left_eye, right_eye=right_eye
             )
             rotated_x1, rotated_y1, rotated_x2, rotated_y2 = rotate_facial_area(
                 facial_area=(x, y, x + w, y + h),
                 angle=angle,
-                size=(img.shape[0], img.shape[1])
+                size=(source.shape[0], source.shape[1])
             )
             detected_face = aligned_img[
                 int(rotated_y1) : int(rotated_y2),
@@ -135,12 +171,10 @@ def detect_faces(
             img=detected_face,
             facial_area=FacialAreaRegion(
                 x=x, y=y, h=h, w=w, confidence=confidence, left_eye=left_eye, right_eye=right_eye
-            ),
-            confidence=confidence,
+            )
         )
         results.append(result)
     return results
-
 
 def rotate_facial_area(
     facial_area: Tuple[int, int, int, int],
@@ -173,15 +207,15 @@ def rotate_facial_area(
         return facial_area
 
     # Angle in radians
-    angle = angle * np.pi / 180
+    angle = angle * numpy.pi / 180
 
     # Translate the facial area to the center of the image
     x = (facial_area[0] + facial_area[2]) / 2 - size[1] / 2
     y = (facial_area[1] + facial_area[3]) / 2 - size[0] / 2
 
     # Rotate the facial area
-    x_new = x * np.cos(angle) + y * direction * np.sin(angle)
-    y_new = -x * direction * np.sin(angle) + y * np.cos(angle)
+    x_new = x * numpy.cos(angle) + y * direction * numpy.sin(angle)
+    y_new = -x * direction * numpy.sin(angle) + y * numpy.cos(angle)
 
     # Translate the facial area back to the original position
     x_new = x_new + size[1] / 2

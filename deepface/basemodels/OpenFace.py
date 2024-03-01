@@ -1,8 +1,8 @@
 from typing import List
 import os
 import gdown
-import tensorflow as tf
-import numpy as np
+import tensorflow
+import numpy
 from deepface.commons import package_utils, folder_utils
 from deepface.commons.logger import Logger
 from deepface.models.FacialRecognition import FacialRecognition
@@ -39,11 +39,11 @@ class OpenFaceClient(FacialRecognition):
         self.input_shape = (96, 96)
         self.output_shape = 128
 
-    def find_embeddings(self, img: np.ndarray) -> List[float]:
+    def find_embeddings(self, img: numpy.ndarray) -> List[float]:
         """
         find embeddings with OpenFace model
         Args:
-            img (np.ndarray): pre-loaded image in BGR
+            img (numpy.ndarray): pre-loaded image in BGR
         Returns
             embeddings (list): multi-dimensional vector
         """
@@ -68,7 +68,7 @@ def load_model(
     x = Activation("relu")(x)
     x = ZeroPadding2D(padding=(1, 1))(x)
     x = MaxPooling2D(pool_size=3, strides=2)(x)
-    x = Lambda(lambda x: tf.nn.lrn(x, alpha=1e-4, beta=0.75), name="lrn_1")(x)
+    x = Lambda(lambda x: tensorflow.nn.lrn(x, alpha=1e-4, beta=0.75), name="lrn_1")(x)
     x = Conv2D(64, (1, 1), name="conv2")(x)
     x = BatchNormalization(axis=3, epsilon=0.00001, name="bn2")(x)
     x = Activation("relu")(x)
@@ -76,7 +76,7 @@ def load_model(
     x = Conv2D(192, (3, 3), name="conv3")(x)
     x = BatchNormalization(axis=3, epsilon=0.00001, name="bn3")(x)
     x = Activation("relu")(x)
-    x = Lambda(lambda x: tf.nn.lrn(x, alpha=1e-4, beta=0.75), name="lrn_2")(x)  # x is equal added
+    x = Lambda(lambda x: tensorflow.nn.lrn(x, alpha=1e-4, beta=0.75), name="lrn_2")(x)  # x is equal added
     x = ZeroPadding2D(padding=(1, 1))(x)
     x = MaxPooling2D(pool_size=3, strides=2)(x)
 
@@ -394,17 +394,14 @@ def load_model(
 
     # -----------------------------------
 
-    home = folder_utils.get_deepface_home()
+    file_name = "openface_weights.h5"
+    output = os.path.join(folder_utils.get_weights_dir(), file_name)
 
-    if os.path.isfile(home + "/.deepface/weights/openface_weights.h5") != True:
-        logger.info("openface_weights.h5 will be downloaded...")
-
-        output = home + "/.deepface/weights/openface_weights.h5"
+    if os.path.isfile(output) != True:
+        logger.info(f"Download : {file_name}")
         gdown.download(url, output, quiet=False)
 
-    # -----------------------------------
-
-    model.load_weights(home + "/.deepface/weights/openface_weights.h5")
+    model.load_weights(output)
 
     # -----------------------------------
 

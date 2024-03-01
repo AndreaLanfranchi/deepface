@@ -2,15 +2,12 @@ from typing import List
 import os
 import bz2
 import gdown
-import numpy as np
+import numpy
 from deepface.commons import folder_utils
 from deepface.commons.logger import Logger
 from deepface.models.FacialRecognition import FacialRecognition
 
 logger = Logger(module="basemodels.DlibResNet")
-
-# pylint: disable=too-few-public-methods
-
 
 class DlibClient(FacialRecognition):
     """
@@ -23,17 +20,17 @@ class DlibClient(FacialRecognition):
         self.input_shape = (150, 150)
         self.output_shape = 128
 
-    def find_embeddings(self, img: np.ndarray) -> List[float]:
+    def find_embeddings(self, img: numpy.ndarray) -> List[float]:
         """
         find embeddings with Dlib model - different than regular models
         Args:
-            img (np.ndarray): pre-loaded image in BGR
+            img (numpy.ndarray): pre-loaded image in BGR
         Returns
             embeddings (list): multi-dimensional vector
         """
         # return self.model.predict(img)[0].tolist()
 
-        # extract_faces returns 4 dimensional images
+        # detect_faces returns 4 dimensional images
         if len(img.shape) == 4:
             img = img[0]
 
@@ -44,13 +41,12 @@ class DlibClient(FacialRecognition):
         if img.max() <= 1:
             img = img * 255
 
-        img = img.astype(np.uint8)
+        img = img.astype(numpy.uint8)
 
         img_representation = self.model.model.compute_face_descriptor(img)
-        img_representation = np.array(img_representation)
-        img_representation = np.expand_dims(img_representation, axis=0)
+        img_representation = numpy.array(img_representation)
+        img_representation = numpy.expand_dims(img_representation, axis=0)
         return img_representation[0].tolist()
-
 
 class DlibResNet:
     def __init__(self):
@@ -68,34 +64,33 @@ class DlibResNet:
 
         # ---------------------
 
-        home = folder_utils.get_deepface_home()
-        weight_file = home + "/.deepface/weights/dlib_face_recognition_resnet_model_v1.dat"
+        file_name = "dlib_face_recognition_resnet_model_v1.dat"
+        weight_file = os.path.join(folder_utils.get_weights_dir(), file_name)
 
         # ---------------------
 
         # download pre-trained model if it does not exist
         if os.path.isfile(weight_file) != True:
-            logger.info("dlib_face_recognition_resnet_model_v1.dat is going to be downloaded")
+            logger.info(f"Download : {file_name}")
 
-            file_name = "dlib_face_recognition_resnet_model_v1.dat.bz2"
-            url = f"http://dlib.net/files/{file_name}"
-            output = f"{home}/.deepface/weights/{file_name}"
+            source_file = f"{file_name}.bz2"
+            url = f"http://dlib.net/files/{source_file}"
+            output = os.path.join(folder_utils.get_weights_dir(), source_file)
             gdown.download(url, output, quiet=False)
 
             zipfile = bz2.BZ2File(output)
             data = zipfile.read()
-            newfilepath = output[:-4]  # discard .bz2 extension
-            with open(newfilepath, "wb") as f:
+            with open(weight_file, "wb") as f:
                 f.write(data)
+            
+            # remove the downloaded file
+            os.remove(output)
 
         # ---------------------
 
         self.model = dlib.face_recognition_model_v1(weight_file)
 
         # ---------------------
-
-        # return None  # classes must return None
-
 
 class DlibMetaData:
     def __init__(self):

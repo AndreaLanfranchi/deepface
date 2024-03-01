@@ -9,7 +9,7 @@ detectors = ["opencv", "mtcnn"]
 
 def test_standard_analyze():
     img = "dataset/img4.jpg"
-    demography_objs = DeepFace.analyze(img, silent=True)
+    demography_objs = DeepFace.analyze(img)
     for demography in demography_objs:
         logger.debug(demography)
         assert demography["age"] > 20 and demography["age"] < 40
@@ -20,7 +20,7 @@ def test_standard_analyze():
 def test_analyze_with_all_actions_as_tuple():
     img = "dataset/img4.jpg"
     demography_objs = DeepFace.analyze(
-        img, actions=("age", "gender", "race", "emotion"), silent=True
+        img, actions=("age", "gender", "race", "emotion")
     )
 
     for demography in demography_objs:
@@ -44,7 +44,7 @@ def test_analyze_with_all_actions_as_tuple():
 def test_analyze_with_all_actions_as_list():
     img = "dataset/img4.jpg"
     demography_objs = DeepFace.analyze(
-        img, actions=["age", "gender", "race", "emotion"], silent=True
+        img, actions=["age", "gender", "race", "emotion"]
     )
 
     for demography in demography_objs:
@@ -67,7 +67,7 @@ def test_analyze_with_all_actions_as_list():
 
 def test_analyze_for_some_actions():
     img = "dataset/img4.jpg"
-    demography_objs = DeepFace.analyze(img, ["age", "gender"], silent=True)
+    demography_objs = DeepFace.analyze(img, ["age", "gender"])
 
     for demography in demography_objs:
         age = demography["age"]
@@ -88,7 +88,7 @@ def test_analyze_for_some_actions():
 
 def test_analyze_for_preloaded_image():
     img = cv2.imread("dataset/img1.jpg")
-    resp_objs = DeepFace.analyze(img, silent=True)
+    resp_objs = DeepFace.analyze(img)
     for resp_obj in resp_objs:
         logger.debug(resp_obj)
         assert resp_obj["age"] > 20 and resp_obj["age"] < 40
@@ -114,7 +114,7 @@ def test_analyze_for_different_detectors():
     for img_path in img_paths:
         for detector in detectors:
             results = DeepFace.analyze(
-                img_path, actions=("gender",), detector_backend=detector, enforce_detection=False
+                img_path, actions=("gender",), detector_backend=detector
             )
             for result in results:
                 logger.debug(result)

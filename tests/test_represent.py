@@ -17,7 +17,7 @@ def test_standard_represent():
 
 def test_represent_for_skipped_detector_backend_with_image_path():
     face_img = "dataset/img5.jpg"
-    img_objs = DeepFace.represent(img_path=face_img, detector_backend="skip")
+    img_objs = DeepFace.represent(img_path=face_img, detector_backend="donotdetect")
     assert len(img_objs) >= 1
     img_obj = img_objs[0]
     assert "embedding" in img_obj.keys()
@@ -34,7 +34,7 @@ def test_represent_for_skipped_detector_backend_with_image_path():
 def test_represent_for_skipped_detector_backend_with_preloaded_image():
     face_img = "dataset/img5.jpg"
     img = cv2.imread(face_img)
-    img_objs = DeepFace.represent(img_path=img, detector_backend="skip")
+    img_objs = DeepFace.represent(img_path=img, detector_backend="donoetdetect")
     assert len(img_objs) >= 1
     img_obj = img_objs[0]
     assert "embedding" in img_obj.keys()

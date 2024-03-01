@@ -1,12 +1,13 @@
 # built-in dependencies
 import os
+import re
 import pickle
 from typing import List, Union, Optional
 import time
 
 # 3rd party dependencies
-import numpy as np
-import pandas as pd
+import numpy
+import pandas
 from tqdm import tqdm
 
 # project dependencies
@@ -18,23 +19,21 @@ logger = Logger(module="deepface/modules/recognition.py")
 
 
 def find(
-    img_path: Union[str, np.ndarray],
+    img_path: Union[str, numpy.ndarray],
     db_path: str,
     model_name: str = "VGG-Face",
     distance_metric: str = "cosine",
-    enforce_detection: bool = True,
     detector_backend: str = "opencv",
     align: bool = True,
     expand_percentage: int = 0,
     threshold: Optional[float] = None,
-    normalization: str = "base",
-    silent: bool = False,
-) -> List[pd.DataFrame]:
+    normalization: str = "base"
+) -> List[pandas.DataFrame]:
     """
     Identify individuals in a database
 
     Args:
-        img_path (str or np.ndarray): The exact path to the image, a numpy array in BGR format,
+        img_path (str or numpy.ndarray): The exact path to the image, a numpy array in BGR format,
             or a base64 encoded image. If the source image contains multiple faces, the result will
             include information for each detected face.
 
@@ -46,9 +45,6 @@ def find(
 
         distance_metric (string): Metric for measuring similarity. Options: 'cosine',
             'euclidean', 'euclidean_l2'.
-
-        enforce_detection (boolean): If no face is detected in an image, raise an exception.
-            Default is True. Set to False to avoid the exception for low-resolution images.
 
         detector_backend (string): face detector backend. Options: 'opencv', 'retinaface',
             'mtcnn', 'ssd', 'dlib', 'mediapipe', 'yolov8'.
@@ -65,10 +61,8 @@ def find(
         normalization (string): Normalize the input image before feeding it to the model.
             Default is base. Options: base, raw, Facenet, Facenet2018, VGGFace, VGGFace2, ArcFace
 
-        silent (boolean): Suppress or allow some log messages for a quieter analysis process.
-
     Returns:
-        results (List[pd.DataFrame]): A list of pandas dataframes. Each dataframe corresponds
+        results (List[pandas.DataFrame]): A list of pandas dataframes. Each dataframe corresponds
             to the identity information for an individual detected in the source image.
             The DataFrame columns include:
 
@@ -92,7 +86,7 @@ def find(
     if os.path.isdir(db_path) is not True:
         raise ValueError("Passed db_path does not exist!")
 
-    model: FacialRecognition = modeling.build_model(model_name)
+    model: FacialRecognition = modeling.get_recognition_model(model_name)
     target_size = model.input_shape
 
     # ---------------------------------------
@@ -139,7 +133,7 @@ def find(
     new_images = list(set(storage_images) - set(pickled_images)) # images added to storage
     old_images = list(set(pickled_images) - set(storage_images)) # images removed from storage
 
-    if not silent and (len(new_images) > 0 or len(old_images) > 0):
+    if len(new_images) > 0 or len(old_images) > 0:
         logger.info(f"Found {len(new_images)} new images and {len(old_images)} removed images")
 
     # remove old images first
@@ -154,43 +148,40 @@ def find(
             model_name=model_name,
             target_size=target_size,
             detector_backend=detector_backend,
-            enforce_detection=enforce_detection,
             align=align,
-            normalization=normalization,
-            silent=silent,
+            normalization=normalization
         ) # add new images
         must_save_pickle = True
 
     if must_save_pickle:
         with open(datastore_path, "wb") as f:
             pickle.dump(representations, f)
-        if not silent:
             logger.info(f"There are now {len(representations)} representations in {file_name}")
 
     # Should we have no representations bailout
     if len(representations) == 0:
-        if not silent:
-            toc = time.time()
-            logger.info(f"find function duration {toc - tic} seconds")
+        logger.debug(f"find function duration {(time.time() - tic):0.5f} seconds")
         return []
 
     # ----------------------------
     # now, we got representations for facial database
-    df = pd.DataFrame(
+    df = pandas.DataFrame(
         representations,
         columns=df_cols,
     )
 
-    # img path might have more than once face
-    source_objs = detection.extract_faces(
-        img_path=img_path,
-        target_size=target_size,
-        detector_backend=detector_backend,
-        grayscale=False,
-        enforce_detection=enforce_detection,
-        align=align,
-        expand_percentage=expand_percentage,
-    )
+    try:
+        # img path might have more than once face
+        source_objs = detection.detect_faces(
+            source=img_path,
+            target_size=target_size,
+            detector=detector_backend,
+            grayscale=False,
+            align=align,
+            expand_percentage=expand_percentage,
+        )
+    except ValueError:
+        source_objs = []
 
     resp_obj = []
 
@@ -200,8 +191,7 @@ def find(
         target_embedding_obj = representation.represent(
             img_path=source_img,
             model_name=model_name,
-            enforce_detection=enforce_detection,
-            detector_backend="skip",
+            detector_backend="donotdetect",
             align=align,
             normalization=normalization,
         )
@@ -263,10 +253,7 @@ def find(
 
     # -----------------------------------
 
-    if not silent:
-        toc = time.time()
-        logger.info(f"find function duration {toc - tic} seconds")
-
+    logger.debug(f"find function duration {(time.time() - tic):0.5f} seconds")
     return resp_obj
 
 
@@ -279,11 +266,10 @@ def __list_images(path: str) -> List[str]:
         images (list): list of exact image paths
     """
     images = []
-    for r, _, f in os.walk(path):
-        for file in f:
-            if file.lower().endswith((".jpg", ".jpeg", ".png")):
-                exact_path = os.path.join(r, file)
-                images.append(exact_path)
+    pattern = re.compile(r".*\.(jpg|jpeg|png)$", re.IGNORECASE)
+    for file_name in os.listdir(path):
+        if pattern.match(file_name):
+            images.append(os.path.join(path, file_name))
     return images
 
 
@@ -292,11 +278,9 @@ def __find_bulk_embeddings(
     model_name: str = "VGG-Face",
     target_size: tuple = (224, 224),
     detector_backend: str = "opencv",
-    enforce_detection: bool = True,
     align: bool = True,
     expand_percentage: int = 0,
-    normalization: str = "base",
-    silent: bool = False,
+    normalization: str = "base"
 ):
     """
     Find embeddings of a list of images
@@ -310,9 +294,6 @@ def __find_bulk_embeddings(
 
         detector_backend (str): face detector model name
 
-        enforce_detection (bool): set this to False if you
-            want to proceed when you cannot detect any face
-
         align (bool): enable or disable alignment of image
             before feeding to facial recognition model
 
@@ -321,7 +302,6 @@ def __find_bulk_embeddings(
 
         normalization (bool): normalization technique
 
-        silent (bool): enable or disable informative logging
     Returns:
         representations (list): pivot list of embeddings with
             image name and detected face area's coordinates
@@ -329,16 +309,14 @@ def __find_bulk_embeddings(
     representations = []
     for employee in tqdm(
         employees,
-        desc="Finding representations",
-        disable=silent,
+        desc="Finding representations"
     ):
         try:
-            img_objs = detection.extract_faces(
-                img_path=employee,
+            img_objs = detection.detect_faces(
+                source=employee,
                 target_size=target_size,
-                detector_backend=detector_backend,
+                detector=detector_backend,
                 grayscale=False,
-                enforce_detection=enforce_detection,
                 align=align,
                 expand_percentage=expand_percentage,
             )
@@ -358,8 +336,7 @@ def __find_bulk_embeddings(
                 embedding_obj = representation.represent(
                     img_path=img_content,
                     model_name=model_name,
-                    enforce_detection=enforce_detection,
-                    detector_backend="skip",
+                    detector_backend="donotdetect",
                     align=align,
                     normalization=normalization,
                 )
