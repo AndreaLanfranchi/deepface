@@ -82,7 +82,7 @@ def verify(
     target_size = model.input_shape
 
     # img pairs might have many faces
-    img1_objs = detection.extract_faces(
+    img1_objs = detection.detect_faces(
         source=img1_path,
         target_size=target_size,
         detector=detector_backend,
@@ -91,7 +91,7 @@ def verify(
         expand_percentage=expand_percentage,
     )
 
-    img2_objs = detection.extract_faces(
+    img2_objs = detection.detect_faces(
         source=img2_path,
         target_size=target_size,
         detector=detector_backend,

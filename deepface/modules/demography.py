@@ -108,7 +108,7 @@ def analyze(
     # ---------------------------------
     resp_objects = []
 
-    img_objs = detection.extract_faces(
+    img_objs = detection.detect_faces(
         source=img_path,
         target_size=(224, 224),
         detector=detector_backend,

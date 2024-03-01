@@ -463,7 +463,7 @@ def extract_faces(
         - "confidence" (float): The confidence score associated with the detected face.
     """
 
-    return detection.extract_faces(
+    return detection.detect_faces(
         source=img_path,
         target_size=target_size,
         detector=detector_backend,

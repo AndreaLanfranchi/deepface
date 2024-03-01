@@ -172,7 +172,7 @@ def find(
 
     try:
         # img path might have more than once face
-        source_objs = detection.extract_faces(
+        source_objs = detection.detect_faces(
             source=img_path,
             target_size=target_size,
             detector=detector_backend,
@@ -312,7 +312,7 @@ def __find_bulk_embeddings(
         desc="Finding representations"
     ):
         try:
-            img_objs = detection.extract_faces(
+            img_objs = detection.detect_faces(
                 source=employee,
                 target_size=target_size,
                 detector=detector_backend,

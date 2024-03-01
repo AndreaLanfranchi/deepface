@@ -22,7 +22,7 @@ elif tf_major_version == 2:
     from tensorflow.keras.preprocessing import image
 
 
-def extract_faces(
+def detect_faces(
     source: Union[str, numpy.ndarray],
     detector: Union[str, Detector] = "opencv",
     target_size: Optional[Tuple[int, int]] = None,

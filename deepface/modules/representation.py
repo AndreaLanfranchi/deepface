@@ -61,7 +61,7 @@ def represent(
     # we have run pre-process in verification. so, this can be skipped if it is coming from verify.
     target_size = model.input_shape
     if detector_backend != "donotdetect":
-        img_objs = detection.extract_faces(
+        img_objs = detection.detect_faces(
             source=img_path,
             target_size=(target_size[1], target_size[0]),
             detector=detector_backend,
