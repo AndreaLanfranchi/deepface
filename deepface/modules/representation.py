@@ -62,9 +62,9 @@ def represent(
     target_size = model.input_shape
     if detector_backend != "donotdetect":
         img_objs = detection.extract_faces(
-            img_path=img_path,
+            source=img_path,
             target_size=(target_size[1], target_size[0]),
-            detector_backend=detector_backend,
+            detector=detector_backend,
             grayscale=False,
             align=align,
             expand_percentage=expand_percentage,

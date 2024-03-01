@@ -8,7 +8,7 @@ from PIL import Image
 
 # project dependencies
 from deepface.modules import preprocessing
-from deepface.models.Detector import DetectedFace, FacialAreaRegion
+from deepface.models.Detector import Detector, DetectedFace, FacialAreaRegion
 from deepface.detectors import DetectorWrapper
 from deepface.commons import package_utils
 from deepface.commons.logger import Logger
@@ -23,9 +23,9 @@ elif tf_major_version == 2:
 
 
 def extract_faces(
-    img_path: Union[str, numpy.ndarray],
-    target_size: Optional[Tuple[int, int]],
-    detector_backend: str = "opencv",
+    source: Union[str, numpy.ndarray],
+    detector: Union[str, Detector] = "opencv",
+    target_size: Optional[Tuple[int, int]] = None,
     align: bool = True,
     expand_percentage: int = 0,
     grayscale: bool = False,
@@ -35,24 +35,25 @@ def extract_faces(
     Extract faces from a given image
 
     Args:
-        img_path (str or numpy.ndarray): Path to the first image. Accepts exact image path
-            as a string, numpy array (BGR), or base64 encoded images.
+    
+        source (str or numpy.ndarray): If a string is provided, it is assumed the image have
+        to be loaded/parsed from a file or base64 encoded string
+
+        detector (str or Detector): If a string is provided, it is assumed the detector
+        instance have to be lazily initialized.
 
         target_size (tuple): final shape of facial image. black pixels will be
-            added to resize the image.
-
-        detector_backend (string): face detector backend. Options: 'opencv', 'retinaface',
-            'mtcnn', 'ssd', 'dlib', 'mediapipe', 'yolov8' (default is opencv)
+        added to resize the image.
 
         align (bool): Flag to enable face alignment (default is True).
 
         expand_percentage (int): expand detected facial area with a percentage
 
-        grayscale (boolean): Flag to convert the image to grayscale before
-            processing (default is False).
+        grayscale (boolean): Wether to convert the detected face image to grayscale.
+        Default is False.
 
-        human_readable (bool): Flag to make the image human readable. 3D RGB for human readable
-            or 4D BGR for ML models (default is False).
+        human_readable (bool): Wether to make the image human readable. 3D RGB for human readable
+        or 4D BGR for ML models. Default is False.
 
     Returns:
         results (List[Dict[str, Any]]): A list of dictionaries, where each dictionary contains:
@@ -69,16 +70,16 @@ def extract_faces(
     results: List[Dict[str, Any]] = []
 
     # img might be path, base64 or numpy array. Convert it to numpy whatever it is.
-    img, img_name = preprocessing.load_image(img_path)
+    img, _ = preprocessing.load_image(source)
 
     base_region = FacialAreaRegion(x=0, y=0, w=img.shape[1], h=img.shape[0], confidence=0)
 
-    if detector_backend == "donotdetect":
+    if detector == "donotdetect":
         face_objs = [DetectedFace(img=img, facial_area=base_region)]
     else:
         face_objs = DetectorWrapper.detect_faces(
-            img=img,
-            detector_backend=detector_backend,
+            source=img,
+            detector=detector,
             align=align,
             expand_percentage=expand_percentage,
         )

@@ -464,9 +464,9 @@ def extract_faces(
     """
 
     return detection.extract_faces(
-        img_path=img_path,
+        source=img_path,
         target_size=target_size,
-        detector_backend=detector_backend,
+        detector=detector_backend,
         align=align,
         expand_percentage=expand_percentage,
         grayscale=grayscale,

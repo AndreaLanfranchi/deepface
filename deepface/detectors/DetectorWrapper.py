@@ -1,7 +1,12 @@
+# built-in dependencies
 import time
-from typing import Any, List, Tuple
+from typing import List, Tuple, Union
+
+# 3rd party dependencies
 import numpy
-from deepface.modules import detection
+
+# project dependencies
+from deepface.modules import detection, preprocessing
 from deepface.models.Detector import (
     Detector,
     DetectedFace,
@@ -22,7 +27,7 @@ from deepface.commons.logger import Logger
 
 logger = Logger(module="deepface/detectors/DetectorWrapper.py")
 
-def get_detector(name: str) -> Any:
+def get_detector(name: str) -> Detector:
     """
     This function retturns a face detector model.
     Eventually the model instance is lazily initialized.
@@ -76,21 +81,27 @@ def get_detector(name: str) -> Any:
     return detectors_instances[name]
 
 def detect_faces(
-    img: numpy.ndarray,
-    detector_backend: str,
+    source: Union[str, numpy.ndarray],
+    detector: Union[str, Detector] = "opencv",
     align: bool = True,
     expand_percentage: int = 0
 ) -> List[DetectedFace]:
     """
-    Detect face(s) from a given image
+    
+    Tries to detect face(s) from a provided image.
+
     Args:
-        detector_backend (str): detector name
 
-        img (numpy.ndarray): pre-loaded image
+        source (str or numpy.ndarray): If a string is provided, it is assumed the image have
+        to be loaded/parsed from a file or base64 encoded string
 
-        align (bool): enable or disable alignment after detection
+        detector (str or Detector): If a string is provided, it is assumed the detector
+        instance have to be lazily initialized.
 
-        expand_percentage (int): expand detected facial area with a percentage (default is 0).
+        align (bool): wether to perform alignment after detection. Default is True.
+
+        expand_percentage (int): expand detected facial area with a percentage. Default is 0.
+        Negative values are clamped to 0.
 
     Returns:
         results (List[DetectedFace]): A list of DetectedFace objects
@@ -99,21 +110,24 @@ def detect_faces(
         - img (numpy.ndarray): The detected face as a NumPy array.
 
         - facial_area (FacialAreaRegion): The facial area region represented as x, y, w, h
-
-        - confidence (float): The confidence score associated with the detected face.
     """
-    face_detector: Detector = get_detector(detector_backend)
 
-    # validate expand percentage score
-    if expand_percentage < 0:
-        logger.warn(
-            f"Expand percentage cannot be negative but you set it to {expand_percentage}."
-            "Overwritten it to 0."
-        )
-        expand_percentage = 0
+    # Validation
+    if isinstance(detector, str):
+        detector = get_detector(detector) # raise KeyError if detector is not known
+    if isinstance(source, str):
+        source, _ = preprocessing.load_image(source)
+
+    expand_percentage = max(0, expand_percentage) # clamp to 0
+
+    # If the image is too small, return an empty list
+    # TODO: Add a warning message here ?
+    # TODO: Maybe set a minimum size for the image globally ?
+    if source.shape[0] < 32 or source.shape[1] < 32:
+        return []
 
     # find facial areas of given image
-    facial_areas = face_detector.detect_faces(img=img)
+    facial_areas = detector.detect_faces(img=source)
 
     results = []
     for facial_area in facial_areas:
@@ -133,21 +147,21 @@ def detect_faces(
 
             x = max(0, x - int((expanded_w - w) / 2))
             y = max(0, y - int((expanded_h - h) / 2))
-            w = min(img.shape[1] - x, expanded_w)
-            h = min(img.shape[0] - y, expanded_h)
+            w = min(source.shape[1] - x, expanded_w)
+            h = min(source.shape[0] - y, expanded_h)
 
         # extract detected face unaligned
-        detected_face = img[int(y) : int(y + h), int(x) : int(x + w)]
+        detected_face = source[int(y) : int(y + h), int(x) : int(x + w)]
 
         # align original image, then find projection of detected face area after alignment
         if align is True:  # and left_eye is not None and right_eye is not None:
             aligned_img, angle = detection.align_face(
-                img=img, left_eye=left_eye, right_eye=right_eye
+                img=source, left_eye=left_eye, right_eye=right_eye
             )
             rotated_x1, rotated_y1, rotated_x2, rotated_y2 = rotate_facial_area(
                 facial_area=(x, y, x + w, y + h),
                 angle=angle,
-                size=(img.shape[0], img.shape[1])
+                size=(source.shape[0], source.shape[1])
             )
             detected_face = aligned_img[
                 int(rotated_y1) : int(rotated_y2),
