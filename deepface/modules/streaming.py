@@ -35,28 +35,35 @@ class Stream(threading.Thread):
 
     def __init__(self, 
                  source: Union[str, int] = int(0),
-                 buffer_frame_size: int = 3
+                 buffer_frame_size: int = 3,
                  ):
+        super(Stream, self).__init__(name="VideoStream")
         self.__vc = cv2.VideoCapture(source)
         self.__vc.set(cv2.CAP_PROP_BUFFERSIZE, buffer_frame_size)
         self.__last_read: bool = True
         self.__last_frame: MatLike = numpy.array([])
-        self.__should_stop: bool = False
-        super(Stream, self).__init__(name="VideoStream")
+        self.__stop: bool = False
         self.start()
 
     def run(self):
-        while not self.__should_stop:
-            self.__last_read, self.__last_frame = self.__vc.read()
-            if not self.__last_read:
-                self.__vc.release()
-                break
+        logger.info("Capture thread started")
+        try:
+            while not self.__stop:
+                self.__last_read, self.__last_frame = self.__vc.read()
+                if not self.__last_read:
+                    self.__vc.release()
+                    self.__stop = True
+        except:
+            # Any exception will complete the task
+            self.__stop = True
 
     def read(self) -> Tuple[bool, MatLike]:
+        if self.__stop:
+            raise IOError("Capture source failed")
         return (self.__last_read, self.__last_frame)
     
     def stop(self):
-        self.__should_stop = True
+        self.__stop = True
     
 
 def analysis(
