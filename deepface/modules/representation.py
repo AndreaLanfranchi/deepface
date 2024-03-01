@@ -2,7 +2,7 @@
 from typing import Any, Dict, List, Union
 
 # 3rd party dependencies
-import numpy as np
+import numpy
 import cv2
 
 # project dependencies
@@ -11,7 +11,7 @@ from deepface.models.FacialRecognition import FacialRecognition
 
 
 def represent(
-    img_path: Union[str, np.ndarray],
+    img_path: Union[str, numpy.ndarray],
     model_name: str = "VGG-Face",
     detector_backend: str = "opencv",
     align: bool = True,
@@ -22,7 +22,7 @@ def represent(
     Represent facial images as multi-dimensional vector embeddings.
 
     Args:
-        img_path (str or np.ndarray): The exact path to the image, a numpy array in BGR format,
+        img_path (str or numpy.ndarray): The exact path to the image, a numpy array in BGR format,
             or a base64 encoded image. If the source image contains multiple faces, the result will
             include information for each detected face.
 
@@ -77,10 +77,10 @@ def represent(
             img = img[0]  # e.g. (1, 224, 224, 3) to (224, 224, 3)
         if len(img.shape) == 3:
             img = cv2.resize(img, target_size)
-            img = np.expand_dims(img, axis=0)
+            img = numpy.expand_dims(img, axis=0)
             # when called from verify, this is already normalized. But needed when user given.
             if img.max() > 1:
-                img = (img.astype(np.float32) / 255.0).astype(np.float32)
+                img = (img.astype(numpy.float32) / 255.0).astype(numpy.float32)
         # --------------------------------
         # make dummy region and confidence to keep compatibility with `extract_faces`
         img_objs = [

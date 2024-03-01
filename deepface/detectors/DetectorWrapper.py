@@ -1,6 +1,6 @@
 import time
 from typing import Any, List, Tuple
-import numpy as np
+import numpy
 from deepface.modules import detection
 from deepface.models.Detector import (
     Detector,
@@ -21,7 +21,6 @@ from deepface.detectors import (
 from deepface.commons.logger import Logger
 
 logger = Logger(module="deepface/detectors/DetectorWrapper.py")
-
 
 def get_detector(name: str) -> Any:
     """
@@ -76,9 +75,8 @@ def get_detector(name: str) -> Any:
 
     return detectors_instances[name]
 
-
 def detect_faces(
-    img: np.ndarray,
+    img: numpy.ndarray,
     detector_backend: str,
     align: bool = True,
     expand_percentage: int = 0
@@ -88,7 +86,7 @@ def detect_faces(
     Args:
         detector_backend (str): detector name
 
-        img (np.ndarray): pre-loaded image
+        img (numpy.ndarray): pre-loaded image
 
         align (bool): enable or disable alignment after detection
 
@@ -98,7 +96,7 @@ def detect_faces(
         results (List[DetectedFace]): A list of DetectedFace objects
             where each object contains:
 
-        - img (np.ndarray): The detected face as a NumPy array.
+        - img (numpy.ndarray): The detected face as a NumPy array.
 
         - facial_area (FacialAreaRegion): The facial area region represented as x, y, w, h
 
@@ -165,7 +163,6 @@ def detect_faces(
         results.append(result)
     return results
 
-
 def rotate_facial_area(
     facial_area: Tuple[int, int, int, int],
     angle: float,
@@ -197,15 +194,15 @@ def rotate_facial_area(
         return facial_area
 
     # Angle in radians
-    angle = angle * np.pi / 180
+    angle = angle * numpy.pi / 180
 
     # Translate the facial area to the center of the image
     x = (facial_area[0] + facial_area[2]) / 2 - size[1] / 2
     y = (facial_area[1] + facial_area[3]) / 2 - size[0] / 2
 
     # Rotate the facial area
-    x_new = x * np.cos(angle) + y * direction * np.sin(angle)
-    y_new = -x * direction * np.sin(angle) + y * np.cos(angle)
+    x_new = x * numpy.cos(angle) + y * direction * numpy.sin(angle)
+    y_new = -x * direction * numpy.sin(angle) + y * numpy.cos(angle)
 
     # Translate the facial area back to the original position
     x_new = x_new + size[1] / 2

@@ -6,9 +6,9 @@ import logging
 from typing import Any, Dict, List, Tuple, Union, Optional
 
 # 3rd party dependencies
-import numpy as np
-import pandas as pd
-import tensorflow as tf
+import numpy
+import pandas
+import tensorflow
 
 # package dependencies
 from deepface.commons import package_utils
@@ -33,7 +33,7 @@ warnings.filterwarnings("ignore")
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 tf_version = package_utils.get_tf_major_version()
 if tf_version == 2:
-    tf.get_logger().setLevel(logging.ERROR)
+    tensorflow.get_logger().setLevel(logging.ERROR)
 # -----------------------------------
 
 def get_recognition_model(name: str) -> Any:
@@ -75,8 +75,8 @@ def get_analysis_model(name: str) -> Any:
     return modeling.get_analysis_model(name=name)
 
 def verify(
-    img1_path: Union[str, np.ndarray],
-    img2_path: Union[str, np.ndarray],
+    img1_path: Union[str, numpy.ndarray],
+    img2_path: Union[str, numpy.ndarray],
     model_name: str = "VGG-Face",
     detector_backend: str = "opencv",
     distance_metric: str = "cosine",
@@ -87,10 +87,10 @@ def verify(
     """
     Verify if an image pair represents the same person or different persons.
     Args:
-        img1_path (str or np.ndarray): Path to the first image. Accepts exact image path
+        img1_path (str or numpy.ndarray): Path to the first image. Accepts exact image path
             as a string, numpy array (BGR), or base64 encoded images.
 
-        img2_path (str or np.ndarray): Path to the second image. Accepts exact image path
+        img2_path (str or numpy.ndarray): Path to the second image. Accepts exact image path
             as a string, numpy array (BGR), or base64 encoded images.
 
         model_name (str): Model for face recognition. Options: VGG-Face, Facenet, Facenet512,
@@ -147,7 +147,7 @@ def verify(
 
 
 def analyze(
-    img_path: Union[str, np.ndarray],
+    img_path: Union[str, numpy.ndarray],
     actions: Union[tuple, list] = ("emotion", "age", "gender", "race"),
     detector_backend: str = "opencv",
     align: bool = True,
@@ -156,7 +156,7 @@ def analyze(
     """
     Analyze facial attributes such as age, gender, emotion, and race in the provided image.
     Args:
-        img_path (str or np.ndarray): The exact path to the image, a numpy array in BGR format,
+        img_path (str or numpy.ndarray): The exact path to the image, a numpy array in BGR format,
             or a base64 encoded image. If the source image contains multiple faces, the result will
             include information for each detected face.
 
@@ -231,7 +231,7 @@ def analyze(
 
 
 def find(
-    img_path: Union[str, np.ndarray],
+    img_path: Union[str, numpy.ndarray],
     db_path: str,
     model_name: str = "VGG-Face",
     distance_metric: str = "cosine",
@@ -240,11 +240,11 @@ def find(
     expand_percentage: int = 0,
     threshold: Optional[float] = None,
     normalization: str = "base"
-) -> List[pd.DataFrame]:
+) -> List[pandas.DataFrame]:
     """
     Identify individuals in a database
     Args:
-        img_path (str or np.ndarray): The exact path to the image, a numpy array in BGR format,
+        img_path (str or numpy.ndarray): The exact path to the image, a numpy array in BGR format,
             or a base64 encoded image. If the source image contains multiple faces, the result will
             include information for each detected face.
 
@@ -304,7 +304,7 @@ def find(
 
 
 def represent(
-    img_path: Union[str, np.ndarray],
+    img_path: Union[str, numpy.ndarray],
     model_name: str = "VGG-Face",
     detector_backend: str = "opencv",
     align: bool = True,
@@ -315,7 +315,7 @@ def represent(
     Represent facial images as multi-dimensional vector embeddings.
 
     Args:
-        img_path (str or np.ndarray): The exact path to the image, a numpy array in BGR format,
+        img_path (str or numpy.ndarray): The exact path to the image, a numpy array in BGR format,
             or a base64 encoded image. If the source image contains multiple faces, the result will
             include information for each detected face.
 
@@ -358,9 +358,8 @@ def represent(
         normalization=normalization,
     )
 
-
 def stream(
-    db_path: str = "",
+    db_path: str,
     model_name: str = "VGG-Face",
     detector_backend: str = "opencv",
     distance_metric: str = "cosine",
@@ -424,9 +423,8 @@ def stream(
         faces_count_threshold=faces_count_threshold
     )
 
-
 def extract_faces(
-    img_path: Union[str, np.ndarray],
+    img_path: Union[str, numpy.ndarray],
     target_size: Optional[Tuple[int, int]] = (224, 224),
     detector_backend: str = "opencv",
     align: bool = True,
@@ -437,7 +435,7 @@ def extract_faces(
     Extract faces from a given image
 
     Args:
-        img_path (str or np.ndarray): Path to the first image. Accepts exact image path
+        img_path (str or numpy.ndarray): Path to the first image. Accepts exact image path
             as a string, numpy array (BGR), or base64 encoded images.
 
         target_size (tuple): final shape of facial image. black pixels will be
@@ -456,7 +454,7 @@ def extract_faces(
     Returns:
         results (List[Dict[str, Any]]): A list of dictionaries, where each dictionary contains:
 
-        - "face" (np.ndarray): The detected face as a NumPy array.
+        - "face" (numpy.ndarray): The detected face as a NumPy array.
 
         - "facial_area" (Dict[str, Any]): The detected face's regions as a dictionary containing:
             - keys 'x', 'y', 'w', 'h' with int values
@@ -475,7 +473,6 @@ def extract_faces(
         human_readable=True,
     )
 
-
 def cli() -> None:
     """
     command line interface function will be offered in this block
@@ -484,21 +481,18 @@ def cli() -> None:
 
     fire.Fire()
 
-
 # deprecated function(s)
-
-
 def detectFace(
-    img_path: Union[str, np.ndarray],
+    img_path: Union[str, numpy.ndarray],
     target_size: Tuple[int, int] = (224, 224),
     detector_backend: str = "opencv",
     align: bool = True,
-) -> Union[np.ndarray, None]:
+) -> Union[numpy.ndarray, None]:
     """
     Deprecated face detection function. Use extract_faces for same functionality.
 
     Args:
-        img_path (str or np.ndarray): Path to the first image. Accepts exact image path
+        img_path (str or numpy.ndarray): Path to the first image. Accepts exact image path
             as a string, numpy array (BGR), or base64 encoded images.
 
         target_size (tuple): final shape of facial image. black pixels will be
@@ -510,7 +504,7 @@ def detectFace(
         align (bool): Flag to enable face alignment (default is True).
 
     Returns:
-        img (np.ndarray): detected (and aligned) facial area image as numpy array
+        img (numpy.ndarray): detected (and aligned) facial area image as numpy array
     """
     logger.warn("Function detectFace is deprecated. Use extract_faces instead.")
     face_objs = extract_faces(

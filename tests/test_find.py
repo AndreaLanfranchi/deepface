@@ -1,6 +1,6 @@
 import os
 import cv2
-import pandas as pd
+import pandas
 from deepface import DeepFace
 from deepface.modules import verification
 from deepface.commons.logger import Logger
@@ -15,7 +15,7 @@ def test_find_with_exact_path():
     dfs = DeepFace.find(img_path=img_path, db_path="dataset")
     assert len(dfs) > 0
     for df in dfs:
-        assert isinstance(df, pd.DataFrame)
+        assert isinstance(df, pandas.DataFrame)
 
         # one is img1.jpg itself
         identity_df = df[df["identity"] == img_path]
@@ -36,7 +36,7 @@ def test_find_with_array_input():
     dfs = DeepFace.find(img1, db_path="dataset")
     assert len(dfs) > 0
     for df in dfs:
-        assert isinstance(df, pd.DataFrame)
+        assert isinstance(df, pandas.DataFrame)
 
         # one is img1.jpg itself
         identity_df = df[df["identity"] == img_path]
@@ -59,7 +59,7 @@ def test_find_with_extracted_faces():
     dfs = DeepFace.find(img, db_path="dataset", detector_backend="donotdetect")
     assert len(dfs) > 0
     for df in dfs:
-        assert isinstance(df, pd.DataFrame)
+        assert isinstance(df, pandas.DataFrame)
 
         # one is img1.jpg itself
         identity_df = df[df["identity"] == img_path]

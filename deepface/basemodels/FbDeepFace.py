@@ -2,7 +2,7 @@ from typing import List
 import os
 import zipfile
 import gdown
-import numpy as np
+import numpy
 from deepface.commons import package_utils, folder_utils
 from deepface.commons.logger import Logger
 from deepface.models.FacialRecognition import FacialRecognition
@@ -49,11 +49,11 @@ class DeepFaceClient(FacialRecognition):
         self.input_shape = (152, 152)
         self.output_shape = 4096
 
-    def find_embeddings(self, img: np.ndarray) -> List[float]:
+    def find_embeddings(self, img: numpy.ndarray) -> List[float]:
         """
         find embeddings with OpenFace model
         Args:
-            img (np.ndarray): pre-loaded image in BGR
+            img (numpy.ndarray): pre-loaded image in BGR
         Returns
             embeddings (list): multi-dimensional vector
         """

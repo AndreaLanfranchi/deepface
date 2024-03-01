@@ -1,7 +1,7 @@
 from typing import List
 import os
 import gdown
-import numpy as np
+import numpy
 from deepface.commons import package_utils, folder_utils
 from deepface.commons.logger import Logger
 from deepface.models.FacialRecognition import FacialRecognition
@@ -52,7 +52,7 @@ class DeepIdClient(FacialRecognition):
         self.input_shape = (47, 55)
         self.output_shape = 160
 
-    def find_embeddings(self, img: np.ndarray) -> List[float]:
+    def find_embeddings(self, img: numpy.ndarray) -> List[float]:
         """
         find embeddings with DeepId model
         Args:

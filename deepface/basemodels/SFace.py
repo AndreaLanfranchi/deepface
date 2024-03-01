@@ -1,8 +1,8 @@
 import os
 from typing import Any, List
 
-import numpy as np
-import cv2 as cv
+import numpy
+import cv2
 import gdown
 
 from deepface.commons import folder_utils
@@ -25,18 +25,18 @@ class SFaceClient(FacialRecognition):
         self.input_shape = (112, 112)
         self.output_shape = 128
 
-    def find_embeddings(self, img: np.ndarray) -> List[float]:
+    def find_embeddings(self, img: numpy.ndarray) -> List[float]:
         """
         find embeddings with SFace model - different than regular models
         Args:
-            img (np.ndarray): pre-loaded image in BGR
+            img (numpy.ndarray): pre-loaded image in BGR
         Returns
             embeddings (list): multi-dimensional vector
         """
         # return self.model.predict(img)[0].tolist()
 
         # revert the image to original format and preprocess using the model
-        input_blob = (img[0] * 255).astype(np.uint8)
+        input_blob = (img[0] * 255).astype(numpy.uint8)
 
         embeddings = self.model.model.feature(input_blob)
 
@@ -71,12 +71,12 @@ class SFaceWrapper:
         SFace wrapper covering model construction, layer infos and predict
         """
         try:
-            self.model = cv.FaceRecognizerSF.create(
+            self.model = cv2.FaceRecognizerSF.create(
                 model=model_path, config="", backend_id=0, target_id=0
             )
         except Exception as err:
             raise ValueError(
-                "Exception while calling opencv.FaceRecognizerSF module."
+                "Exception while calling opencv2.FaceRecognizerSF module."
                 + "This is an optional dependency."
                 + "You can install it as pip install opencv-contrib-python."
             ) from err

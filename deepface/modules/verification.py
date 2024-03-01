@@ -3,7 +3,7 @@ import time
 from typing import Any, Dict, Union
 
 # 3rd party dependencies
-import numpy as np
+import numpy
 
 # project dependencies
 from deepface.modules import representation, detection, modeling
@@ -11,8 +11,8 @@ from deepface.models.FacialRecognition import FacialRecognition
 
 
 def verify(
-    img1_path: Union[str, np.ndarray],
-    img2_path: Union[str, np.ndarray],
+    img1_path: Union[str, numpy.ndarray],
+    img2_path: Union[str, numpy.ndarray],
     model_name: str = "VGG-Face",
     detector_backend: str = "opencv",
     distance_metric: str = "cosine",
@@ -28,10 +28,10 @@ def verify(
     (or lower distance) than vectors of images of different persons.
 
     Args:
-        img1_path (str or np.ndarray): Path to the first image. Accepts exact image path
+        img1_path (str or numpy.ndarray): Path to the first image. Accepts exact image path
             as a string, numpy array (BGR), or base64 encoded images.
 
-        img2_path (str or np.ndarray): Path to the second image. Accepts exact image path
+        img2_path (str or numpy.ndarray): Path to the second image. Accepts exact image path
             as a string, numpy array (BGR), or base64 encoded images.
 
         model_name (str): Model for face recognition. Options: VGG-Face, Facenet, Facenet512,
@@ -146,7 +146,7 @@ def verify(
     # -------------------------------
     threshold = find_threshold(model_name, distance_metric)
     distance = min(distances)  # best distance
-    facial_areas = regions[np.argmin(distances)]
+    facial_areas = regions[numpy.argmin(distances)]
 
     # pylint: disable=simplifiable-if-expression
     resp_obj = {
@@ -164,66 +164,66 @@ def verify(
 
 
 def find_cosine_distance(
-    source_representation: Union[np.ndarray, list], test_representation: Union[np.ndarray, list]
-) -> np.float64:
+    source_representation: Union[numpy.ndarray, list], test_representation: Union[numpy.ndarray, list]
+) -> numpy.float64:
     """
     Find cosine distance between two given vectors
     Args:
-        source_representation (np.ndarray or list): 1st vector
-        test_representation (np.ndarray or list): 2nd vector
+        source_representation (numpy.ndarray or list): 1st vector
+        test_representation (numpy.ndarray or list): 2nd vector
     Returns
-        distance (np.float64): calculated cosine distance
+        distance (numpy.float64): calculated cosine distance
     """
     if isinstance(source_representation, list):
-        source_representation = np.array(source_representation)
+        source_representation = numpy.array(source_representation)
 
     if isinstance(test_representation, list):
-        test_representation = np.array(test_representation)
+        test_representation = numpy.array(test_representation)
 
-    a = np.matmul(np.transpose(source_representation), test_representation)
-    b = np.sum(np.multiply(source_representation, source_representation))
-    c = np.sum(np.multiply(test_representation, test_representation))
-    return 1 - (a / (np.sqrt(b) * np.sqrt(c)))
+    a = numpy.matmul(numpy.transpose(source_representation), test_representation)
+    b = numpy.sum(numpy.multiply(source_representation, source_representation))
+    c = numpy.sum(numpy.multiply(test_representation, test_representation))
+    return 1 - (a / (numpy.sqrt(b) * numpy.sqrt(c)))
 
 
 def find_euclidean_distance(
-    source_representation: Union[np.ndarray, list], test_representation: Union[np.ndarray, list]
-) -> np.float64:
+    source_representation: Union[numpy.ndarray, list], test_representation: Union[numpy.ndarray, list]
+) -> numpy.float64:
     """
     Find euclidean distance between two given vectors
     Args:
-        source_representation (np.ndarray or list): 1st vector
-        test_representation (np.ndarray or list): 2nd vector
+        source_representation (numpy.ndarray or list): 1st vector
+        test_representation (numpy.ndarray or list): 2nd vector
     Returns
-        distance (np.float64): calculated euclidean distance
+        distance (numpy.float64): calculated euclidean distance
     """
     if isinstance(source_representation, list):
-        source_representation = np.array(source_representation)
+        source_representation = numpy.array(source_representation)
 
     if isinstance(test_representation, list):
-        test_representation = np.array(test_representation)
+        test_representation = numpy.array(test_representation)
 
     euclidean_distance = source_representation - test_representation
-    euclidean_distance = np.sum(np.multiply(euclidean_distance, euclidean_distance))
-    euclidean_distance = np.sqrt(euclidean_distance)
+    euclidean_distance = numpy.sum(numpy.multiply(euclidean_distance, euclidean_distance))
+    euclidean_distance = numpy.sqrt(euclidean_distance)
     return euclidean_distance
 
 def find_euclidean_l2_distance(
-    source_representation: Union[np.ndarray, list], test_representation: Union[np.ndarray, list]
-) -> np.float64:
+    source_representation: Union[numpy.ndarray, list], test_representation: Union[numpy.ndarray, list]
+) -> numpy.float64:
     return find_euclidean_distance(l2_normalize(source_representation), l2_normalize(test_representation))
 
-def l2_normalize(x: Union[np.ndarray, list]) -> np.ndarray:
+def l2_normalize(x: Union[numpy.ndarray, list]) -> numpy.ndarray:
     """
     Normalize input vector with l2
     Args:
-        x (np.ndarray or list): given vector
+        x (numpy.ndarray or list): given vector
     Returns:
-        y (np.ndarray): l2 normalized vector
+        y (numpy.ndarray): l2 normalized vector
     """
     if isinstance(x, list):
-        x = np.array(x)
-    return x / np.sqrt(np.sum(np.multiply(x, x)))
+        x = numpy.array(x)
+    return x / numpy.sqrt(numpy.sum(numpy.multiply(x, x)))
 
 
 def find_threshold(model_name: str, distance_metric: str) -> float:

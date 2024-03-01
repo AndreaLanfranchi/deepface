@@ -5,11 +5,11 @@ import threading
 import traceback
 from typing import Any, Dict, List, Tuple, Union
 
-import numpy as np
+import numpy
 import cv2
 from cv2.typing import MatLike
 
-import pandas as pd
+import pandas
 
 from deepface import DeepFace
 from deepface.models.FacialRecognition import FacialRecognition
@@ -40,7 +40,7 @@ class Stream(threading.Thread):
         self.__vc = cv2.VideoCapture(source)
         self.__vc.set(cv2.CAP_PROP_BUFFERSIZE, buffer_frame_size)
         self.__last_read: bool = True
-        self.__last_frame: MatLike = np.array([])
+        self.__last_frame: MatLike = numpy.array([])
         self.__should_stop: bool = False
         super(Stream, self).__init__(name="VideoStream")
         self.start()
@@ -95,7 +95,7 @@ def analysis(
     # -----------------------
     # call a dummy find function for db_path once to create embeddings in the initialization
     _ = DeepFace.find(
-        img_path=np.zeros(target_size),
+        img_path=numpy.zeros(target_size),
         db_path=db_path,
         model_name=model_name,
         detector_backend=detector_backend,
@@ -366,7 +366,7 @@ def __get_face_matches(
     db_path: str,
     model_name: str,
     distance_metric: str
-) -> List[pd.DataFrame]:
+) -> List[pandas.DataFrame]:
 
     cropped_face = __crop_face(picture, facial_area)
     matching_results = DeepFace.find(
@@ -383,7 +383,7 @@ def __get_face_matches(
 def __process_matches(
         picture: MatLike,
         facial_area: Dict[str, Any],
-        matching_results: List[pd.DataFrame],
+        matching_results: List[pandas.DataFrame],
         target_size: Tuple[int, int],
         detector_backend: str,
 ) -> bool:

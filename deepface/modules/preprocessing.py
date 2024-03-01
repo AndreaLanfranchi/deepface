@@ -5,11 +5,11 @@ import binascii
 from typing import Union, Tuple
 
 # 3rd party
-import numpy as np
+import numpy
 import cv2
 import requests
 
-def load_image(source: Union[str, np.ndarray]) -> Tuple[np.ndarray, str]:
+def load_image(source: Union[str, numpy.ndarray]) -> Tuple[numpy.ndarray, str]:
     """
     Load image from path, url, base64 or numpy array.
 
@@ -28,7 +28,7 @@ def load_image(source: Union[str, np.ndarray]) -> Tuple[np.ndarray, str]:
         FileNotFoundError: if the input is a path and the file does not exist
     """
 
-    if isinstance(source, np.ndarray):
+    if isinstance(source, numpy.ndarray):
         return source, "numpy array"
     if not isinstance(source, str):
         raise TypeError(f"Unsupoorted source type {type(source)}")
@@ -46,7 +46,7 @@ def load_image(source: Union[str, np.ndarray]) -> Tuple[np.ndarray, str]:
 
     return __load_image_from_file(filename=source), source
 
-def __load_image_from_web(url: str) -> np.ndarray:
+def __load_image_from_web(url: str) -> numpy.ndarray:
     """
     Loading an image from web
 
@@ -55,19 +55,19 @@ def __load_image_from_web(url: str) -> np.ndarray:
         url: link for the image
 
     Returns:
-        img (np.ndarray): equivalent to pre-loaded image from opencv (BGR format)
+        img (numpy.ndarray): equivalent to pre-loaded image from opencv (BGR format)
 
     Raises:
         HTTPError: if the response status code is not 200
     """
     response = requests.get(url, stream=True, timeout=60)
     response.raise_for_status()
-    image_array = np.asarray(bytearray(response.raw.read()), dtype=np.uint8)
+    image_array = numpy.asarray(bytearray(response.raw.read()), dtype=numpy.uint8)
     image = cv2.imdecode(image_array, cv2.IMREAD_COLOR)
     return image
 
 
-def __load_base64(uri: str) -> np.ndarray:
+def __load_base64(uri: str) -> numpy.ndarray:
     """Load image from base64 string.
 
     Args:
@@ -88,12 +88,12 @@ def __load_base64(uri: str) -> np.ndarray:
         raise ValueError("Invalid mime-type. Supported types are jpeg, jpg and png.")
     try:
         decoded = base64.b64decode(split_data[1], validate=True)
-        nparr = np.frombuffer(buffer=decoded, dtype=np.uint8)
+        nparr = numpy.frombuffer(buffer=decoded, dtype=numpy.uint8)
         return cv2.imdecode(nparr, cv2.IMREAD_COLOR)
     except binascii.Error as ex:
         raise ValueError("Invalid base64 input") from ex
 
-def __load_image_from_file(filename: str) -> np.ndarray:
+def __load_image_from_file(filename: str) -> numpy.ndarray:
     """Load image from file.
 
     Args:
@@ -116,7 +116,7 @@ def __load_image_from_file(filename: str) -> np.ndarray:
 
     return cv2.imread(filename)
 
-def normalize_input(img: np.ndarray, normalization: str = "base") -> np.ndarray:
+def normalize_input(img: numpy.ndarray, normalization: str = "base") -> numpy.ndarray:
     """Normalize input image.
 
     Args:

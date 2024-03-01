@@ -1,4 +1,4 @@
-import numpy as np
+import numpy
 import pytest
 from deepface import DeepFace
 from deepface.commons.logger import Logger
@@ -26,7 +26,7 @@ def test_different_detectors():
 
 
 def test_backends_for_enforced_detection_with_non_facial_inputs():
-    black_img = np.zeros([224, 224, 3])
+    black_img = numpy.zeros([224, 224, 3])
     for detector in detectors:
         with pytest.raises(ValueError):
             _ = DeepFace.extract_faces(img_path=black_img, detector_backend=detector)
@@ -34,7 +34,7 @@ def test_backends_for_enforced_detection_with_non_facial_inputs():
 
 
 def test_backends_for_not_enforced_detection_with_non_facial_inputs():
-    black_img = np.zeros([224, 224, 3])
+    black_img = numpy.zeros([224, 224, 3])
     for detector in detectors:
         objs = DeepFace.extract_faces(
             img_path=black_img, detector_backend=detector

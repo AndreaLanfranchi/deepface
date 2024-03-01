@@ -2,8 +2,8 @@ from typing import List
 import os
 import gdown
 import cv2
-import pandas as pd
-import numpy as np
+import pandas
+import numpy
 from deepface.detectors import OpenCv
 from deepface.commons import folder_utils
 from deepface.models.Detector import Detector, FacialAreaRegion
@@ -71,12 +71,12 @@ class SsdClient(Detector):
 
         return detector
 
-    def detect_faces(self, img: np.ndarray) -> List[FacialAreaRegion]:
+    def detect_faces(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
         """
         Detect and align face with ssd
 
         Args:
-            img (np.ndarray): pre-loaded image as numpy array
+            img (numpy.ndarray): pre-loaded image as numpy array
 
         Returns:
             results (List[FacialAreaRegion]): A list of FacialAreaRegion objects
@@ -106,7 +106,7 @@ class SsdClient(Detector):
         face_detector.setInput(imageBlob)
         detections = face_detector.forward()
 
-        detections_df = pd.DataFrame(detections[0][0], columns=ssd_labels)
+        detections_df = pandas.DataFrame(detections[0][0], columns=ssd_labels)
 
         detections_df = detections_df[detections_df["is_face"] == 1]  # 0: background, 1: face
         detections_df = detections_df[detections_df["confidence"] >= 0.90]

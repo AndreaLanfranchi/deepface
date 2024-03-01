@@ -1,5 +1,5 @@
 from typing import List
-import numpy as np
+import numpy
 from mtcnn import MTCNN
 from deepface.models.Detector import Detector, FacialAreaRegion
 
@@ -13,12 +13,12 @@ class MtCnnClient(Detector):
         self.name = "mtcnn"
         self.model = MTCNN()
 
-    def detect_faces(self, img: np.ndarray) -> List[FacialAreaRegion]:
+    def detect_faces(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
         """
         Detect and align face with mtcnn
 
         Args:
-            img (np.ndarray): pre-loaded image as numpy array
+            img (numpy.ndarray): pre-loaded image as numpy array
 
         Returns:
             results (List[FacialAreaRegion]): A list of FacialAreaRegion objects

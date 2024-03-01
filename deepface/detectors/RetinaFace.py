@@ -1,5 +1,5 @@
 from typing import List
-import numpy as np
+import numpy
 from retinaface import RetinaFace as rf
 from deepface.models.Detector import Detector, FacialAreaRegion
 
@@ -9,12 +9,12 @@ class RetinaFaceClient(Detector):
         self.name = "retinaface"
         self.model = rf.build_model()
 
-    def detect_faces(self, img: np.ndarray) -> List[FacialAreaRegion]:
+    def detect_faces(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
         """
         Detect and align face with retinaface
 
         Args:
-            img (np.ndarray): pre-loaded image as numpy array
+            img (numpy.ndarray): pre-loaded image as numpy array
 
         Returns:
             results (List[FacialAreaRegion]): A list of FacialAreaRegion objects

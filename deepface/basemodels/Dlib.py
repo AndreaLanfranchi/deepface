@@ -2,15 +2,12 @@ from typing import List
 import os
 import bz2
 import gdown
-import numpy as np
+import numpy
 from deepface.commons import folder_utils
 from deepface.commons.logger import Logger
 from deepface.models.FacialRecognition import FacialRecognition
 
 logger = Logger(module="basemodels.DlibResNet")
-
-# pylint: disable=too-few-public-methods
-
 
 class DlibClient(FacialRecognition):
     """
@@ -23,11 +20,11 @@ class DlibClient(FacialRecognition):
         self.input_shape = (150, 150)
         self.output_shape = 128
 
-    def find_embeddings(self, img: np.ndarray) -> List[float]:
+    def find_embeddings(self, img: numpy.ndarray) -> List[float]:
         """
         find embeddings with Dlib model - different than regular models
         Args:
-            img (np.ndarray): pre-loaded image in BGR
+            img (numpy.ndarray): pre-loaded image in BGR
         Returns
             embeddings (list): multi-dimensional vector
         """
@@ -44,13 +41,12 @@ class DlibClient(FacialRecognition):
         if img.max() <= 1:
             img = img * 255
 
-        img = img.astype(np.uint8)
+        img = img.astype(numpy.uint8)
 
         img_representation = self.model.model.compute_face_descriptor(img)
-        img_representation = np.array(img_representation)
-        img_representation = np.expand_dims(img_representation, axis=0)
+        img_representation = numpy.array(img_representation)
+        img_representation = numpy.expand_dims(img_representation, axis=0)
         return img_representation[0].tolist()
-
 
 class DlibResNet:
     def __init__(self):
@@ -93,9 +89,6 @@ class DlibResNet:
         self.model = dlib.face_recognition_model_v1(weight_file)
 
         # ---------------------
-
-        # return None  # classes must return None
-
 
 class DlibMetaData:
     def __init__(self):

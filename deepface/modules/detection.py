@@ -2,7 +2,7 @@
 from typing import Any, Dict, List, Tuple, Union, Optional
 
 # 3rd part dependencies
-import numpy as np
+import numpy
 import cv2
 from PIL import Image
 
@@ -23,7 +23,7 @@ elif tf_major_version == 2:
 
 
 def extract_faces(
-    img_path: Union[str, np.ndarray],
+    img_path: Union[str, numpy.ndarray],
     target_size: Optional[Tuple[int, int]],
     detector_backend: str = "opencv",
     align: bool = True,
@@ -35,7 +35,7 @@ def extract_faces(
     Extract faces from a given image
 
     Args:
-        img_path (str or np.ndarray): Path to the first image. Accepts exact image path
+        img_path (str or numpy.ndarray): Path to the first image. Accepts exact image path
             as a string, numpy array (BGR), or base64 encoded images.
 
         target_size (tuple): final shape of facial image. black pixels will be
@@ -57,7 +57,7 @@ def extract_faces(
     Returns:
         results (List[Dict[str, Any]]): A list of dictionaries, where each dictionary contains:
 
-        - "face" (np.ndarray): The detected face as a NumPy array.
+        - "face" (numpy.ndarray): The detected face as a NumPy array.
 
         - "facial_area" (Dict[str, Any]): The detected face's regions as a dictionary containing:
             - keys 'x', 'y', 'w', 'h' with int values
@@ -109,7 +109,7 @@ def extract_faces(
             diff_1 = target_size[1] - current_img.shape[1]
             if grayscale is False:
                 # Put the base image in the middle of the padded image
-                current_img = np.pad(
+                current_img = numpy.pad(
                     current_img,
                     (
                         (diff_0 // 2, diff_0 - diff_0 // 2),
@@ -119,7 +119,7 @@ def extract_faces(
                     "constant",
                 )
             else:
-                current_img = np.pad(
+                current_img = numpy.pad(
                     current_img,
                     (
                         (diff_0 // 2, diff_0 - diff_0 // 2),
@@ -135,7 +135,7 @@ def extract_faces(
         # normalizing the image pixels
         # what this line doing? must?
         img_pixels = image.img_to_array(current_img)
-        img_pixels = np.expand_dims(img_pixels, axis=0)
+        img_pixels = numpy.expand_dims(img_pixels, axis=0)
         img_pixels /= 255  # normalize input in [0, 1]
         # discard expanded dimension
         if human_readable is True and len(img_pixels.shape) == 4:
@@ -160,18 +160,18 @@ def extract_faces(
 
 
 def align_face(
-    img: np.ndarray,
+    img: numpy.ndarray,
     left_eye: Union[list, tuple],
     right_eye: Union[list, tuple],
-) -> Tuple[np.ndarray, float]:
+) -> Tuple[numpy.ndarray, float]:
     """
     Align a given image horizantally with respect to their left and right eye locations
     Args:
-        img (np.ndarray): pre-loaded image with detected face
+        img (numpy.ndarray): pre-loaded image with detected face
         left_eye (list or tuple): coordinates of left eye with respect to the you
         right_eye(list or tuple): coordinates of right eye with respect to the you
     Returns:
-        img (np.ndarray): aligned facial image
+        img (numpy.ndarray): aligned facial image
     """
     # if eye could not be detected for the given image, return image itself
     if left_eye is None or right_eye is None:
@@ -181,6 +181,6 @@ def align_face(
     if img.shape[0] == 0 or img.shape[1] == 0:
         return img, 0
 
-    angle = float(np.degrees(np.arctan2(right_eye[1] - left_eye[1], right_eye[0] - left_eye[0])))
-    img = np.array(Image.fromarray(img).rotate(angle))
+    angle = float(numpy.degrees(numpy.arctan2(right_eye[1] - left_eye[1], right_eye[0] - left_eye[0])))
+    img = numpy.array(Image.fromarray(img).rotate(angle))
     return img, angle

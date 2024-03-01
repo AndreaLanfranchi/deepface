@@ -1,6 +1,6 @@
 import os
 import gdown
-import numpy as np
+import numpy
 from deepface.basemodels import VGGFace
 from deepface.commons import package_utils, folder_utils
 from deepface.commons.logger import Logger
@@ -32,7 +32,7 @@ class ApparentAgeClient(Demography):
         self.model = load_model()
         self.model_name = "Age"
 
-    def predict(self, img: np.ndarray) -> np.float64:
+    def predict(self, img: numpy.ndarray) -> numpy.float64:
         age_predictions = self.model.predict(img, verbose=0)[0, :]
         return find_apparent_age(age_predictions)
 
@@ -79,7 +79,7 @@ def load_model(
     # --------------------------
 
 
-def find_apparent_age(age_predictions: np.ndarray) -> np.float64:
+def find_apparent_age(age_predictions: numpy.ndarray) -> numpy.float64:
     """
     Find apparent age prediction from a given probas of ages
     Args:
@@ -87,6 +87,6 @@ def find_apparent_age(age_predictions: np.ndarray) -> np.float64:
     Returns:
         apparent_age (float)
     """
-    output_indexes = np.array(list(range(0, 101)))
-    apparent_age = np.sum(age_predictions * output_indexes)
+    output_indexes = numpy.array(list(range(0, 101)))
+    apparent_age = numpy.sum(age_predictions * output_indexes)
     return apparent_age

@@ -1,6 +1,6 @@
 import os
 import gdown
-import numpy as np
+import numpy
 from deepface.basemodels import VGGFace
 from deepface.commons import package_utils, folder_utils
 from deepface.commons.logger import Logger
@@ -35,7 +35,7 @@ class GenderClient(Demography):
         self.model = load_model()
         self.model_name = "Gender"
 
-    def predict(self, img: np.ndarray) -> np.ndarray:
+    def predict(self, img: numpy.ndarray) -> numpy.ndarray:
         return self.model.predict(img, verbose=0)[0, :]
 
 

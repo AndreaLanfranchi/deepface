@@ -1,7 +1,7 @@
 from typing import List
 import os
 import gdown
-import numpy as np
+import numpy
 from deepface.commons import package_utils, folder_utils
 from deepface.commons.logger import Logger
 from deepface.models.FacialRecognition import FacialRecognition
@@ -56,7 +56,7 @@ class ArcFaceClient(FacialRecognition):
         self.output_shape = 512
         self.model = self.__load_model()
 
-    def find_embeddings(self, img: np.ndarray) -> List[float]:
+    def find_embeddings(self, img: numpy.ndarray) -> List[float]:
         """
         find embeddings with ArcFace model
         Args:

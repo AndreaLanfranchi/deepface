@@ -1,5 +1,5 @@
 import pytest
-import numpy as np
+import numpy
 from deepface import DeepFace
 from deepface.commons.logger import Logger
 
@@ -7,7 +7,7 @@ logger = Logger("tests/test_enforce_detection.py")
 
 
 def test_enabled_enforce_detection_for_non_facial_input():
-    black_img = np.zeros([224, 224, 3])
+    black_img = numpy.zeros([224, 224, 3])
 
     with pytest.raises(ValueError, match="Face could not be detected."):
         DeepFace.represent(img_path=black_img)
@@ -19,7 +19,7 @@ def test_enabled_enforce_detection_for_non_facial_input():
 
 
 def test_disabled_enforce_detection_for_non_facial_input_on_represent():
-    black_img = np.zeros([224, 224, 3])
+    black_img = numpy.zeros([224, 224, 3])
     objs = DeepFace.represent(img_path=black_img)
 
     assert isinstance(objs, list)
@@ -39,7 +39,7 @@ def test_disabled_enforce_detection_for_non_facial_input_on_represent():
 
 
 def test_disabled_enforce_detection_for_non_facial_input_on_verify():
-    black_img = np.zeros([224, 224, 3])
+    black_img = numpy.zeros([224, 224, 3])
     obj = DeepFace.verify(img1_path=black_img, img2_path=black_img)
     assert isinstance(obj, dict)
 

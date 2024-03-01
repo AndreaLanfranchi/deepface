@@ -1,7 +1,7 @@
 import os
 from typing import Any, List
 import cv2
-import numpy as np
+import numpy
 import gdown
 from deepface.commons import folder_utils
 from deepface.models.Detector import Detector, FacialAreaRegion
@@ -49,12 +49,12 @@ class YuNetClient(Detector):
             ) from err
         return face_detector
 
-    def detect_faces(self, img: np.ndarray) -> List[FacialAreaRegion]:
+    def detect_faces(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
         """
         Detect and align face with yunet
 
         Args:
-            img (np.ndarray): pre-loaded image as numpy array
+            img (numpy.ndarray): pre-loaded image as numpy array
 
         Returns:
             results (List[FacialAreaRegion]): A list of FacialAreaRegion objects

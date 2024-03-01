@@ -1,5 +1,5 @@
 from typing import Any, List
-import numpy as np
+import numpy
 from deepface.models.Detector import Detector, FacialAreaRegion
 
 # Link - https://google.github.io/mediapipe/solutions/face_detection
@@ -29,12 +29,12 @@ class MediaPipeClient(Detector):
         face_detection = mp_face_detection.FaceDetection(min_detection_confidence=0.7)
         return face_detection
 
-    def detect_faces(self, img: np.ndarray) -> List[FacialAreaRegion]:
+    def detect_faces(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
         """
         Detect and align face with mediapipe
 
         Args:
-            img (np.ndarray): pre-loaded image as numpy array
+            img (numpy.ndarray): pre-loaded image as numpy array
 
         Returns:
             results (List[FacialAreaRegion]): A list of FacialAreaRegion objects

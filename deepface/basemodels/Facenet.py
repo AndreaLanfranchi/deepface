@@ -1,7 +1,7 @@
 from typing import List
 import os
 import gdown
-import numpy as np
+import numpy
 from deepface.commons import package_utils, folder_utils
 from deepface.commons.logger import Logger
 from deepface.models.FacialRecognition import FacialRecognition
@@ -56,11 +56,11 @@ class FaceNet128dClient(FacialRecognition):
         self.input_shape = (160, 160)
         self.output_shape = 128
 
-    def find_embeddings(self, img: np.ndarray) -> List[float]:
+    def find_embeddings(self, img: numpy.ndarray) -> List[float]:
         """
         find embeddings with FaceNet-128d model
         Args:
-            img (np.ndarray): pre-loaded image in BGR
+            img (numpy.ndarray): pre-loaded image in BGR
         Returns
             embeddings (list): multi-dimensional vector
         """
@@ -80,11 +80,11 @@ class FaceNet512dClient(FacialRecognition):
         self.input_shape = (160, 160)
         self.output_shape = 512
 
-    def find_embeddings(self, img: np.ndarray) -> List[float]:
+    def find_embeddings(self, img: numpy.ndarray) -> List[float]:
         """
         find embeddings with FaceNet-512d model
         Args:
-            img (np.ndarray): pre-loaded image in BGR
+            img (numpy.ndarray): pre-loaded image in BGR
         Returns
             embeddings (list): multi-dimensional vector
         """

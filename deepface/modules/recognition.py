@@ -6,8 +6,8 @@ from typing import List, Union, Optional
 import time
 
 # 3rd party dependencies
-import numpy as np
-import pandas as pd
+import numpy
+import pandas
 from tqdm import tqdm
 
 # project dependencies
@@ -19,7 +19,7 @@ logger = Logger(module="deepface/modules/recognition.py")
 
 
 def find(
-    img_path: Union[str, np.ndarray],
+    img_path: Union[str, numpy.ndarray],
     db_path: str,
     model_name: str = "VGG-Face",
     distance_metric: str = "cosine",
@@ -28,12 +28,12 @@ def find(
     expand_percentage: int = 0,
     threshold: Optional[float] = None,
     normalization: str = "base"
-) -> List[pd.DataFrame]:
+) -> List[pandas.DataFrame]:
     """
     Identify individuals in a database
 
     Args:
-        img_path (str or np.ndarray): The exact path to the image, a numpy array in BGR format,
+        img_path (str or numpy.ndarray): The exact path to the image, a numpy array in BGR format,
             or a base64 encoded image. If the source image contains multiple faces, the result will
             include information for each detected face.
 
@@ -62,7 +62,7 @@ def find(
             Default is base. Options: base, raw, Facenet, Facenet2018, VGGFace, VGGFace2, ArcFace
 
     Returns:
-        results (List[pd.DataFrame]): A list of pandas dataframes. Each dataframe corresponds
+        results (List[pandas.DataFrame]): A list of pandas dataframes. Each dataframe corresponds
             to the identity information for an individual detected in the source image.
             The DataFrame columns include:
 
@@ -165,7 +165,7 @@ def find(
 
     # ----------------------------
     # now, we got representations for facial database
-    df = pd.DataFrame(
+    df = pandas.DataFrame(
         representations,
         columns=df_cols,
     )

@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Any, Union, List, Tuple
-import numpy as np
+import numpy
 from deepface.commons import package_utils
 
 tf_version = package_utils.get_tf_major_version()
@@ -20,5 +20,5 @@ class FacialRecognition(ABC):
 
 
     @abstractmethod
-    def find_embeddings(self, img: np.ndarray) -> List[float]:
+    def find_embeddings(self, img: numpy.ndarray) -> List[float]:
         pass

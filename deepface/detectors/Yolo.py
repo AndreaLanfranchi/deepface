@@ -1,6 +1,6 @@
 import os
 from typing import Any, List
-import numpy as np
+import numpy
 import gdown
 from deepface.models.Detector import Detector, FacialAreaRegion
 from deepface.commons import folder_utils
@@ -57,12 +57,12 @@ class YoloClient(Detector):
         # Return face_detector
         return YOLO(weight_path)
 
-    def detect_faces(self, img: np.ndarray) -> List[FacialAreaRegion]:
+    def detect_faces(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
         """
         Detect and align face with yolo
 
         Args:
-            img (np.ndarray): pre-loaded image as numpy array
+            img (numpy.ndarray): pre-loaded image as numpy array
 
         Returns:
             results (List[FacialAreaRegion]): A list of FacialAreaRegion objects

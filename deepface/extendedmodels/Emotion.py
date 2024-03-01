@@ -1,6 +1,6 @@
 import os
 import gdown
-import numpy as np
+import numpy
 import cv2
 from deepface.commons import package_utils, folder_utils
 from deepface.commons.logger import Logger
@@ -42,10 +42,10 @@ class EmotionClient(Demography):
         self.model = load_model()
         self.model_name = "Emotion"
 
-    def predict(self, img: np.ndarray) -> np.ndarray:
+    def predict(self, img: numpy.ndarray) -> numpy.ndarray:
         img_gray = cv2.cvtColor(img[0], cv2.COLOR_BGR2GRAY)
         img_gray = cv2.resize(img_gray, (48, 48))
-        img_gray = np.expand_dims(img_gray, axis=0)
+        img_gray = numpy.expand_dims(img_gray, axis=0)
 
         emotion_predictions = self.model.predict(img_gray, verbose=0)[0, :]
         return emotion_predictions

@@ -2,7 +2,7 @@ from typing import List
 import os
 import bz2
 import gdown
-import numpy as np
+import numpy
 from deepface.commons import folder_utils
 from deepface.models.Detector import Detector, FacialAreaRegion
 from deepface.commons.logger import Logger
@@ -58,12 +58,12 @@ class DlibClient(Detector):
         detector["sp"] = sp
         return detector
 
-    def detect_faces(self, img: np.ndarray) -> List[FacialAreaRegion]:
+    def detect_faces(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
         """
         Detect and align face with dlib
 
         Args:
-            img (np.ndarray): pre-loaded image as numpy array
+            img (numpy.ndarray): pre-loaded image as numpy array
 
         Returns:
             results (List[FacialAreaRegion]): A list of FacialAreaRegion objects

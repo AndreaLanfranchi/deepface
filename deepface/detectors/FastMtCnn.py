@@ -1,6 +1,6 @@
 from typing import Any, Union, List
 import cv2
-import numpy as np
+import numpy
 from deepface.models.Detector import Detector, FacialAreaRegion
 
 # Link -> https://github.com/timesler/facenet-pytorch
@@ -12,12 +12,12 @@ class FastMtCnnClient(Detector):
         self.name = "fastmtcnn"
         self.model = self.build_model()
 
-    def detect_faces(self, img: np.ndarray) -> List[FacialAreaRegion]:
+    def detect_faces(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
         """
         Detect and align face with mtcnn
 
         Args:
-            img (np.ndarray): pre-loaded image as numpy array
+            img (numpy.ndarray): pre-loaded image as numpy array
 
         Returns:
             results (List[FacialAreaRegion]): A list of FacialAreaRegion objects

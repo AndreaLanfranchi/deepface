@@ -2,7 +2,7 @@
 from typing import Any, Dict, List, Union
 
 # 3rd party dependencies
-import numpy as np
+import numpy
 from tqdm import tqdm
 
 # project dependencies
@@ -11,7 +11,7 @@ from deepface.extendedmodels import Gender, Race, Emotion
 
 
 def analyze(
-    img_path: Union[str, np.ndarray],
+    img_path: Union[str, numpy.ndarray],
     actions: Union[tuple, list] = ("emotion", "age", "gender", "race"),
     detector_backend: str = "opencv",
     align: bool = True,
@@ -21,7 +21,7 @@ def analyze(
     Analyze facial attributes such as age, gender, emotion, and race in the provided image.
 
     Args:
-        img_path (str or np.ndarray): The exact path to the image, a numpy array in BGR format,
+        img_path (str or numpy.ndarray): The exact path to the image, a numpy array in BGR format,
             or a base64 encoded image. If the source image contains multiple faces, the result will
             include information for each detected face.
 
@@ -141,7 +141,7 @@ def analyze(
                         emotion_prediction = 100 * emotion_predictions[i] / sum_of_predictions
                         obj["emotion"][emotion_label] = emotion_prediction
 
-                    obj["dominant_emotion"] = Emotion.labels[np.argmax(emotion_predictions)]
+                    obj["dominant_emotion"] = Emotion.labels[numpy.argmax(emotion_predictions)]
 
                 elif action == "age":
                     apparent_age = modeling.get_analysis_model("Age").predict(img_content)
@@ -155,7 +155,7 @@ def analyze(
                         gender_prediction = 100 * gender_predictions[i]
                         obj["gender"][gender_label] = gender_prediction
 
-                    obj["dominant_gender"] = Gender.labels[np.argmax(gender_predictions)]
+                    obj["dominant_gender"] = Gender.labels[numpy.argmax(gender_predictions)]
 
                 elif action == "race":
                     race_predictions = modeling.get_analysis_model("Race").predict(img_content)
@@ -166,7 +166,7 @@ def analyze(
                         race_prediction = 100 * race_predictions[i] / sum_of_predictions
                         obj["race"][race_label] = race_prediction
 
-                    obj["dominant_race"] = Race.labels[np.argmax(race_predictions)]
+                    obj["dominant_race"] = Race.labels[numpy.argmax(race_predictions)]
 
                 # -----------------------------
                 # mention facial areas
