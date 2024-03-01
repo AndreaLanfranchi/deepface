@@ -25,19 +25,16 @@ def represent():
 
     model_name = input_args.get("model_name", "VGG-Face")
     detector_backend = input_args.get("detector_backend", "opencv")
-    enforce_detection = input_args.get("enforce_detection", True)
     align = input_args.get("align", True)
 
     obj = service.represent(
         img_path=img_path,
         model_name=model_name,
         detector_backend=detector_backend,
-        enforce_detection=enforce_detection,
-        align=align,
+        align=align
     )
 
     logger.debug(obj)
-
     return obj
 
 
@@ -59,7 +56,6 @@ def verify():
 
     model_name = input_args.get("model_name", "VGG-Face")
     detector_backend = input_args.get("detector_backend", "opencv")
-    enforce_detection = input_args.get("enforce_detection", True)
     distance_metric = input_args.get("distance_metric", "cosine")
     align = input_args.get("align", True)
 
@@ -69,12 +65,10 @@ def verify():
         model_name=model_name,
         detector_backend=detector_backend,
         distance_metric=distance_metric,
-        align=align,
-        enforce_detection=enforce_detection,
+        align=align
     )
 
     logger.debug(verification)
-
     return verification
 
 
@@ -90,7 +84,6 @@ def analyze():
         return {"message": "you must pass img_path input"}
 
     detector_backend = input_args.get("detector_backend", "opencv")
-    enforce_detection = input_args.get("enforce_detection", True)
     align = input_args.get("align", True)
     actions = input_args.get("actions", ["age", "gender", "emotion", "race"])
 
@@ -98,10 +91,8 @@ def analyze():
         img_path=img_path,
         actions=actions,
         detector_backend=detector_backend,
-        enforce_detection=enforce_detection,
         align=align,
     )
 
     logger.debug(demographies)
-
     return demographies

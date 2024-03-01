@@ -1,27 +1,39 @@
+import time
+
 # built-in dependencies
 from typing import Any
 
 # project dependencies
+from deepface.commons.logger import Logger
 from deepface.basemodels import VGGFace, OpenFace, FbDeepFace, DeepID, ArcFace, SFace, Dlib, Facenet
 from deepface.extendedmodels import Age, Gender, Race, Emotion
 
+logger = Logger(module="modules.modeling")
 
-def build_model(model_name: str) -> Any:
+def get_recognition_model(name: str) -> Any:
     """
-    This function builds a deepface model
-    Parameters:
-            model_name (string): face recognition or facial attribute model
-                    VGG-Face, Facenet, OpenFace, DeepFace, DeepID for face recognition
-                    Age, Gender, Emotion, Race for facial attributes
+    This function retturns a face recognition model.
+    Eventually the model instance is lazily initialized.
+
+    Params:
+        name (string): The name of the face recognition model to be returned
+            Valid values are any of the following:\n
+            "VGG-Face", "Facenet", "OpenFace", "DeepFace", "DeepID", "Dlib", "ArcFace", "SFace"
+
+    Exception:
+        KeyError: when name is not known
 
     Returns:
-            built model class
+        reference to built model class instance
     """
 
-    # singleton design pattern
-    global model_obj
+    name = name.replace(" ", "")
+    if len(name) == 0:
+        raise KeyError("Empty model name")
 
-    models = {
+    global available_recognition_models
+    if not "available_recognition_models" in globals():
+        available_recognition_models = {
         "VGG-Face": VGGFace.VggFaceClient,
         "OpenFace": OpenFace.OpenFaceClient,
         "Facenet": Facenet.FaceNet128dClient,
@@ -31,20 +43,61 @@ def build_model(model_name: str) -> Any:
         "Dlib": Dlib.DlibClient,
         "ArcFace": ArcFace.ArcFaceClient,
         "SFace": SFace.SFaceClient,
+        }
+
+    global recognition_model_instances
+    if not "recognition_model_instances" in globals():
+        recognition_model_instances = {}
+
+    if not name in recognition_model_instances.keys():
+        if not name in available_recognition_models.keys():
+            raise KeyError(f"Unknown recognition model : {name}")
+
+        tic = time.time()
+        recognition_model_instances[name] = available_recognition_models[name]()
+        logger.debug(f"Instantiated recognition model : {name} ({time.time() - tic:.3f} seconds)")
+
+    return recognition_model_instances[name]
+
+def get_analysis_model(name: str) -> Any:
+    """
+    This function retturns a face analisys model.
+    Eventually the model instance is lazily initialized.
+
+    Params:
+        name (string): The name of the face analisys model to be returned
+            Valid values are any of the following:\n
+            "Age", "Gender", "Emotion", "Race"
+
+    Exception:
+        KeyError: when name is not known
+
+    Returns:
+        reference to built model class instance
+    """
+
+    name = name.replace(" ", "")
+    if len(name) == 0:
+        raise KeyError("Empty model name")
+
+    global available_analisys_models
+    if not "available_analisys_models" in globals():
+        available_analisys_models = {
         "Emotion": Emotion.EmotionClient,
         "Age": Age.ApparentAgeClient,
         "Gender": Gender.GenderClient,
-        "Race": Race.RaceClient,
-    }
+        "Race": Race.RaceClient
+        }
 
-    if not "model_obj" in globals():
-        model_obj = {}
+    global analisys_model_instances
+    if not "analysis_model_instances" in globals():
+        analisys_model_instances = {}
 
-    if not model_name in model_obj.keys():
-        model = models.get(model_name)
-        if model:
-            model_obj[model_name] = model()
-        else:
-            raise ValueError(f"Invalid model_name passed - {model_name}")
+    if not name in analisys_model_instances.keys():
+        if not name in available_analisys_models.keys():
+            raise KeyError(f"Unknown analisys model : {name}")
+        tic = time.time()
+        analisys_model_instances[name] = available_analisys_models[name]()
+        logger.debug(f"Instantiated analysis model : {name} ({time.time() - tic:.3f} seconds)")
 
-    return model_obj[model_name]
+    return analisys_model_instances[name]

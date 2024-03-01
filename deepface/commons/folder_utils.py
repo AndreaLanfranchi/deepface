@@ -4,32 +4,25 @@ from deepface.commons.logger import Logger
 
 logger = Logger(module="deepface/commons/folder_utils.py")
 
-
-def initialize_folder() -> None:
-    """
-    Initialize the folder for storing model weights.
-
-    Raises:
-        OSError: if the folder cannot be created.
-    """
-    home = get_deepface_home()
-    deepface_home_path = home + "/.deepface"
-    weights_path = deepface_home_path + "/weights"
-
-    if not os.path.exists(deepface_home_path):
-        os.makedirs(deepface_home_path, exist_ok=True)
-        logger.info(f"Directory {home}/.deepface created")
-
-    if not os.path.exists(weights_path):
-        os.makedirs(weights_path, exist_ok=True)
-        logger.info(f"Directory {home}/.deepface/weights created")
-
-
-def get_deepface_home() -> str:
+def get_data_dir() -> str:
     """
     Get the home directory for storing model weights
+    It gets the home directory from the environment variable DEEPFACE_HOME
+    or the user's home directory when the former is not set.
 
     Returns:
-        str: the home directory.
+        str: the full path to home directory.
+
+    Raise:
+        ValueError: if the home directory does not exist.
     """
-    return str(os.getenv("DEEPFACE_HOME", default=str(Path.home())))
+    home_dir = str(os.getenv("DEEPFACE_HOME", default=str(Path.home())))
+    if not os.path.exists(home_dir):
+        raise ValueError(f"Directory {home_dir} does not exist")
+    home_dir_data = os.path.join(home_dir, ".deepface", "weights")
+    if not os.path.exists(home_dir_data):
+        os.makedirs(home_dir_data, exist_ok=True) # this is recursive
+    return os.path.join(home_dir, ".deepface")
+
+def get_weights_dir() -> str:
+    return os.path.join(get_data_dir(), "weights")

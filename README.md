@@ -236,7 +236,7 @@ demographies = DeepFace.analyze(img_path = "img4.jpg",
 )
 
 #face detection and alignment
-face_objs = DeepFace.extract_faces(img_path = "img.jpg", 
+face_objs = DeepFace.detect_faces(img_path = "img.jpg", 
         target_size = (224, 224), 
         detector_backend = backends[4]
 )

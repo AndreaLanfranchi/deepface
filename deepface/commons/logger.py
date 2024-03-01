@@ -19,8 +19,8 @@ class Logger:
 
     def info(self, message):
         if self.log_level <= logging.INFO:
-            self.dump_log(f"{message}")
-
+            self.dump_log(f"🔵 {message}")
+            
     def debug(self, message):
         if self.log_level <= logging.DEBUG:
             self.dump_log(f"🕷️ {message}")

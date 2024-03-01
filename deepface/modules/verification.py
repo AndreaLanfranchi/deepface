@@ -3,7 +3,7 @@ import time
 from typing import Any, Dict, Union
 
 # 3rd party dependencies
-import numpy as np
+import numpy
 
 # project dependencies
 from deepface.modules import representation, detection, modeling
@@ -11,12 +11,11 @@ from deepface.models.FacialRecognition import FacialRecognition
 
 
 def verify(
-    img1_path: Union[str, np.ndarray],
-    img2_path: Union[str, np.ndarray],
+    img1_path: Union[str, numpy.ndarray],
+    img2_path: Union[str, numpy.ndarray],
     model_name: str = "VGG-Face",
     detector_backend: str = "opencv",
     distance_metric: str = "cosine",
-    enforce_detection: bool = True,
     align: bool = True,
     expand_percentage: int = 0,
     normalization: str = "base",
@@ -29,10 +28,10 @@ def verify(
     (or lower distance) than vectors of images of different persons.
 
     Args:
-        img1_path (str or np.ndarray): Path to the first image. Accepts exact image path
+        img1_path (str or numpy.ndarray): Path to the first image. Accepts exact image path
             as a string, numpy array (BGR), or base64 encoded images.
 
-        img2_path (str or np.ndarray): Path to the second image. Accepts exact image path
+        img2_path (str or numpy.ndarray): Path to the second image. Accepts exact image path
             as a string, numpy array (BGR), or base64 encoded images.
 
         model_name (str): Model for face recognition. Options: VGG-Face, Facenet, Facenet512,
@@ -43,9 +42,6 @@ def verify(
 
         distance_metric (string): Metric for measuring similarity. Options: 'cosine',
             'euclidean', 'euclidean_l2' (default is cosine).
-
-        enforce_detection (boolean): If no face is detected in an image, raise an exception.
-            Set to False to avoid the exception for low-resolution images (default is True).
 
         align (bool): Flag to enable face alignment (default is True).
 
@@ -82,80 +78,75 @@ def verify(
     tic = time.time()
 
     # --------------------------------
-    model: FacialRecognition = modeling.build_model(model_name)
+    model: FacialRecognition = modeling.get_recognition_model(model_name)
     target_size = model.input_shape
 
     # img pairs might have many faces
-    img1_objs = detection.extract_faces(
-        img_path=img1_path,
+    img1_objs = detection.detect_faces(
+        source=img1_path,
         target_size=target_size,
-        detector_backend=detector_backend,
+        detector=detector_backend,
         grayscale=False,
-        enforce_detection=enforce_detection,
         align=align,
         expand_percentage=expand_percentage,
     )
 
-    img2_objs = detection.extract_faces(
-        img_path=img2_path,
+    img2_objs = detection.detect_faces(
+        source=img2_path,
         target_size=target_size,
-        detector_backend=detector_backend,
+        detector=detector_backend,
         grayscale=False,
-        enforce_detection=enforce_detection,
         align=align,
         expand_percentage=expand_percentage,
     )
     # --------------------------------
     distances = []
     regions = []
+
+    if distance_metric == "cosine":
+        distance_fn = find_cosine_distance
+    elif distance_metric == "euclidean":
+        distance_fn = find_euclidean_distance
+    elif distance_metric == "euclidean_l2":
+        distance_fn = find_euclidean_l2_distance
+    else:
+        raise NotImplementedError("Invalid distance_metric passed : ", distance_metric)
+
     # now we will find the face pair with minimum distance
     for img1_obj in img1_objs:
         img1_content = img1_obj["face"]
         img1_region = img1_obj["facial_area"]
+
+        img1_embedding_obj = representation.represent(
+            img_path=img1_content,
+            model_name=model_name,
+            detector_backend="donotdetect",
+            align=align,
+            normalization=normalization,
+        )
+        img1_representation = img1_embedding_obj[0]["embedding"]
+
         for img2_obj in img2_objs:
             img2_content = img2_obj["face"]
             img2_region = img2_obj["facial_area"]
-            img1_embedding_obj = representation.represent(
-                img_path=img1_content,
-                model_name=model_name,
-                enforce_detection=enforce_detection,
-                detector_backend="skip",
-                align=align,
-                normalization=normalization,
-            )
 
             img2_embedding_obj = representation.represent(
                 img_path=img2_content,
                 model_name=model_name,
-                enforce_detection=enforce_detection,
-                detector_backend="skip",
+                detector_backend="donotdetect",
                 align=align,
                 normalization=normalization,
             )
 
-            img1_representation = img1_embedding_obj[0]["embedding"]
             img2_representation = img2_embedding_obj[0]["embedding"]
-
-            if distance_metric == "cosine":
-                distance = find_cosine_distance(img1_representation, img2_representation)
-            elif distance_metric == "euclidean":
-                distance = find_euclidean_distance(img1_representation, img2_representation)
-            elif distance_metric == "euclidean_l2":
-                distance = find_euclidean_distance(
-                    l2_normalize(img1_representation), l2_normalize(img2_representation)
-                )
-            else:
-                raise ValueError("Invalid distance_metric passed - ", distance_metric)
-
+            distance = distance_fn(img1_representation, img2_representation)
             distances.append(distance)
             regions.append((img1_region, img2_region))
 
     # -------------------------------
     threshold = find_threshold(model_name, distance_metric)
     distance = min(distances)  # best distance
-    facial_areas = regions[np.argmin(distances)]
-
-    toc = time.time()
+    facial_areas = regions[numpy.argmin(distances)]
 
     # pylint: disable=simplifiable-if-expression
     resp_obj = {
@@ -166,69 +157,73 @@ def verify(
         "detector_backend": detector_backend,
         "similarity_metric": distance_metric,
         "facial_areas": {"img1": facial_areas[0], "img2": facial_areas[1]},
-        "time": round(toc - tic, 2),
+        "time": round(time.time() - tic, 2),
     }
 
     return resp_obj
 
 
 def find_cosine_distance(
-    source_representation: Union[np.ndarray, list], test_representation: Union[np.ndarray, list]
-) -> np.float64:
+    source_representation: Union[numpy.ndarray, list], test_representation: Union[numpy.ndarray, list]
+) -> numpy.float64:
     """
     Find cosine distance between two given vectors
     Args:
-        source_representation (np.ndarray or list): 1st vector
-        test_representation (np.ndarray or list): 2nd vector
+        source_representation (numpy.ndarray or list): 1st vector
+        test_representation (numpy.ndarray or list): 2nd vector
     Returns
-        distance (np.float64): calculated cosine distance
+        distance (numpy.float64): calculated cosine distance
     """
     if isinstance(source_representation, list):
-        source_representation = np.array(source_representation)
+        source_representation = numpy.array(source_representation)
 
     if isinstance(test_representation, list):
-        test_representation = np.array(test_representation)
+        test_representation = numpy.array(test_representation)
 
-    a = np.matmul(np.transpose(source_representation), test_representation)
-    b = np.sum(np.multiply(source_representation, source_representation))
-    c = np.sum(np.multiply(test_representation, test_representation))
-    return 1 - (a / (np.sqrt(b) * np.sqrt(c)))
+    a = numpy.matmul(numpy.transpose(source_representation), test_representation)
+    b = numpy.sum(numpy.multiply(source_representation, source_representation))
+    c = numpy.sum(numpy.multiply(test_representation, test_representation))
+    return 1 - (a / (numpy.sqrt(b) * numpy.sqrt(c)))
 
 
 def find_euclidean_distance(
-    source_representation: Union[np.ndarray, list], test_representation: Union[np.ndarray, list]
-) -> np.float64:
+    source_representation: Union[numpy.ndarray, list], test_representation: Union[numpy.ndarray, list]
+) -> numpy.float64:
     """
     Find euclidean distance between two given vectors
     Args:
-        source_representation (np.ndarray or list): 1st vector
-        test_representation (np.ndarray or list): 2nd vector
+        source_representation (numpy.ndarray or list): 1st vector
+        test_representation (numpy.ndarray or list): 2nd vector
     Returns
-        distance (np.float64): calculated euclidean distance
+        distance (numpy.float64): calculated euclidean distance
     """
     if isinstance(source_representation, list):
-        source_representation = np.array(source_representation)
+        source_representation = numpy.array(source_representation)
 
     if isinstance(test_representation, list):
-        test_representation = np.array(test_representation)
+        test_representation = numpy.array(test_representation)
 
     euclidean_distance = source_representation - test_representation
-    euclidean_distance = np.sum(np.multiply(euclidean_distance, euclidean_distance))
-    euclidean_distance = np.sqrt(euclidean_distance)
+    euclidean_distance = numpy.sum(numpy.multiply(euclidean_distance, euclidean_distance))
+    euclidean_distance = numpy.sqrt(euclidean_distance)
     return euclidean_distance
 
+def find_euclidean_l2_distance(
+    source_representation: Union[numpy.ndarray, list], test_representation: Union[numpy.ndarray, list]
+) -> numpy.float64:
+    return find_euclidean_distance(l2_normalize(source_representation), l2_normalize(test_representation))
 
-def l2_normalize(x: Union[np.ndarray, list]) -> np.ndarray:
+def l2_normalize(x: Union[numpy.ndarray, list]) -> numpy.ndarray:
     """
     Normalize input vector with l2
     Args:
-        x (np.ndarray or list): given vector
+        x (numpy.ndarray or list): given vector
     Returns:
-        y (np.ndarray): l2 normalized vector
+        y (numpy.ndarray): l2 normalized vector
     """
     if isinstance(x, list):
-        x = np.array(x)
-    return x / np.sqrt(np.sum(np.multiply(x, x)))
+        x = numpy.array(x)
+    return x / numpy.sqrt(numpy.sum(numpy.multiply(x, x)))
 
 
 def find_threshold(model_name: str, distance_metric: str) -> float:

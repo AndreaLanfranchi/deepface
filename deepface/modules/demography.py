@@ -2,7 +2,7 @@
 from typing import Any, Dict, List, Union
 
 # 3rd party dependencies
-import numpy as np
+import numpy
 from tqdm import tqdm
 
 # project dependencies
@@ -11,27 +11,22 @@ from deepface.extendedmodels import Gender, Race, Emotion
 
 
 def analyze(
-    img_path: Union[str, np.ndarray],
+    img_path: Union[str, numpy.ndarray],
     actions: Union[tuple, list] = ("emotion", "age", "gender", "race"),
-    enforce_detection: bool = True,
     detector_backend: str = "opencv",
     align: bool = True,
-    expand_percentage: int = 0,
-    silent: bool = False,
+    expand_percentage: int = 0
 ) -> List[Dict[str, Any]]:
     """
     Analyze facial attributes such as age, gender, emotion, and race in the provided image.
 
     Args:
-        img_path (str or np.ndarray): The exact path to the image, a numpy array in BGR format,
+        img_path (str or numpy.ndarray): The exact path to the image, a numpy array in BGR format,
             or a base64 encoded image. If the source image contains multiple faces, the result will
             include information for each detected face.
 
         actions (tuple): Attributes to analyze. The default is ('age', 'gender', 'emotion', 'race').
             You can exclude some of these attributes from the analysis if needed.
-
-        enforce_detection (boolean): If no face is detected in an image, raise an exception.
-            Set to False to avoid the exception for low-resolution images (default is True).
 
         detector_backend (string): face detector backend. Options: 'opencv', 'retinaface',
             'mtcnn', 'ssd', 'dlib', 'mediapipe', 'yolov8' (default is opencv).
@@ -42,9 +37,6 @@ def analyze(
         align (boolean): Perform alignment based on the eye positions (default is True).
 
         expand_percentage (int): expand detected facial area with a percentage (default is 0).
-
-        silent (boolean): Suppress or allow some log messages for a quieter analysis process
-            (default is False).
 
     Returns:
         results (List[Dict[str, Any]]): A list of dictionaries, where each dictionary represents
@@ -116,12 +108,11 @@ def analyze(
     # ---------------------------------
     resp_objects = []
 
-    img_objs = detection.extract_faces(
-        img_path=img_path,
+    img_objs = detection.detect_faces(
+        source=img_path,
         target_size=(224, 224),
-        detector_backend=detector_backend,
+        detector=detector_backend,
         grayscale=False,
-        enforce_detection=enforce_detection,
         align=align,
         expand_percentage=expand_percentage,
     )
@@ -134,16 +125,15 @@ def analyze(
             obj = {}
             # facial attribute analysis
             pbar = tqdm(
-                range(0, len(actions)),
-                desc="Finding actions",
-                disable=silent if len(actions) > 1 else True,
+                range(len(actions)),
+                desc="Finding actions"
             )
             for index in pbar:
                 action = actions[index]
                 pbar.set_description(f"Action: {action}")
 
                 if action == "emotion":
-                    emotion_predictions = modeling.build_model("Emotion").predict(img_content)
+                    emotion_predictions = modeling.get_analysis_model("Emotion").predict(img_content)
                     sum_of_predictions = emotion_predictions.sum()
 
                     obj["emotion"] = {}
@@ -151,24 +141,24 @@ def analyze(
                         emotion_prediction = 100 * emotion_predictions[i] / sum_of_predictions
                         obj["emotion"][emotion_label] = emotion_prediction
 
-                    obj["dominant_emotion"] = Emotion.labels[np.argmax(emotion_predictions)]
+                    obj["dominant_emotion"] = Emotion.labels[numpy.argmax(emotion_predictions)]
 
                 elif action == "age":
-                    apparent_age = modeling.build_model("Age").predict(img_content)
+                    apparent_age = modeling.get_analysis_model("Age").predict(img_content)
                     # int cast is for exception - object of type 'float32' is not JSON serializable
                     obj["age"] = int(apparent_age)
 
                 elif action == "gender":
-                    gender_predictions = modeling.build_model("Gender").predict(img_content)
+                    gender_predictions = modeling.get_analysis_model("Gender").predict(img_content)
                     obj["gender"] = {}
                     for i, gender_label in enumerate(Gender.labels):
                         gender_prediction = 100 * gender_predictions[i]
                         obj["gender"][gender_label] = gender_prediction
 
-                    obj["dominant_gender"] = Gender.labels[np.argmax(gender_predictions)]
+                    obj["dominant_gender"] = Gender.labels[numpy.argmax(gender_predictions)]
 
                 elif action == "race":
-                    race_predictions = modeling.build_model("Race").predict(img_content)
+                    race_predictions = modeling.get_analysis_model("Race").predict(img_content)
                     sum_of_predictions = race_predictions.sum()
 
                     obj["race"] = {}
@@ -176,7 +166,7 @@ def analyze(
                         race_prediction = 100 * race_predictions[i] / sum_of_predictions
                         obj["race"][race_label] = race_prediction
 
-                    obj["dominant_race"] = Race.labels[np.argmax(race_predictions)]
+                    obj["dominant_race"] = Race.labels[numpy.argmax(race_predictions)]
 
                 # -----------------------------
                 # mention facial areas

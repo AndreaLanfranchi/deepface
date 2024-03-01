@@ -1,6 +1,6 @@
 from typing import Any, Union, List
 import cv2
-import numpy as np
+import numpy
 from deepface.models.Detector import Detector, FacialAreaRegion
 
 # Link -> https://github.com/timesler/facenet-pytorch
@@ -9,19 +9,22 @@ from deepface.models.Detector import Detector, FacialAreaRegion
 
 class FastMtCnnClient(Detector):
     def __init__(self):
+        self.name = "fastmtcnn"
         self.model = self.build_model()
 
-    def detect_faces(self, img: np.ndarray) -> List[FacialAreaRegion]:
+    def detect_faces(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
         """
         Detect and align face with mtcnn
 
         Args:
-            img (np.ndarray): pre-loaded image as numpy array
+            img (numpy.ndarray): pre-loaded image as numpy array
 
         Returns:
             results (List[FacialAreaRegion]): A list of FacialAreaRegion objects
         """
-        resp = []
+        results = []
+        if img.shape[0] == 0 or img.shape[1] == 0:
+            return results
 
         img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)  # mtcnn expects RGB but OpenCV read BGR
         detections = self.model.detect(
@@ -44,9 +47,9 @@ class FastMtCnnClient(Detector):
                     right_eye=right_eye,
                     confidence=confidence,
                 )
-                resp.append(facial_area)
+                results.append(facial_area)
 
-        return resp
+        return results
 
     def build_model(self) -> Any:
         """

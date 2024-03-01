@@ -1,29 +1,32 @@
 from typing import List
-import numpy as np
+import numpy
 from retinaface import RetinaFace as rf
 from deepface.models.Detector import Detector, FacialAreaRegion
 
 # pylint: disable=too-few-public-methods
 class RetinaFaceClient(Detector):
     def __init__(self):
+        self.name = "retinaface"
         self.model = rf.build_model()
 
-    def detect_faces(self, img: np.ndarray) -> List[FacialAreaRegion]:
+    def detect_faces(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
         """
         Detect and align face with retinaface
 
         Args:
-            img (np.ndarray): pre-loaded image as numpy array
+            img (numpy.ndarray): pre-loaded image as numpy array
 
         Returns:
             results (List[FacialAreaRegion]): A list of FacialAreaRegion objects
         """
-        resp = []
+        results = []
+        if img.shape[0] == 0 or img.shape[1] == 0:
+            return results
 
         obj = rf.detect_faces(img, model=self.model, threshold=0.9)
 
         if not isinstance(obj, dict):
-            return resp
+            return results
 
         for face_idx in obj.keys():
             identity = obj[face_idx]
@@ -54,6 +57,6 @@ class RetinaFaceClient(Detector):
                 confidence=confidence,
             )
 
-            resp.append(facial_area)
+            results.append(facial_area)
 
-        return resp
+        return results

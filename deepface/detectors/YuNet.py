@@ -1,7 +1,7 @@
 import os
 from typing import Any, List
 import cv2
-import numpy as np
+import numpy
 import gdown
 from deepface.commons import folder_utils
 from deepface.models.Detector import Detector, FacialAreaRegion
@@ -12,6 +12,7 @@ logger = Logger(module="detectors.YunetWrapper")
 
 class YuNetClient(Detector):
     def __init__(self):
+        self.name = "yunet"
         self.model = self.build_model()
 
     def build_model(self) -> Any:
@@ -30,7 +31,7 @@ class YuNetClient(Detector):
         # pylint: disable=C0301
         url = "https://github.com/opencv/opencv_zoo/raw/main/models/face_detection_yunet/face_detection_yunet_2023mar.onnx"
         file_name = "face_detection_yunet_2023mar.onnx"
-        home = folder_utils.get_deepface_home()
+        home = folder_utils.get_data_dir()
         if os.path.isfile(home + f"/.deepface/weights/{file_name}") is False:
             logger.info(f"{file_name} will be downloaded...")
             output = home + f"/.deepface/weights/{file_name}"
@@ -48,12 +49,12 @@ class YuNetClient(Detector):
             ) from err
         return face_detector
 
-    def detect_faces(self, img: np.ndarray) -> List[FacialAreaRegion]:
+    def detect_faces(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
         """
         Detect and align face with yunet
 
         Args:
-            img (np.ndarray): pre-loaded image as numpy array
+            img (numpy.ndarray): pre-loaded image as numpy array
 
         Returns:
             results (List[FacialAreaRegion]): A list of FacialAreaRegion objects
@@ -61,7 +62,11 @@ class YuNetClient(Detector):
         # FaceDetector.detect_faces does not support score_threshold parameter.
         # We can set it via environment variable.
         score_threshold = float(os.environ.get("yunet_score_threshold", "0.9"))
-        resp = []
+
+        results = []
+        if img.shape[0] == 0 or img.shape[1] == 0:
+            return results
+
         faces = []
         height, width = img.shape[0], img.shape[1]
         # resize image if it is too large (Yunet fails to detect faces on large input sometimes)
@@ -77,7 +82,7 @@ class YuNetClient(Detector):
         self.model.setScoreThreshold(score_threshold)
         _, faces = self.model.detect(img)
         if faces is None:
-            return resp
+            return results
         for face in faces:
             # pylint: disable=W0105
             """
@@ -121,5 +126,5 @@ class YuNetClient(Detector):
                 left_eye=left_eye,
                 right_eye=right_eye,
             )
-            resp.append(facial_area)
-        return resp
+            results.append(facial_area)
+        return results

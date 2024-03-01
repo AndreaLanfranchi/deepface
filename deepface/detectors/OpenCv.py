@@ -1,7 +1,7 @@
 import os
 from typing import Any, List
 import cv2
-import numpy as np
+import numpy
 from deepface.models.Detector import Detector, FacialAreaRegion
 
 
@@ -11,6 +11,7 @@ class OpenCvClient(Detector):
     """
 
     def __init__(self):
+        self.name = "opencv"
         self.model = self.build_model()
 
     def build_model(self):
@@ -24,17 +25,19 @@ class OpenCvClient(Detector):
         detector["eye_detector"] = self.__build_cascade("haarcascade_eye")
         return detector
 
-    def detect_faces(self, img: np.ndarray) -> List[FacialAreaRegion]:
+    def detect_faces(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
         """
         Detect and align face with opencv
 
         Args:
-            img (np.ndarray): pre-loaded image as numpy array
+            img (numpy.ndarray): pre-loaded image as numpy array
 
         Returns:
             results (List[FacialAreaRegion]): A list of FacialAreaRegion objects
         """
-        resp = []
+        results = []
+        if img.shape[0] == 0 or img.shape[1] == 0:
+            return results
 
         detected_face = None
 
@@ -62,15 +65,15 @@ class OpenCvClient(Detector):
                     right_eye=right_eye,
                     confidence=(100 - confidence) / 100,
                 )
-                resp.append(facial_area)
+                results.append(facial_area)
 
-        return resp
+        return results
 
-    def find_eyes(self, img: np.ndarray) -> tuple:
+    def find_eyes(self, img: numpy.ndarray) -> tuple:
         """
         Find the left and right eye coordinates of given image
         Args:
-            img (np.ndarray): given image
+            img (numpy.ndarray): given image
         Returns:
             left and right eye (tuple)
         """
