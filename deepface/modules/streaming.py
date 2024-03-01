@@ -3,7 +3,7 @@ import os
 import time
 import threading
 import traceback
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict, List, Tuple, Union, Optional
 
 import numpy
 import cv2
@@ -33,7 +33,7 @@ class Stream(threading.Thread):
         https://stackoverflow.com/a/65191619
     """
 
-    def __init__(self, 
+    def __init__(self,
                  source: Union[str, int] = int(0),
                  buffer_frame_size: int = 3,
                  ):
@@ -61,17 +61,16 @@ class Stream(threading.Thread):
         if self.__stop:
             raise IOError("Capture source failed")
         return (self.__last_read, self.__last_frame)
-    
+
     def stop(self):
         self.__stop = True
-    
 
 def analysis(
     db_path:str,
     model_name:str ="VGG-Face",
     detector_backend:str="opencv",
     distance_metric:str="cosine",
-    analyzers:List[str]= [],
+    analyzers:Optional[List[str]] = None,
     source: Union[str, int] = int(0),
     freeze_time_seconds: int = 3,
     valid_frames_count: int = 5,
@@ -96,8 +95,9 @@ def analysis(
     target_size = model.input_shape
 
     # Lazy load the analysis models (if needed)
-    for analyzer in analyzers:
-        _ = DeepFace.get_analysis_model(name=analyzer)
+    if analyzers is not None:
+        for analyzer in analyzers:
+            _ = DeepFace.get_analysis_model(name=analyzer)
 
     # -----------------------
     # call a dummy find function for db_path once to create embeddings in the initialization
