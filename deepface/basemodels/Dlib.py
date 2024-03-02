@@ -64,23 +64,22 @@ class DlibResNet:
 
         # ---------------------
 
-        file_name = "dlib_face_recognition_resnet_model_v1.dat"
-        weight_file = os.path.join(folder_utils.get_weights_dir(), file_name)
+        file_name: str = "dlib_face_recognition_resnet_model_v1.dat"
+        url: str = f"http://dlib.net/files/{file_name}.bz2"
+        output: str = os.path.join(folder_utils.get_weights_dir(), file_name)
 
         # ---------------------
 
         # download pre-trained model if it does not exist
-        if os.path.isfile(weight_file) != True:
+        if os.path.isfile(output) != True:
             logger.info(f"Download : {file_name}")
 
-            source_file = f"{file_name}.bz2"
-            url = f"http://dlib.net/files/{source_file}"
-            output = os.path.join(folder_utils.get_weights_dir(), source_file)
-            gdown.download(url, output, quiet=False)
+            compressed_output = output + ".bz2"
+            gdown.download(url, compressed_output, quiet=False)
 
-            zipfile = bz2.BZ2File(output)
+            zipfile = bz2.BZ2File(compressed_output)
             data = zipfile.read()
-            with open(weight_file, "wb") as f:
+            with open(output, "wb") as f:
                 f.write(data)
             
             # remove the downloaded file
@@ -88,7 +87,7 @@ class DlibResNet:
 
         # ---------------------
 
-        self.model = dlib.face_recognition_model_v1(weight_file)
+        self.model = dlib.face_recognition_model_v1(output)
 
         # ---------------------
 

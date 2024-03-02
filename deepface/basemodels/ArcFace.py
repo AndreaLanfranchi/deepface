@@ -68,10 +68,7 @@ class ArcFaceClient(FacialRecognition):
         # embedding = model.predict(img, verbose=0)[0].tolist()
         return self.model(img, training=False).numpy()[0].tolist()
 
-    def __load_model(
-        self,
-        url:str ="https://github.com/serengil/deepface_models/releases/download/v1.0/arcface_weights.h5",
-    ) -> Model:
+    def __load_model(self) -> Model:
         """
         Construct ArcFace model, download its weights and load
         Returns:
@@ -96,8 +93,9 @@ class ArcFaceClient(FacialRecognition):
         # ---------------------------------------
         # check the availability of pre-trained weights
 
-        file_name = "arcface_weights.h5"
-        output = os.path.join(folder_utils.get_weights_dir(), file_name)
+        file_name: str = "arcface_weights.h5"
+        url: str = f"https://github.com/serengil/deepface_models/releases/download/v1.0/{file_name}",
+        output: str = os.path.join(folder_utils.get_weights_dir(), file_name)
 
         if os.path.isfile(output) != True:
             logger.info(f"Download : {file_name}")
