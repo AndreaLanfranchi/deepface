@@ -39,9 +39,7 @@ class GenderClient(Demography):
         return self.model.predict(img, verbose=0)[0, :]
 
 
-def load_model(
-    url="https://github.com/serengil/deepface_models/releases/download/v1.0/gender_model_weights.h5",
-) -> Model:
+def load_model() -> Model:
     """
     Construct gender model, download its weights and load
     Returns:
@@ -66,14 +64,13 @@ def load_model(
 
     # load weights
 
-    home = folder_utils.get_data_dir()
+    file_name = "gender_model_weights.h5"
+    url = f"https://github.com/serengil/deepface_models/releases/download/v1.0/{file_name}"
+    output = os.path.join(folder_utils.get_weights_dir(), file_name)
 
-    if os.path.isfile(home + "/.deepface/weights/gender_model_weights.h5") != True:
-        logger.info("gender_model_weights.h5 will be downloaded...")
-
-        output = home + "/.deepface/weights/gender_model_weights.h5"
+    if os.path.isfile(output) != True:
+        logger.info(f"Download : {file_name}")
         gdown.download(url, output, quiet=False)
 
-    gender_model.load_weights(home + "/.deepface/weights/gender_model_weights.h5")
-
+    gender_model.load_weights(output)
     return gender_model

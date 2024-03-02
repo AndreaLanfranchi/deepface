@@ -22,8 +22,7 @@ class DlibClient(Detector):
         Returns:
             model (Any)
         """
-        home = folder_utils.get_data_dir()
-
+        
         # this is not a must dependency. do not import it in the global level.
         try:
             import dlib

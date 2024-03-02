@@ -38,9 +38,7 @@ class RaceClient(Demography):
         return self.model.predict(img, verbose=0)[0, :]
 
 
-def load_model(
-    url="https://github.com/serengil/deepface_models/releases/download/v1.0/race_model_single_batch.h5",
-) -> Model:
+def load_model() -> Model:
     """
     Construct race model, download its weights and load
     """
@@ -62,15 +60,13 @@ def load_model(
     # --------------------------
 
     # load weights
+    file_name = "race_model_single_batch.h5"
+    url = f"https://github.com/serengil/deepface_models/releases/download/v1.0/{file_name}"
+    output = os.path.join(folder_utils.get_weights_dir(), file_name)
 
-    home = folder_utils.get_data_dir()
-
-    if os.path.isfile(home + "/.deepface/weights/race_model_single_batch.h5") != True:
-        logger.info("race_model_single_batch.h5 will be downloaded...")
-
-        output = home + "/.deepface/weights/race_model_single_batch.h5"
+    if os.path.isfile(output) != True:
+        logger.info(f"Download : {file_name}")
         gdown.download(url, output, quiet=False)
 
-    race_model.load_weights(home + "/.deepface/weights/race_model_single_batch.h5")
-
+    race_model.load_weights(output)
     return race_model

@@ -26,37 +26,29 @@ class SsdClient(Detector):
             model (dict)
         """
 
-        home = folder_utils.get_data_dir()
+        weights_folder = folder_utils.get_weights_folder()
+        file_name = "deploy.prototxt"
+        output1 = os.path.join(weights_folder, file_name)
 
         # model structure
-        if os.path.isfile(home + "/.deepface/weights/deploy.prototxt") != True:
+        if os.path.isfile(output1) != True:
+            logger.info(f"Download : {file_name}")
+            url = f"https://github.com/opencv/opencv/raw/3.4.0/samples/dnn/face_detector/{file_name}"
+            gdown.download(url, output1, quiet=False)
 
-            logger.info("deploy.prototxt will be downloaded...")
-
-            url = "https://github.com/opencv/opencv/raw/3.4.0/samples/dnn/face_detector/deploy.prototxt"
-
-            output = home + "/.deepface/weights/deploy.prototxt"
-
-            gdown.download(url, output, quiet=False)
+        file_name = "res10_300x300_ssd_iter_140000.caffemodel"
+        output2 = os.path.join(weights_folder, file_name)
 
         # pre-trained weights
-        if (
-            os.path.isfile(home + "/.deepface/weights/res10_300x300_ssd_iter_140000.caffemodel")
-            != True
-        ):
+        if os.path.isfile(output2) != True:
+            logger.info(f"Download : {file_name}")
 
-            logger.info("res10_300x300_ssd_iter_140000.caffemodel will be downloaded...")
-
-            url = "https://github.com/opencv/opencv_3rdparty/raw/dnn_samples_face_detector_20170830/res10_300x300_ssd_iter_140000.caffemodel"
-
-            output = home + "/.deepface/weights/res10_300x300_ssd_iter_140000.caffemodel"
-
-            gdown.download(url, output, quiet=False)
+            url = f"https://github.com/opencv/opencv_3rdparty/raw/dnn_samples_face_detector_20170830/{file_name}"
+            gdown.download(url, output2, quiet=False)
 
         try:
             face_detector = cv2.dnn.readNetFromCaffe(
-                home + "/.deepface/weights/deploy.prototxt",
-                home + "/.deepface/weights/res10_300x300_ssd_iter_140000.caffemodel",
+                output1, output2
             )
         except Exception as err:
             raise ValueError(

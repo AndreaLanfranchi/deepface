@@ -9,7 +9,6 @@ from deepface.commons.logger import Logger
 
 logger = Logger(module="detectors.YunetWrapper")
 
-
 class YuNetClient(Detector):
     def __init__(self):
         self.name = "yunet"
@@ -23,23 +22,22 @@ class YuNetClient(Detector):
         """
 
         opencv_version = cv2.__version__.split(".")
-
         if len(opencv_version) > 2 and int(opencv_version[0]) == 4 and int(opencv_version[1]) < 8:
             # min requirement: https://github.com/opencv/opencv_zoo/issues/172
-            raise ValueError(f"YuNet requires opencv-python >= 4.8 but you have {cv2.__version__}")
+            raise RuntimeError(f"YuNet requires opencv-python >= 4.8 but you have {cv2.__version__}")
 
         # pylint: disable=C0301
-        url = "https://github.com/opencv/opencv_zoo/raw/main/models/face_detection_yunet/face_detection_yunet_2023mar.onnx"
         file_name = "face_detection_yunet_2023mar.onnx"
-        home = folder_utils.get_data_dir()
-        if os.path.isfile(home + f"/.deepface/weights/{file_name}") is False:
-            logger.info(f"{file_name} will be downloaded...")
-            output = home + f"/.deepface/weights/{file_name}"
+        url = f"https://github.com/opencv/opencv_zoo/raw/main/models/face_detection_yunet/{file_name}"
+        output = os.path.join(folder_utils.get_weights_dir(), file_name)
+
+        if os.path.isfile(output) is False:
+            logger.info(f"Download : {file_name}")
             gdown.download(url, output, quiet=False)
 
         try:
             face_detector = cv2.FaceDetectorYN_create(
-                home + f"/.deepface/weights/{file_name}", "", (0, 0)
+                output, "", (0, 0)
             )
         except Exception as err:
             raise ValueError(

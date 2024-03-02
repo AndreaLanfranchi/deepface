@@ -51,9 +51,7 @@ class EmotionClient(Demography):
         return emotion_predictions
 
 
-def load_model(
-    url="https://github.com/serengil/deepface_models/releases/download/v1.0/facial_expression_model_weights.h5",
-) -> Sequential:
+def load_model() -> Sequential:
     """
     Consruct emotion model, download and load weights
     """
@@ -88,14 +86,14 @@ def load_model(
 
     # ----------------------------
 
-    home = folder_utils.get_data_dir()
+    file_name = "facial_expression_model_weights.h5"
+    url = f"https://github.com/serengil/deepface_models/releases/download/v1.0/{file_name}",
+    output = os.path.join(folder_utils.get_weights_dir(), file_name)
 
-    if os.path.isfile(home + "/.deepface/weights/facial_expression_model_weights.h5") != True:
-        logger.info("facial_expression_model_weights.h5 will be downloaded...")
-
-        output = home + "/.deepface/weights/facial_expression_model_weights.h5"
+    if os.path.isfile(output) != True:
+        logger.info(f"Download : {file_name}")
         gdown.download(url, output, quiet=False)
 
-    model.load_weights(home + "/.deepface/weights/facial_expression_model_weights.h5")
+    model.load_weights(output)
 
     return model

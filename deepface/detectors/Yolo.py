@@ -18,7 +18,6 @@ WEIGHT_URL = "https://drive.google.com/uc?id=1qcr9DbgsX3ryrz2uU8w4Xm3cOrRywXqb"
 # used in alignment_procedure function
 LANDMARKS_CONFIDENCE_THRESHOLD = 0.5
 
-
 class YoloClient(Detector):
     def __init__(self):
         self.name = "yolov8"
@@ -40,22 +39,23 @@ class YoloClient(Detector):
                 Please install using 'pip install ultralytics' "
             ) from e
 
-        weight_path = f"{folder_utils.get_data_dir()}{PATH}"
+
+        file_name = "yolov8n-face.pt"
+        output = os.path.join(folder_utils.get_weights_dir(), file_name)
 
         # Download the model's weights if they don't exist
-        if not os.path.isfile(weight_path):
-            logger.info(f"Downloading Yolo weights from {WEIGHT_URL} to {weight_path}...")
+        if not os.path.isfile(output):
+            logger.info(f"Download : {file_name}")
             try:
-                gdown.download(WEIGHT_URL, weight_path, quiet=False)
+                gdown.download(WEIGHT_URL, output, quiet=False)
             except Exception as err:
                 raise ValueError(
                     f"Exception while downloading Yolo weights from {WEIGHT_URL}."
-                    f"You may consider to download it to {weight_path} manually."
+                    f"You may consider to download it to {output} manually."
                 ) from err
-            logger.info(f"Yolo model is just downloaded to {os.path.basename(weight_path)}")
 
         # Return face_detector
-        return YOLO(weight_path)
+        return YOLO(output)
 
     def detect_faces(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
         """

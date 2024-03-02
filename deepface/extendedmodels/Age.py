@@ -37,9 +37,7 @@ class ApparentAgeClient(Demography):
         return find_apparent_age(age_predictions)
 
 
-def load_model(
-    url="https://github.com/serengil/deepface_models/releases/download/v1.0/age_model_weights.h5",
-) -> Model:
+def load_model() -> Model:
     """
     Construct age model, download its weights and load
     Returns:
@@ -64,15 +62,15 @@ def load_model(
 
     # load weights
 
-    home = folder_utils.get_data_dir()
+    file_name = "age_model_weights.h5"
+    url = f"https://github.com/serengil/deepface_models/releases/download/v1.0/{file_name}",
+    output = os.path.join(folder_utils.get_weights_dir(), file_name)
 
-    if os.path.isfile(home + "/.deepface/weights/age_model_weights.h5") != True:
-        logger.info("age_model_weights.h5 will be downloaded...")
-
-        output = home + "/.deepface/weights/age_model_weights.h5"
+    if os.path.isfile(output) != True:
+        logger.info(f"Download : {file_name}")
         gdown.download(url, output, quiet=False)
 
-    age_model.load_weights(home + "/.deepface/weights/age_model_weights.h5")
+    age_model.load_weights(output)
 
     return age_model
 
