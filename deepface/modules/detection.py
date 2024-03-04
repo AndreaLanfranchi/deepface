@@ -177,6 +177,14 @@ def align_face(
     if img.shape[0] == 0 or img.shape[1] == 0:
         return img, 0
 
-    angle = float(numpy.degrees(numpy.arctan2(right_eye[1] - left_eye[1], right_eye[0] - left_eye[0])))
+    angle = float(
+        numpy.degrees(
+            numpy.arctan2(
+                right_eye[1] - left_eye[1],
+                right_eye[0] - left_eye[0]
+                )
+            )
+        )
+
     img = numpy.array(Image.fromarray(img).rotate(angle))
     return img, angle
