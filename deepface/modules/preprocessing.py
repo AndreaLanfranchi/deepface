@@ -39,11 +39,11 @@ def load_image(source: Union[str, numpy.ndarray]) -> Tuple[numpy.ndarray, str]:
 
     http_pattern = re.compile(r"^http(s)?://.*", re.IGNORECASE)
     if http_pattern.match(source):
-        return __load_image_from_web(url=source), source
+        return _load_image_from_web(url=source), source
 
     base64_pattern = re.compile(r"^data:image\/.*", re.IGNORECASE)
     if base64_pattern.match(source):
-        return __load_base64(uri=source), "base64 encoded string"
+        return _load_base64(uri=source), "base64 encoded string"
 
     # TODO : this is still unsafe as there are many other ways to
     # express the source of image to be loaded.
@@ -51,9 +51,9 @@ def load_image(source: Union[str, numpy.ndarray]) -> Tuple[numpy.ndarray, str]:
     # as a result bailing out to a filesystem load might be
     # an issue
 
-    return __load_image_from_file(filename=source), source
+    return _load_image_from_file(filename=source), source
 
-def __load_image_from_web(url: str) -> numpy.ndarray:
+def _load_image_from_web(url: str) -> numpy.ndarray:
     """
     Loading an image from web
 
@@ -74,7 +74,7 @@ def __load_image_from_web(url: str) -> numpy.ndarray:
     return image
 
 
-def __load_base64(uri: str) -> numpy.ndarray:
+def _load_base64(uri: str) -> numpy.ndarray:
     """Load image from base64 string.
 
     Args:
@@ -100,7 +100,7 @@ def __load_base64(uri: str) -> numpy.ndarray:
     except binascii.Error as ex:
         raise ValueError("Invalid base64 input") from ex
 
-def __load_image_from_file(filename: str) -> numpy.ndarray:
+def _load_image_from_file(filename: str) -> numpy.ndarray:
     """Load image from file.
 
     Args:

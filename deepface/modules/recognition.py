@@ -125,7 +125,7 @@ def find(
             )
 
     # Get the list of images on storage
-    storage_images:Set[str] = __list_image_files(path=db_path)
+    storage_images:Set[str] = _list_image_files(path=db_path)
     pickled_images:Set[str] = {representation[0] for representation in representations}
 
     # Enforce data consistency amongst on disk images and pickle file
@@ -143,7 +143,7 @@ def find(
 
     # find representations for new images
     if len(new_images)>0:
-        representations += __find_bulk_embeddings(
+        representations += _find_bulk_embeddings(
             employees=new_images,
             model_name=model_name,
             target_size=target_size,
@@ -258,7 +258,7 @@ def find(
 
 _image_file_pattern = re.compile(r".*\.(jpg|jpeg|png)$", re.IGNORECASE) # Mimic static variable
 
-def __list_image_files(path: str) -> Set[str]:
+def _list_image_files(path: str) -> Set[str]:
     """
     List images in a given path
     Args:
@@ -280,7 +280,7 @@ def __list_image_files(path: str) -> Set[str]:
 
     return results
 
-def __find_bulk_embeddings(
+def _find_bulk_embeddings(
     employees: List[str],
     model_name: str = "VGG-Face",
     target_size: tuple = (224, 224),
