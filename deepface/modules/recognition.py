@@ -2,7 +2,7 @@
 import os
 import re
 import pickle
-from typing import List, Union, Optional
+from typing import List, Set, Union, Optional
 import time
 
 # 3rd party dependencies
@@ -37,7 +37,8 @@ def find(
             or a base64 encoded image. If the source image contains multiple faces, the result will
             include information for each detected face.
 
-        db_path (string): Path to the folder containing image files. All detected faces
+        db_path (string): Path to the folder containing image files. Must be a directory.
+            All valid pictures (jpg, jpeg, png) image files with validly detected faces
             in the database will be considered in the decision-making process.
 
         model_name (str): Model for face recognition. Options: VGG-Face, Facenet, Facenet512,
@@ -84,7 +85,7 @@ def find(
 
     # -------------------------------
     if os.path.isdir(db_path) is not True:
-        raise ValueError("Passed db_path does not exist!")
+        raise ValueError(f"{db_path} does not exist or is not a directory.")
 
     model: FacialRecognition = modeling.get_recognition_model(model_name)
     target_size = model.input_shape
@@ -96,7 +97,8 @@ def find(
     datastore_path = os.path.join(db_path, file_name)
     representations = []
 
-    df_cols = [
+    # This is the "record template" for each item in the pickle file
+    template_cols: List[str] = [
         "identity",
         f"{model_name}_representation",
         "target_x",
@@ -116,22 +118,20 @@ def find(
 
     # Check if the representations are out-of-date
     if len(representations) > 0:
-        if len(representations[0]) != len(df_cols):
+        if len(representations[0]) != len(template_cols):
             raise ValueError(
                 f"Seems existing {datastore_path} is out-of-the-date."
                 "Please delete it and re-run."
             )
-        pickled_images = [representation[0] for representation in representations]
-    else:
-        pickled_images = []
 
     # Get the list of images on storage
-    storage_images = __list_images(path=db_path)
+    storage_images:Set[str] = __list_image_files(path=db_path)
+    pickled_images:Set[str] = {representation[0] for representation in representations}
 
     # Enforce data consistency amongst on disk images and pickle file
     must_save_pickle = False
-    new_images = list(set(storage_images) - set(pickled_images)) # images added to storage
-    old_images = list(set(pickled_images) - set(storage_images)) # images removed from storage
+    new_images:Set[str] = storage_images - pickled_images # images added to storage
+    old_images:Set[str] = pickled_images - storage_images # images removed from storage
 
     if len(new_images) > 0 or len(old_images) > 0:
         logger.info(f"Found {len(new_images)} new images and {len(old_images)} removed images")
@@ -167,7 +167,7 @@ def find(
     # now, we got representations for facial database
     df = pandas.DataFrame(
         representations,
-        columns=df_cols,
+        columns=template_cols,
     )
 
     try:
@@ -256,22 +256,29 @@ def find(
     logger.debug(f"find function duration {(time.time() - tic):0.5f} seconds")
     return resp_obj
 
+_image_file_pattern = re.compile(r".*\.(jpg|jpeg|png)$", re.IGNORECASE) # Mimic static variable
 
-def __list_images(path: str) -> List[str]:
+def __list_image_files(path: str) -> Set[str]:
     """
     List images in a given path
     Args:
-        path (str): path's location
+        path (str): Directory location where to get the collection
+            of image file names
     Returns:
-        images (list): list of exact image paths
+        images (set): Unique list of image file names combined with
+            the path
+    Raises:
+        IOError: if the path does not exist or is not a directory
     """
-    images = []
-    pattern = re.compile(r".*\.(jpg|jpeg|png)$", re.IGNORECASE)
+    results: Set[str] = set()
+    if not os.path.isdir(path):
+        raise IOError(f"Path {path} does not exist or is not a directory!")
+    
     for file_name in os.listdir(path):
-        if pattern.match(file_name):
-            images.append(os.path.join(path, file_name))
-    return images
+        if _image_file_pattern.match(file_name):
+            results.add(os.path.join(path, file_name))
 
+    return results
 
 def __find_bulk_embeddings(
     employees: List[str],
