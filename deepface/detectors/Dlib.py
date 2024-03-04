@@ -11,7 +11,7 @@ logger = Logger(module="detectors.DlibWrapper")
 
 
 class DlibClient(Detector):
-    
+
     def __init__(self):
         self.name = "dlib"
         self.model = self.build_model()
@@ -22,7 +22,7 @@ class DlibClient(Detector):
         Returns:
             model (Any)
         """
-        
+
         # this is not a must dependency. do not import it in the global level.
         try:
             import dlib
@@ -37,11 +37,10 @@ class DlibClient(Detector):
 
         # check required file exists in the home/.deepface/weights folder
         if os.path.isfile(output) != True:
-            
+
             logger.info(f"Download : {file_name}")
-            
             source_file = f"{file_name}.bz2"
-            
+
             url = f"http://dlib.net/files/{source_file}"
             dest = os.path.join(folder_utils.get_weights_dir(), source_file)
             gdown.download(url, dest, quiet=False)

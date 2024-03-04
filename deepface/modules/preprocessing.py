@@ -33,16 +33,23 @@ def load_image(source: Union[str, numpy.ndarray]) -> Tuple[numpy.ndarray, str]:
     if not isinstance(source, str):
         raise TypeError(f"Unsupoorted source type {type(source)}")
 
-    if len(source.replace(" ", "")) == 0:
+    source = source.strip()
+    if len(source) == 0:
         raise ValueError("Invalid source. Empty string.")
+
+    http_pattern = re.compile(r"^http(s)?://.*", re.IGNORECASE)
+    if http_pattern.match(source):
+        return __load_image_from_web(url=source), source
 
     base64_pattern = re.compile(r"^data:image\/.*", re.IGNORECASE)
     if base64_pattern.match(source):
         return __load_base64(uri=source), "base64 encoded string"
 
-    http_pattern = re.compile(r"^http(s)?://.*", re.IGNORECASE)
-    if http_pattern.match(source):
-        return __load_image_from_web(url=source), source
+    # TODO : this is still unsafe as there are many other ways to
+    # express the source of image to be loaded.
+    # for example, an "ftp://" link or a "sftp://" link
+    # as a result bailing out to a filesystem load might be
+    # an issue
 
     return __load_image_from_file(filename=source), source
 
@@ -89,7 +96,7 @@ def __load_base64(uri: str) -> numpy.ndarray:
     try:
         decoded = base64.b64decode(split_data[1], validate=True)
         nparr = numpy.frombuffer(buffer=decoded, dtype=numpy.uint8)
-        return cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        return cv2.imdecode(nparr, cv2.IMREAD_ANYCOLOR)
     except binascii.Error as ex:
         raise ValueError("Invalid base64 input") from ex
 

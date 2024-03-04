@@ -191,7 +191,6 @@ def analysis(
                         best_capture,
                         item["facial_area"],
                         matching_results,
-                        target_size,
                         detector_backend,
                     ) == True:
                         should_freeze = True
@@ -396,7 +395,6 @@ def __process_matches(
         picture: MatLike,
         facial_area: Dict[str, Any],
         matching_results: List[pandas.DataFrame],
-        target_size: Tuple[int, int],
         detector_backend: str,
 ) -> bool:
 
@@ -413,7 +411,6 @@ def __process_matches(
     try:
         matching_faces = DeepFace.detect_faces(
             img_path=matching_identity,
-            target_size=target_size,
             detector_backend=detector_backend,
             align=False,
         )
