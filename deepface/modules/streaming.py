@@ -173,17 +173,18 @@ def analysis(
             cv2.imshow(capture_window_title, __box_faces(best_capture, best_faces))
             __cv2_refresh()
 
-            # Perform facial attribute analysis and face recognition
+            # TODO : Perform facial attribute analysis and face recognition
+
+            # Display the results
             should_freeze = False
             for item in best_faces:
 
                 # Detect matches for this face
                 matching_results = __get_face_matches(
-                    best_capture,
-                    item["facial_area"],
-                    db_path,
-                    model_name,
-                    distance_metric
+                    face = item["face"],
+                    db_path = db_path,
+                    model_name = model_name,
+                    distance_metric = distance_metric
                 )
                 if len(matching_results) > 0:
                     # Applies matches to the best capture
@@ -372,16 +373,14 @@ def __crop_face(
 # Get the matches from the dataset
 # which are the closest to the detected face
 def __get_face_matches(
-    picture: MatLike,
-    facial_area: Dict[str, Any],
+    face: numpy.ndarray,
     db_path: str,
     model_name: str,
     distance_metric: str
 ) -> List[pandas.DataFrame]:
 
-    cropped_face = __crop_face(picture, facial_area)
     matching_results = DeepFace.find(
-        img_path=cropped_face,
+        img_path=face,
         db_path=db_path,
         model_name=model_name,
         detector_backend="donotdetect", # Skip detection, we already have the face
