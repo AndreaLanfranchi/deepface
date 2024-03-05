@@ -2,8 +2,7 @@ from typing import List, Tuple, Optional
 from abc import ABC, abstractmethod
 import numpy
 
-# Notice that all facial detector models must inherit from this class
-# and implement the abstract methods.
+# Abstract class all specialized face detectors must inherit from.
 class Detector(ABC):
 
     name: str               # Name of the detector

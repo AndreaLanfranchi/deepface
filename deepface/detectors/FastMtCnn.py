@@ -3,14 +3,14 @@ import cv2
 import numpy
 from deepface.models.Detector import Detector, FacialAreaRegion
 
-# Link -> https://github.com/timesler/facenet-pytorch
-# Examples https://www.kaggle.com/timesler/guide-to-mtcnn-in-facenet-pytorch
-
-
 class FastMtCnnClient(Detector):
     """
     This class is used to detect faces using fast mtcnn face detector.
     Note! This is an optional detector, ensure the library is installed.
+
+    See the following link for more information:
+    https://github.com/timesler/facenet-pytorch
+    Examples https://www.kaggle.com/timesler/guide-to-mtcnn-in-facenet-pytorch
     """
     _detector: Any
 
