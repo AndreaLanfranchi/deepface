@@ -50,7 +50,7 @@ def get_detector(name: str) -> Detector:
         reference to built model class instance
     """
 
-    name = name.replace(" ", "")
+    name = name.lower().strip()
     if len(name) == 0:
         raise KeyError("Empty detector name")
 
