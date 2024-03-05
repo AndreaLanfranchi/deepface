@@ -2,17 +2,16 @@ from typing import List, Tuple, Optional
 from abc import ABC, abstractmethod
 import numpy
 
-# Notice that all facial detector models must be inherited from this class
-
-
-# pylint: disable=unnecessary-pass, too-few-public-methods
+# Notice that all facial detector models must inherit from this class
+# and implement the abstract methods.
 class Detector(ABC):
-    name: str
+    
+    name: str               # Name of the detector
 
     @abstractmethod
     def detect_faces(self, img: numpy.ndarray) -> List["FacialAreaRegion"]:
         """
-        Interface for detect and align face
+        Interface in picture face detection.
 
         Args:
             img (numpy.ndarray): pre-loaded image as numpy array
