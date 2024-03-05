@@ -11,7 +11,8 @@ from deepface.models.Detector import (
     Detector,
     DetectedFace,
     FacialAreaRegion,
-    DonotDetect)
+    DonotDetect,
+)
 from deepface.detectors import (
     FastMtCnn,
     MediaPipe,
@@ -27,6 +28,7 @@ from deepface.commons.logger import Logger
 
 logger = Logger(module="deepface/detectors/DetectorWrapper.py")
 
+
 def get_detector(name: str) -> Detector:
     """
     This function retturns a face detector model.
@@ -35,14 +37,14 @@ def get_detector(name: str) -> Detector:
     Params:
         name (string): The name of the detector model to be returned
             Valid values are any of the following:\n
-            "opencv", "mtcnn", "ssd", "dlib", "retinaface", 
-            "mediapipe", "yolov8", "yunet", "fastmtcnn", 
+            "opencv", "mtcnn", "ssd", "dlib", "retinaface",
+            "mediapipe", "yolov8", "yunet", "fastmtcnn",
             "donotdetect"
-      
+
             Note! "donotdetect" is used to skip face detection and simply
             return the whole image as a face.
             This is useful when the user wants to use a pre-detected face.
-                
+
     Exception:
         KeyError: when name is not known
 
@@ -54,7 +56,7 @@ def get_detector(name: str) -> Detector:
     if len(name) == 0:
         raise KeyError("Empty detector name")
 
-    global detectors_instances   # singleton design pattern
+    global detectors_instances  # singleton design pattern
     if not "detectors_instances" in globals():
         detectors_instances = {}
 
@@ -70,7 +72,7 @@ def get_detector(name: str) -> Detector:
             "yolov8": Yolo.YoloClient,
             "yunet": YuNet.YuNetClient,
             "fastmtcnn": FastMtCnn.FastMtCnnClient,
-            "donotdetect": DonotDetect
+            "donotdetect": DonotDetect,
         }
 
     if name not in detectors_instances.keys():
@@ -79,21 +81,26 @@ def get_detector(name: str) -> Detector:
         try:
             tic = time.time()
             detectors_instances[name] = avaliable_detectors[name]()
-            logger.debug(f"Instantiated detection model : {name} ({time.time() - tic:.3f} seconds)")
+            logger.debug(
+                f"Instantiated detection model : {name} ({time.time() - tic:.3f} seconds)"
+            )
         except Exception as ex:
-            logger.critical(f"Failed to instantiate detection model : {name} Error: {str(ex)}")
+            logger.critical(
+                f"Failed to instantiate detection model : {name} Error: {str(ex)}"
+            )
             raise ex
 
     return detectors_instances[name]
+
 
 def detect_faces(
     source: Union[str, numpy.ndarray],
     detector: Union[str, Detector] = "opencv",
     align: bool = True,
-    expand_percentage: int = 0
+    expand_percentage: int = 0,
 ) -> List[DetectedFace]:
     """
-    
+
     Tries to detect face(s) from a provided image.
 
     Args:
@@ -120,11 +127,11 @@ def detect_faces(
 
     # Validation
     if isinstance(detector, str):
-        detector = get_detector(detector) # raise KeyError if detector is not known
+        detector = get_detector(detector)  # raise KeyError if detector is not known
     if isinstance(source, str):
         source, _ = preprocessing.load_image(source)
 
-    expand_percentage = max(0, expand_percentage) # clamp to 0
+    expand_percentage = max(0, expand_percentage)  # clamp to 0
 
     # If the image is too small, return an empty list
     # TODO: Add a warning message here ?
@@ -167,25 +174,30 @@ def detect_faces(
             rotated_x1, rotated_y1, rotated_x2, rotated_y2 = rotate_facial_area(
                 facial_area=(x, y, x + w, y + h),
                 angle=angle,
-                size=(source.shape[0], source.shape[1])
+                size=(source.shape[0], source.shape[1]),
             )
             detected_face = aligned_img[
-                int(rotated_y1) : int(rotated_y2),
-                int(rotated_x1) : int(rotated_x2)]
+                int(rotated_y1) : int(rotated_y2), int(rotated_x1) : int(rotated_x2)
+            ]
 
         result = DetectedFace(
             img=detected_face,
             facial_area=FacialAreaRegion(
-                x=x, y=y, h=h, w=w, confidence=confidence, left_eye=left_eye, right_eye=right_eye
-            )
+                x=x,
+                y=y,
+                h=h,
+                w=w,
+                confidence=confidence,
+                left_eye=left_eye,
+                right_eye=right_eye,
+            ),
         )
         results.append(result)
     return results
 
+
 def rotate_facial_area(
-    facial_area: Tuple[int, int, int, int],
-    angle: float,
-    size: Tuple[int, int]
+    facial_area: Tuple[int, int, int, int], angle: float, size: Tuple[int, int]
 ) -> Tuple[int, int, int, int]:
     """
     Rotate the facial area around its center.

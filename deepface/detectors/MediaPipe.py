@@ -2,6 +2,7 @@ from typing import Any, List
 import numpy
 from deepface.models.Detector import Detector, FacialAreaRegion
 
+
 class MediaPipeClient(Detector):
     """
     This class is used to detect faces using fast mtcnn face detector.
@@ -20,8 +21,11 @@ class MediaPipeClient(Detector):
     def __initialize(self):
         try:
             import mediapipe as mp
+
             mp_face_detection = mp.solutions.face_detection
-            self._detector = mp_face_detection.FaceDetection(min_detection_confidence=0.7)
+            self._detector = mp_face_detection.FaceDetection(
+                min_detection_confidence=0.7
+            )
 
         except ModuleNotFoundError as e:
             raise ImportError(
@@ -63,15 +67,27 @@ class MediaPipeClient(Detector):
             y = int(bounding_box.ymin * img_height)
             h = int(bounding_box.height * img_height)
 
-            left_eye = (int(landmarks[0].x * img_width), int(landmarks[0].y * img_height))
-            right_eye = (int(landmarks[1].x * img_width), int(landmarks[1].y * img_height))
+            left_eye = (
+                int(landmarks[0].x * img_width),
+                int(landmarks[0].y * img_height),
+            )
+            right_eye = (
+                int(landmarks[1].x * img_width),
+                int(landmarks[1].y * img_height),
+            )
             # nose = (int(landmarks[2].x * img_width), int(landmarks[2].y * img_height))
             # mouth = (int(landmarks[3].x * img_width), int(landmarks[3].y * img_height))
             # right_ear = (int(landmarks[4].x * img_width), int(landmarks[4].y * img_height))
             # left_ear = (int(landmarks[5].x * img_width), int(landmarks[5].y * img_height))
 
             facial_area = FacialAreaRegion(
-                x=x, y=y, w=w, h=h, left_eye=left_eye, right_eye=right_eye, confidence=confidence
+                x=x,
+                y=y,
+                w=w,
+                h=h,
+                left_eye=left_eye,
+                right_eye=right_eye,
+                confidence=confidence,
             )
             results.append(facial_area)
 

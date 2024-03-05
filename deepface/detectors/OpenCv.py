@@ -111,7 +111,10 @@ class OpenCvClient(Detector):
 
             # -----------------------
             # find center of eyes
-            left_eye = (int(left_eye[0] + (left_eye[2] / 2)), int(left_eye[1] + (left_eye[3] / 2)))
+            left_eye = (
+                int(left_eye[0] + (left_eye[2] / 2)),
+                int(left_eye[1] + (left_eye[3] / 2)),
+            )
             right_eye = (
                 int(right_eye[0] + (right_eye[2] / 2)),
                 int(right_eye[1] + (right_eye[3] / 2)),
@@ -146,7 +149,9 @@ class OpenCvClient(Detector):
             detector = cv2.CascadeClassifier(eye_detector_path)
 
         else:
-            raise ValueError(f"unimplemented model_name for build_cascade - {model_name}")
+            raise ValueError(
+                f"unimplemented model_name for build_cascade - {model_name}"
+            )
 
         return detector
 

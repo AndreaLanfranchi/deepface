@@ -11,11 +11,13 @@ from deepface.commons.logger import Logger
 
 logger = Logger(module="detectors.SsdWrapper")
 
+
 class SsdClient(Detector):
     """
     This class is used to detect faces using OpenCV's SSD face detector.
     Note! This is an optional detector, ensure the library is installed.
     """
+
     _detector: Any
     _opencv_detector: Detector
 
@@ -74,7 +76,15 @@ class SsdClient(Detector):
 
         detected_face = None
 
-        ssd_labels = ["img_id", "is_face", "confidence", "left", "top", "right", "bottom"]
+        ssd_labels = [
+            "img_id",
+            "is_face",
+            "confidence",
+            "left",
+            "top",
+            "right",
+            "bottom",
+        ]
 
         target_size = (300, 300)
 
@@ -93,7 +103,9 @@ class SsdClient(Detector):
 
         detections_df = pandas.DataFrame(detections[0][0], columns=ssd_labels)
 
-        detections_df = detections_df[detections_df["is_face"] == 1]  # 0: background, 1: face
+        detections_df = detections_df[
+            detections_df["is_face"] == 1
+        ]  # 0: background, 1: face
         detections_df = detections_df[detections_df["confidence"] >= 0.90]
 
         detections_df["left"] = (detections_df["left"] * 300).astype(int)

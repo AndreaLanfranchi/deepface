@@ -25,7 +25,7 @@ class DlibClient(Detector):
 
     def __initialize(self):
         try:
-            import dlib  #Lazy import.
+            import dlib  # Lazy import.
 
             file_name = "shape_predictor_5_face_landmarks.dat"
             weight_file = os.path.join(folder_utils.get_weights_dir(), file_name)

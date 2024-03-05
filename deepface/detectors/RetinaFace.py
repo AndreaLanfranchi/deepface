@@ -3,10 +3,12 @@ import numpy
 from retinaface import RetinaFace as rf
 from deepface.models.Detector import Detector, FacialAreaRegion
 
+
 class RetinaFaceClient(Detector):
     """
     This class is used to detect faces using RetinaFace.
     """
+
     _detector: Any
 
     def __init__(self):

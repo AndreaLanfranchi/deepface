@@ -4,6 +4,7 @@ from deepface.commons.logger import Logger
 
 logger = Logger(module="deepface/commons/folder_utils.py")
 
+
 def get_data_dir() -> str:
     """
     Get the home directory for storing model weights
@@ -21,8 +22,9 @@ def get_data_dir() -> str:
         raise ValueError(f"Directory {home_dir} does not exist")
     home_dir_data = os.path.join(home_dir, ".deepface", "weights")
     if not os.path.exists(home_dir_data):
-        os.makedirs(home_dir_data, exist_ok=True) # this is recursive
+        os.makedirs(home_dir_data, exist_ok=True)  # this is recursive
     return os.path.join(home_dir, ".deepface")
+
 
 def get_weights_dir() -> str:
     return os.path.join(get_data_dir(), "weights")

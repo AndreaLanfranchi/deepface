@@ -3,10 +3,12 @@ import numpy
 from mtcnn import MTCNN
 from deepface.models.Detector import Detector, FacialAreaRegion
 
+
 class MtCnnClient(Detector):
     """
     This class is used to detect faces using MtCnn face detector.
     """
+
     _detector: MTCNN
 
     def __init__(self):

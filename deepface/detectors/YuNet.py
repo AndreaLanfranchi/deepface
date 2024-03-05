@@ -9,6 +9,7 @@ from deepface.commons.logger import Logger
 
 logger = Logger(module="detectors.YunetWrapper")
 
+
 class YuNetClient(Detector):
 
     _detector: Any
@@ -21,9 +22,15 @@ class YuNetClient(Detector):
 
         try:
             opencv_version = cv2.__version__.split(".")
-            if len(opencv_version) > 2 and int(opencv_version[0]) == 4 and int(opencv_version[1]) < 8:
+            if (
+                len(opencv_version) > 2
+                and int(opencv_version[0]) == 4
+                and int(opencv_version[1]) < 8
+            ):
                 # min requirement: https://github.com/opencv/opencv_zoo/issues/172
-                raise RuntimeError(f"YuNet requires opencv-python >= 4.8 but you have {cv2.__version__}")
+                raise RuntimeError(
+                    f"YuNet requires opencv-python >= 4.8 but you have {cv2.__version__}"
+                )
 
             # pylint: disable=C0301
             file_name = "face_detection_yunet_2023mar.onnx"

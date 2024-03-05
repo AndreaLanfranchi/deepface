@@ -3,6 +3,7 @@ import cv2
 import numpy
 from deepface.models.Detector import Detector, FacialAreaRegion
 
+
 class FastMtCnnClient(Detector):
     """
     This class is used to detect faces using fast mtcnn face detector.
@@ -12,6 +13,7 @@ class FastMtCnnClient(Detector):
     https://github.com/timesler/facenet-pytorch
     Examples https://www.kaggle.com/timesler/guide-to-mtcnn-in-facenet-pytorch
     """
+
     _detector: Any
 
     def __init__(self):
@@ -24,11 +26,11 @@ class FastMtCnnClient(Detector):
             from facenet_pytorch import MTCNN as fast_mtcnn
 
             self._detector = fast_mtcnn(
-            image_size=160,
-            thresholds=[0.6, 0.7, 0.7],  # MTCNN thresholds
-            post_process=True,
-            device="cpu",
-            select_largest=False,  # return result in descending order
+                image_size=160,
+                thresholds=[0.6, 0.7, 0.7],  # MTCNN thresholds
+                post_process=True,
+                device="cpu",
+                select_largest=False,  # return result in descending order
             )
 
         except ModuleNotFoundError as e:
@@ -36,7 +38,6 @@ class FastMtCnnClient(Detector):
                 "FastMtcnn is an optional detector, ensure the library is installed."
                 "Please install using 'pip install facenet-pytorch' "
             ) from e
-
 
     def detect_faces(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
         """
@@ -54,7 +55,9 @@ class FastMtCnnClient(Detector):
 
         # TODO: Verify if the image is in the right BGR format
         # before converting it to RGB
-        img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)  # mtcnn expects RGB but OpenCV read BGR
+        img_rgb = cv2.cvtColor(
+            img, cv2.COLOR_BGR2RGB
+        )  # mtcnn expects RGB but OpenCV read BGR
 
         detections = self._detector.detect(
             img_rgb, landmarks=True

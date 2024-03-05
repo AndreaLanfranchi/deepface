@@ -18,6 +18,7 @@ logger = Logger()
 # used in alignment_procedure function
 # LANDMARKS_CONFIDENCE_THRESHOLD = 0.5
 
+
 class YoloClient(Detector):
     """
     This class is used to detect faces using YOLOv8 face detector.
@@ -25,8 +26,10 @@ class YoloClient(Detector):
     """
 
     _detector: Any
-    _WEIGHT_URL: str = "https://drive.google.com/uc?id=1qcr9DbgsX3ryrz2uU8w4Xm3cOrRywXqb"
-    #_LANDMARKS_CONFIDENCE_THRESHOLD = 0.5
+    _WEIGHT_URL: str = (
+        "https://drive.google.com/uc?id=1qcr9DbgsX3ryrz2uU8w4Xm3cOrRywXqb"
+    )
+    # _LANDMARKS_CONFIDENCE_THRESHOLD = 0.5
 
     def __init__(self):
         self.name = "Yolov8"

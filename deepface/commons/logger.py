@@ -2,6 +2,7 @@ import os
 import logging
 from datetime import datetime
 
+
 # pylint: disable=broad-except
 class Logger:
     def __init__(self, module=None):
