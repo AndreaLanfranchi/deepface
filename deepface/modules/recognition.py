@@ -184,6 +184,7 @@ def find(
         source_objs = []
 
     resp_obj = []
+
     distance_metric = distance_metric.lower().strip()
     if distance_metric == "cosine":
         distance_fn = verification.find_cosine_distance
@@ -225,30 +226,29 @@ def find(
             source_dims = len(list(source_representation))
             if target_dims != source_dims:
                 raise ValueError(
-                    "Source and target embeddings must have same dimensions but "
-                    + f"{target_dims}:{source_dims}. Model structure may change"
-                    + " after pickle created. Delete the {file_name} and re-run."
+                    "Representation dimensions mismatch!\n" + 
+                    f"Target : {target_dims} vs Source: {source_dims}.\n" +
+                    f"Please delete {file_name} and re-run."
                 )
 
             distances.append(distance_fn(source_representation, target_representation))
 
-            # ---------------------------
+
         target_threshold = threshold or verification.find_threshold(model_name, distance_metric)
 
         result_df["threshold"] = target_threshold
         result_df["distance"] = distances
 
         result_df = result_df.drop(columns=[f"{model_name}_representation"])
-        # pylint: disable=unsubscriptable-object
         result_df = result_df[result_df["distance"] <= target_threshold]
         result_df = result_df.sort_values(by=["distance"], ascending=True).reset_index(drop=True)
 
         resp_obj.append(result_df)
 
-    # -----------------------------------
 
     logger.debug(f"find function duration {(time.time() - tic):0.5f} seconds")
     return resp_obj
+
 
 _image_file_pattern = re.compile(r".*\.(jpg|jpeg|png)$", re.IGNORECASE) # Mimic static variable
 
@@ -267,7 +267,7 @@ def _list_image_files(path: str) -> Set[str]:
     results: Set[str] = set()
     if not os.path.isdir(path):
         raise IOError(f"Path {path} does not exist or is not a directory!")
-    
+
     for file_name in os.listdir(path):
         if _image_file_pattern.match(file_name):
             results.add(os.path.join(path, file_name))
