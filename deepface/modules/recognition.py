@@ -184,6 +184,16 @@ def find(
         source_objs = []
 
     resp_obj = []
+    distance_metric = distance_metric.lower().strip()
+    if distance_metric == "cosine":
+        distance_fn = verification.find_cosine_distance
+    elif distance_metric == "euclidean":
+        distance_fn = verification.find_euclidean_distance
+    elif distance_metric == "euclidean_l2":
+        distance_fn = verification.find_euclidean_l2_distance
+    else:
+        raise NotImplementedError("Invalid distance_metric passed : ", distance_metric)
+
 
     for source_obj in source_objs:
         source_img = source_obj["face"]
@@ -220,23 +230,7 @@ def find(
                     + " after pickle created. Delete the {file_name} and re-run."
                 )
 
-            if distance_metric == "cosine":
-                distance = verification.find_cosine_distance(
-                    source_representation, target_representation
-                )
-            elif distance_metric == "euclidean":
-                distance = verification.find_euclidean_distance(
-                    source_representation, target_representation
-                )
-            elif distance_metric == "euclidean_l2":
-                distance = verification.find_euclidean_distance(
-                    verification.l2_normalize(source_representation),
-                    verification.l2_normalize(target_representation),
-                )
-            else:
-                raise ValueError(f"invalid distance metric passes - {distance_metric}")
-
-            distances.append(distance)
+            distances.append(distance_fn(source_representation, target_representation))
 
             # ---------------------------
         target_threshold = threshold or verification.find_threshold(model_name, distance_metric)
