@@ -264,10 +264,10 @@ def _list_image_files(path: str) -> Set[str]:
     Raises:
         IOError: if the path does not exist or is not a directory
     """
-    results: Set[str] = set()
     if not os.path.isdir(path):
         raise IOError(f"Path {path} does not exist or is not a directory!")
 
+    results: Set[str] = set()
     for file_name in os.listdir(path):
         if _image_file_pattern.match(file_name):
             results.add(os.path.join(path, file_name))

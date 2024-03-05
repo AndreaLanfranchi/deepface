@@ -18,7 +18,6 @@ class FacialRecognition(ABC):
     input_shape: Tuple[int, int]
     output_shape: int
 
-
     @abstractmethod
     def find_embeddings(self, img: numpy.ndarray) -> List[float]:
         pass
