@@ -9,6 +9,11 @@ import numpy
 import cv2
 import requests
 
+# Pseudo-constants
+_http_pattern = re.compile(r"^http(s)?://.*", re.IGNORECASE)
+_base64_pattern = re.compile(r"^data:image\/.*", re.IGNORECASE)
+_base64_pattern_ext = re.compile(r"^data:image\/(jpeg|jpg|png)?(;base64)$", re.IGNORECASE)
+
 def load_image(source: Union[str, numpy.ndarray]) -> Tuple[numpy.ndarray, str]:
     """
     Load image from path, url, base64 or numpy array.
@@ -37,12 +42,10 @@ def load_image(source: Union[str, numpy.ndarray]) -> Tuple[numpy.ndarray, str]:
     if len(source) == 0:
         raise ValueError("Invalid source. Empty string.")
 
-    http_pattern = re.compile(r"^http(s)?://.*", re.IGNORECASE)
-    if http_pattern.match(source):
+    if _http_pattern.match(source):
         return _load_image_from_web(url=source), source
 
-    base64_pattern = re.compile(r"^data:image\/.*", re.IGNORECASE)
-    if base64_pattern.match(source):
+    if _base64_pattern.match(source):
         return _load_base64(uri=source), "base64 encoded string"
 
     # TODO : this is still unsafe as there are many other ways to
@@ -87,11 +90,12 @@ def _load_base64(uri: str) -> numpy.ndarray:
         ValueError: if the input is invalid.
     """
 
+    # TODO : use regex capture groups to traverse the input string
+    # in one pass only
     split_data = uri.split(",")
     if len(split_data) != 2:
         raise ValueError("Invalid base64 input")
-    pattern = re.compile(r"^data:image\/(jpeg|jpg|png)?(;base64)$", re.IGNORECASE)
-    if not pattern.match(split_data[0]):
+    if not _base64_pattern_ext.match(split_data[0]):
         raise ValueError("Invalid mime-type. Supported types are jpeg, jpg and png.")
     try:
         decoded = base64.b64decode(split_data[1], validate=True)
