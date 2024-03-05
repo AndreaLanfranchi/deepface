@@ -1,17 +1,21 @@
-from typing import List
+from typing import Any, List
 import numpy
 from retinaface import RetinaFace as rf
 from deepface.models.Detector import Detector, FacialAreaRegion
 
-# pylint: disable=too-few-public-methods
 class RetinaFaceClient(Detector):
+    """
+    This class is used to detect faces using RetinaFace.
+    """
+    _detector: Any
+
     def __init__(self):
-        self.name = "retinaface"
-        self.model = rf.build_model()
+        self.name = "RetinaFace"
+        self._detector = rf.build_model()
 
     def detect_faces(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
         """
-        Detect and align face with retinaface
+        Detect in picture face(s) with retinaface
 
         Args:
             img (numpy.ndarray): pre-loaded image as numpy array
@@ -23,7 +27,7 @@ class RetinaFaceClient(Detector):
         if img.shape[0] == 0 or img.shape[1] == 0:
             return results
 
-        obj = rf.detect_faces(img, model=self.model, threshold=0.9)
+        obj = rf.detect_faces(img, model=self._detector, threshold=0.9)
 
         if not isinstance(obj, dict):
             return results

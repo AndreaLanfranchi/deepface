@@ -1,4 +1,4 @@
-from typing import List
+from typing import Any, List
 import os
 import gdown
 import cv2
@@ -11,45 +11,45 @@ from deepface.commons.logger import Logger
 
 logger = Logger(module="detectors.SsdWrapper")
 
-# pylint: disable=line-too-long, c-extension-no-member
-
-
 class SsdClient(Detector):
+    """
+    This class is used to detect faces using OpenCV's SSD face detector.
+    Note! This is an optional detector, ensure the library is installed.
+    """
+    _detector: Any
+    _opencv_detector: Detector
+
     def __init__(self):
-        self.name = "ssd"
-        self.model = self.build_model()
+        self.name = "Ssd"
+        self.__initialize()
 
-    def build_model(self) -> dict:
-        """
-        Build a ssd detector model
-        Returns:
-            model (dict)
-        """
-
-        weights_folder = folder_utils.get_weights_folder()
-        file_name = "deploy.prototxt"
-        output1 = os.path.join(weights_folder, file_name)
-
-        # model structure
-        if os.path.isfile(output1) != True:
-            logger.info(f"Download : {file_name}")
-            url = f"https://github.com/opencv/opencv/raw/3.4.0/samples/dnn/face_detector/{file_name}"
-            gdown.download(url, output1, quiet=False)
-
-        file_name = "res10_300x300_ssd_iter_140000.caffemodel"
-        output2 = os.path.join(weights_folder, file_name)
-
-        # pre-trained weights
-        if os.path.isfile(output2) != True:
-            logger.info(f"Download : {file_name}")
-
-            url = f"https://github.com/opencv/opencv_3rdparty/raw/dnn_samples_face_detector_20170830/{file_name}"
-            gdown.download(url, output2, quiet=False)
+    def __initialize(self):
 
         try:
-            face_detector = cv2.dnn.readNetFromCaffe(
-                output1, output2
-            )
+
+            weights_folder = folder_utils.get_weights_folder()
+            file_name = "deploy.prototxt"
+            output1 = os.path.join(weights_folder, file_name)
+
+            # model structure
+            if os.path.isfile(output1) != True:
+                logger.info(f"Download : {file_name}")
+                url = f"https://github.com/opencv/opencv/raw/3.4.0/samples/dnn/face_detector/{file_name}"
+                gdown.download(url, output1, quiet=False)
+
+            file_name = "res10_300x300_ssd_iter_140000.caffemodel"
+            output2 = os.path.join(weights_folder, file_name)
+
+            # pre-trained weights
+            if os.path.isfile(output2) != True:
+                logger.info(f"Download : {file_name}")
+
+                url = f"https://github.com/opencv/opencv_3rdparty/raw/dnn_samples_face_detector_20170830/{file_name}"
+                gdown.download(url, output2, quiet=False)
+
+            self._detector = cv2.dnn.readNetFromCaffe(output1, output2)
+            self._opencv_detector = OpenCv.OpenCvClient()
+
         except Exception as err:
             raise ValueError(
                 "Exception while calling opencv.dnn module."
@@ -57,15 +57,9 @@ class SsdClient(Detector):
                 + "You can install it as pip install opencv-contrib-python."
             ) from err
 
-        detector = {}
-        detector["face_detector"] = face_detector
-        detector["opencv_module"] = OpenCv.OpenCvClient()
-
-        return detector
-
     def detect_faces(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
         """
-        Detect and align face with ssd
+        Detect in picture face(s) with ssd
 
         Args:
             img (numpy.ndarray): pre-loaded image as numpy array
@@ -73,7 +67,6 @@ class SsdClient(Detector):
         Returns:
             results (List[FacialAreaRegion]): A list of FacialAreaRegion objects
         """
-        opencv_module: OpenCv.OpenCvClient = self.model["opencv_module"]
 
         results = []
         if img.shape[0] == 0 or img.shape[1] == 0:
@@ -125,7 +118,7 @@ class SsdClient(Detector):
 
                 detected_face = img[int(y) : int(y + h), int(x) : int(x + w)]
 
-                left_eye, right_eye = opencv_module.find_eyes(detected_face)
+                left_eye, right_eye = self._opencv_detector.find_eyes(detected_face)
 
                 facial_area = FacialAreaRegion(
                     x=x,

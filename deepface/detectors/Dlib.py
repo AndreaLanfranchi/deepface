@@ -1,4 +1,4 @@
-from typing import List
+from typing import Any, List
 import os
 import bz2
 import gdown
@@ -11,56 +11,52 @@ logger = Logger(module="detectors.DlibWrapper")
 
 
 class DlibClient(Detector):
+    """
+    This class is used to detect faces using dlib's hog face detector.
+    Note! This is an optional detector, ensure the library is installed.
+    """
+
+    _detector: Any
+    _predictor: Any
 
     def __init__(self):
-        self.name = "dlib"
-        self.model = self.build_model()
+        self.name = "Dlib"
+        self.__initialize()
 
-    def build_model(self) -> dict:
-        """
-        Build a dlib hog face detector model
-        Returns:
-            model (Any)
-        """
-
-        # this is not a must dependency. do not import it in the global level.
+    def __initialize(self):
         try:
-            import dlib
+            import dlib  #Lazy import.
+
+            file_name = "shape_predictor_5_face_landmarks.dat"
+            weight_file = os.path.join(folder_utils.get_weights_dir(), file_name)
+
+            # check required file exists in the home/.deepface/weights folder
+            if os.path.isfile(weight_file) != True:
+
+                logger.info(f"Download : {file_name}")
+                source_file = f"{file_name}.bz2"
+
+                url = f"http://dlib.net/files/{source_file}"
+                dest = os.path.join(folder_utils.get_weights_dir(), source_file)
+                gdown.download(url, dest, quiet=False)
+
+                zipfile = bz2.BZ2File(dest)
+                data = zipfile.read()
+                with open(weight_file, "wb") as f:
+                    f.write(data)
+
+            self._detector = dlib.get_frontal_face_detector()
+            self._predictor = dlib.shape_predictor(weight_file)
+
         except ModuleNotFoundError as e:
             raise ImportError(
                 "Dlib is an optional detector, ensure the library is installed."
                 "Please install using 'pip install dlib' "
             ) from e
 
-        file_name = "shape_predictor_5_face_landmarks.dat"
-        output = os.path.join(folder_utils.get_weights_dir(), file_name)
-
-        # check required file exists in the home/.deepface/weights folder
-        if os.path.isfile(output) != True:
-
-            logger.info(f"Download : {file_name}")
-            source_file = f"{file_name}.bz2"
-
-            url = f"http://dlib.net/files/{source_file}"
-            dest = os.path.join(folder_utils.get_weights_dir(), source_file)
-            gdown.download(url, dest, quiet=False)
-
-            zipfile = bz2.BZ2File(dest)
-            data = zipfile.read()
-            with open(output, "wb") as f:
-                f.write(data)
-
-        face_detector = dlib.get_frontal_face_detector()
-        sp = dlib.shape_predictor(output)
-
-        detector = {}
-        detector["face_detector"] = face_detector
-        detector["sp"] = sp
-        return detector
-
     def detect_faces(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
         """
-        Detect and align face with dlib
+        Detect in picture face(s) with dlib
 
         Args:
             img (numpy.ndarray): pre-loaded image as numpy array
@@ -72,10 +68,8 @@ class DlibClient(Detector):
         if img.shape[0] == 0 or img.shape[1] == 0:
             return results
 
-        face_detector = self.model["face_detector"]
-
         # note that, by design, dlib's fhog face detector scores are >0 but not capped at 1
-        detections, scores, _ = face_detector.run(img, 1)
+        detections, scores, _ = self._detector.run(img, 1)
 
         if len(detections) > 0:
 
@@ -90,7 +84,7 @@ class DlibClient(Detector):
                 x = int(max(0, left))
                 w = int(min(right, img.shape[1]) - x)
 
-                shape = self.model["sp"](img, detection)
+                shape = self._predictor(img, detection)
                 left_eye = (shape.part(2).x, shape.part(2).y)
                 right_eye = (shape.part(0).x, shape.part(0).y)
 

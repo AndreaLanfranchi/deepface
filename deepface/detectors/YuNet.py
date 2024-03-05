@@ -10,42 +10,38 @@ from deepface.commons.logger import Logger
 logger = Logger(module="detectors.YunetWrapper")
 
 class YuNetClient(Detector):
+
+    _detector: Any
+
     def __init__(self):
-        self.name = "yunet"
-        self.model = self.build_model()
+        self.name = "YuNet"
+        self.__initialize()
 
-    def build_model(self) -> Any:
-        """
-        Build a yunet detector model
-        Returns:
-            model (Any)
-        """
-
-        opencv_version = cv2.__version__.split(".")
-        if len(opencv_version) > 2 and int(opencv_version[0]) == 4 and int(opencv_version[1]) < 8:
-            # min requirement: https://github.com/opencv/opencv_zoo/issues/172
-            raise RuntimeError(f"YuNet requires opencv-python >= 4.8 but you have {cv2.__version__}")
-
-        # pylint: disable=C0301
-        file_name = "face_detection_yunet_2023mar.onnx"
-        url = f"https://github.com/opencv/opencv_zoo/raw/main/models/face_detection_yunet/{file_name}"
-        output = os.path.join(folder_utils.get_weights_dir(), file_name)
-
-        if os.path.isfile(output) is False:
-            logger.info(f"Download : {file_name}")
-            gdown.download(url, output, quiet=False)
+    def __initialize(self) -> Any:
 
         try:
-            face_detector = cv2.FaceDetectorYN_create(
-                output, "", (0, 0)
-            )
+            opencv_version = cv2.__version__.split(".")
+            if len(opencv_version) > 2 and int(opencv_version[0]) == 4 and int(opencv_version[1]) < 8:
+                # min requirement: https://github.com/opencv/opencv_zoo/issues/172
+                raise RuntimeError(f"YuNet requires opencv-python >= 4.8 but you have {cv2.__version__}")
+
+            # pylint: disable=C0301
+            file_name = "face_detection_yunet_2023mar.onnx"
+            url = f"https://github.com/opencv/opencv_zoo/raw/main/models/face_detection_yunet/{file_name}"
+            output = os.path.join(folder_utils.get_weights_dir(), file_name)
+
+            if os.path.isfile(output) is False:
+                logger.info(f"Download : {file_name}")
+                gdown.download(url, output, quiet=False)
+
+            self._detector = cv2.FaceDetectorYN_create(output, "", (0, 0))
+
         except Exception as err:
             raise ValueError(
                 "Exception while calling opencv.FaceDetectorYN_create module."
                 + "This is an optional dependency."
                 + "You can install it as pip install opencv-contrib-python."
             ) from err
-        return face_detector
 
     def detect_faces(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
         """

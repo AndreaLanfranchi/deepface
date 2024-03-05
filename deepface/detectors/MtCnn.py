@@ -3,19 +3,19 @@ import numpy
 from mtcnn import MTCNN
 from deepface.models.Detector import Detector, FacialAreaRegion
 
-# pylint: disable=too-few-public-methods
 class MtCnnClient(Detector):
     """
-    Class to cover common face detection functionalitiy for MtCnn backend
+    This class is used to detect faces using MtCnn face detector.
     """
+    _detector: MTCNN
 
     def __init__(self):
-        self.name = "mtcnn"
+        self.name = "MtCnn"
         self.model = MTCNN()
 
     def detect_faces(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
         """
-        Detect and align face with mtcnn
+        Detect in picture face(s) with mtcnn
 
         Args:
             img (numpy.ndarray): pre-loaded image as numpy array
@@ -28,11 +28,12 @@ class MtCnnClient(Detector):
         if img.shape[0] == 0 or img.shape[1] == 0:
             return results
 
-
         # mtcnn expects RGB but OpenCV read BGR
-        # img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        # TODO: Verify if the image is in the right BGR format
+        # before converting it to RGB
         img_rgb = img[:, :, ::-1]
-        detections = self.model.detect_faces(img_rgb)
+
+        detections = self._detector.detect_faces(img_rgb)
 
         if detections is not None and len(detections) > 0:
 

@@ -5,7 +5,7 @@ import numpy
 # Notice that all facial detector models must inherit from this class
 # and implement the abstract methods.
 class Detector(ABC):
-    
+
     name: str               # Name of the detector
 
     @abstractmethod
@@ -23,7 +23,6 @@ class Detector(ABC):
             - facial_area (FacialAreaRegion): The facial area region represented
                 as x, y, w, h, left_eye and right_eye
         """
-        pass
 
 class DonotDetect(Detector):
     """

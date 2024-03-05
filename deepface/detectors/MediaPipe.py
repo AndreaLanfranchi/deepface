@@ -2,36 +2,36 @@ from typing import Any, List
 import numpy
 from deepface.models.Detector import Detector, FacialAreaRegion
 
-# Link - https://google.github.io/mediapipe/solutions/face_detection
-
-
 class MediaPipeClient(Detector):
+    """
+    This class is used to detect faces using fast mtcnn face detector.
+    Note! This is an optional detector, ensure the library is installed.
+
+    See also:
+    https://google.github.io/mediapipe/solutions/face_detection
+    """
+
+    _detector: Any
+
     def __init__(self):
         self.name = "mediapipe"
-        self.model = self.build_model()
+        self.__initialize()
 
-    def build_model(self) -> Any:
-        """
-        Build a mediapipe face detector model
-        Returns:
-            model (Any)
-        """
-        # this is not a must dependency. do not import it in the global level.
+    def __initialize(self):
         try:
             import mediapipe as mp
+            mp_face_detection = mp.solutions.face_detection
+            self._detector = mp_face_detection.FaceDetection(min_detection_confidence=0.7)
+
         except ModuleNotFoundError as e:
             raise ImportError(
                 "MediaPipe is an optional detector, ensure the library is installed."
                 "Please install using 'pip install mediapipe' "
             ) from e
 
-        mp_face_detection = mp.solutions.face_detection
-        face_detection = mp_face_detection.FaceDetection(min_detection_confidence=0.7)
-        return face_detection
-
     def detect_faces(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
         """
-        Detect and align face with mediapipe
+        Detect in picture face(s) with mediapipe
 
         Args:
             img (numpy.ndarray): pre-loaded image as numpy array
@@ -45,8 +45,7 @@ class MediaPipeClient(Detector):
 
         img_width = img.shape[1]
         img_height = img.shape[0]
-
-        results = self.model.process(img)
+        results = self._detector.process(img)
 
         # If no face has been detected, return an empty list
         if results.detections is None:

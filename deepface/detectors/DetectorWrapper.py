@@ -73,13 +73,16 @@ def get_detector(name: str) -> Detector:
             "donotdetect": DonotDetect
         }
 
-
     if name not in detectors_instances.keys():
         if name not in avaliable_detectors.keys():
             raise KeyError(f"Unknown detector : {name}")
-        tic = time.time()
-        detectors_instances[name] = avaliable_detectors[name]()
-        logger.debug(f"Instantiated detection model : {name} ({time.time() - tic:.3f} seconds)")
+        try:
+            tic = time.time()
+            detectors_instances[name] = avaliable_detectors[name]()
+            logger.debug(f"Instantiated detection model : {name} ({time.time() - tic:.3f} seconds)")
+        except Exception as ex:
+            logger.critical(f"Failed to instantiate detection model : {name} Error: {str(ex)}")
+            raise ex
 
     return detectors_instances[name]
 

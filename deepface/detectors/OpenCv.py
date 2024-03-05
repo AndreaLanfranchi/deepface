@@ -7,27 +7,23 @@ from deepface.models.Detector import Detector, FacialAreaRegion
 
 class OpenCvClient(Detector):
     """
-    Class to cover common face detection functionalitiy for OpenCv backend
+    This class is used to detect faces using OpenCV face detection.
     """
 
-    def __init__(self):
-        self.name = "opencv"
-        self.model = self.build_model()
+    _detector: Any
+    _eye_detector: Any
 
-    def build_model(self):
-        """
-        Build opencv's face and eye detector models
-        Returns:
-            model (dict): including face_detector and eye_detector keys
-        """
-        detector = {}
-        detector["face_detector"] = self.__build_cascade("haarcascade")
-        detector["eye_detector"] = self.__build_cascade("haarcascade_eye")
-        return detector
+    def __init__(self):
+        self.name = "OpenCV"
+        self.__initialize()
+
+    def __initialize(self):
+        self._detector = self.__build_cascade("haarcascade")
+        self._eye_detector = self.__build_cascade("haarcascade_eye")
 
     def detect_faces(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
         """
-        Detect and align face with opencv
+        Detect in picture face(s) with opencv
 
         Args:
             img (numpy.ndarray): pre-loaded image as numpy array
@@ -46,7 +42,7 @@ class OpenCvClient(Detector):
             # faces = detector["face_detector"].detectMultiScale(img, 1.3, 5)
 
             # note that, by design, opencv's haarcascade scores are >0 but not capped at 1
-            faces, _, scores = self.model["face_detector"].detectMultiScale3(
+            faces, _, scores = self._detector.detectMultiScale3(
                 img, 1.1, 10, outputRejectLevels=True
             )
         except:
@@ -88,7 +84,7 @@ class OpenCvClient(Detector):
             img, cv2.COLOR_BGR2GRAY
         )  # eye detector expects gray scale image
 
-        eyes = self.model["eye_detector"].detectMultiScale(detected_face_gray, 1.1, 10)
+        eyes = self._eye_detector.detectMultiScale(detected_face_gray, 1.1, 10)
 
         # ----------------------------------------------------------------
 
