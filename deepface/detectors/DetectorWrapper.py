@@ -35,9 +35,12 @@ def get_detector(name: str) -> Detector:
     Params:
         name (string): The name of the detector model to be returned
             Valid values are any of the following:\n
-            "opencv", "mtcnn", "ssd", "dlib", "retinaface", "mediapipe", "yolov8", "yunet", "fastmtcnn", "donotdetect"
+            "opencv", "mtcnn", "ssd", "dlib", "retinaface", 
+            "mediapipe", "yolov8", "yunet", "fastmtcnn", 
+            "donotdetect"
       
-            Note! "donotdetect" is used to skip face detection and simply return the whole image as a face.
+            Note! "donotdetect" is used to skip face detection and simply
+            return the whole image as a face.
             This is useful when the user wants to use a pre-detected face.
                 
     Exception:
@@ -76,7 +79,7 @@ def get_detector(name: str) -> Detector:
             raise KeyError(f"Unknown detector : {name}")
         tic = time.time()
         detectors_instances[name] = avaliable_detectors[name]()
-        logger.debug(f"Instantiated detector : {name} ({time.time() - tic:.3f} seconds)")
+        logger.debug(f"Instantiated detection model : {name} ({time.time() - tic:.3f} seconds)")
 
     return detectors_instances[name]
 

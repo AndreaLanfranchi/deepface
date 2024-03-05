@@ -103,6 +103,7 @@ def verify(
     distances = []
     regions = []
 
+    distance_metric = distance_metric.lower().strip()
     if distance_metric == "cosine":
         distance_fn = find_cosine_distance
     elif distance_metric == "euclidean":
@@ -164,7 +165,8 @@ def verify(
 
 
 def find_cosine_distance(
-    source_representation: Union[numpy.ndarray, list], test_representation: Union[numpy.ndarray, list]
+    source_representation: Union[numpy.ndarray, list],
+    test_representation: Union[numpy.ndarray, list]
 ) -> numpy.float64:
     """
     Find cosine distance between two given vectors
@@ -187,7 +189,8 @@ def find_cosine_distance(
 
 
 def find_euclidean_distance(
-    source_representation: Union[numpy.ndarray, list], test_representation: Union[numpy.ndarray, list]
+    source_representation: Union[numpy.ndarray, list],
+    test_representation: Union[numpy.ndarray, list]
 ) -> numpy.float64:
     """
     Find euclidean distance between two given vectors
@@ -209,9 +212,13 @@ def find_euclidean_distance(
     return euclidean_distance
 
 def find_euclidean_l2_distance(
-    source_representation: Union[numpy.ndarray, list], test_representation: Union[numpy.ndarray, list]
+    source_representation: Union[numpy.ndarray, list],
+    test_representation: Union[numpy.ndarray, list]
 ) -> numpy.float64:
-    return find_euclidean_distance(l2_normalize(source_representation), l2_normalize(test_representation))
+    return find_euclidean_distance(
+        l2_normalize(source_representation),
+        l2_normalize(test_representation)
+        )
 
 def l2_normalize(x: Union[numpy.ndarray, list]) -> numpy.ndarray:
     """
