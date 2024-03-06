@@ -43,20 +43,18 @@ class Detector(ABC):
     @staticmethod
     def instance(name: str, singleton: bool = True) -> "Detector":
         """
-        Returns a new instance of a detector matching the given name.
+        `Detector` factory method.
 
         Args:
-            name (str): The name of the detector to instantiate
-            singleton (bool): If True, the same instance will be returned
-                for the same name. If False, a new instance will be returned
-                each time.
-
-        Returns:
-            detector (Detector): A new instance of the detector
+            `name (str)`: The name of the detector to instantiate
+            `singleton (bool)`: If True, the same instance will be returned
+        
+        Return:
+            An instance of the `Detector` subclass matching the given name
 
         Raises:
-            ValueError: If the detector name empty
-            NotImplementedError: If the detector name is unknown
+            `ValueError`: If the detector name empty
+            `NotImplementedError`: If the detector name is unknown
 
         """
         name = name.lower().strip()
