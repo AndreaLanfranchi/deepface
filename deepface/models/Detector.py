@@ -3,12 +3,14 @@ from abc import ABC, abstractmethod
 import numpy
 
 # Abstract class all specialized face detectors must inherit from.
+# A face detection consists in finding [0,inf) faces in an image and
+# returning the region of the image where the face is located.
 class Detector(ABC):
 
     name: str               # Name of the detector
 
     @abstractmethod
-    def detect_faces(self, img: numpy.ndarray) -> List["FacialAreaRegion"]:
+    def process(self, img: numpy.ndarray) -> List["FacialAreaRegion"]:
         """
         Interface in picture face detection.
 
@@ -31,7 +33,7 @@ class DonotDetect(Detector):
     def __init__(self):
         self.name = "DonotDetect"
 
-    def detect_faces(self, img: numpy.ndarray) -> List["FacialAreaRegion"]:
+    def process(self, img: numpy.ndarray) -> List["FacialAreaRegion"]:
         return [
             FacialAreaRegion(
                 0,

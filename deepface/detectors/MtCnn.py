@@ -15,7 +15,7 @@ class MtCnnClient(Detector):
         self.name = "MtCnn"
         self.model = MTCNN()
 
-    def detect_faces(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
+    def process(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
         """
         Detect in picture face(s) with mtcnn
 

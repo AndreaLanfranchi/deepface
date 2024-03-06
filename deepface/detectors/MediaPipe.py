@@ -33,7 +33,7 @@ class MediaPipeClient(Detector):
                 "Please install using 'pip install mediapipe' "
             ) from e
 
-    def detect_faces(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
+    def process(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
         """
         Detect in picture face(s) with mediapipe
 

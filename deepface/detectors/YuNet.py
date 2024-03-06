@@ -50,7 +50,7 @@ class YuNetClient(Detector):
                 + "You can install it as pip install opencv-contrib-python."
             ) from err
 
-    def detect_faces(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
+    def process(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
         """
         Detect and align face with yunet
 

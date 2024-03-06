@@ -140,7 +140,7 @@ def detect_faces(
         return []
 
     # find facial areas of given image
-    facial_areas = detector.detect_faces(img=source)
+    facial_areas = detector.process(img=source)
 
     results = []
     for facial_area in facial_areas:

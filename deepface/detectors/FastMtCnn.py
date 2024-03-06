@@ -39,7 +39,7 @@ class FastMtCnnClient(Detector):
                 "Please install using 'pip install facenet-pytorch' "
             ) from e
 
-    def detect_faces(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
+    def process(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
         """
         Detect in picture face(s) with FastMtCnn
 

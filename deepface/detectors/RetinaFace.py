@@ -15,7 +15,7 @@ class RetinaFaceClient(Detector):
         self.name = "RetinaFace"
         self._detector = rf.build_model()
 
-    def detect_faces(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
+    def process(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
         """
         Detect in picture face(s) with retinaface
 

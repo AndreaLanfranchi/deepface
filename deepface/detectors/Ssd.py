@@ -59,7 +59,7 @@ class SsdClient(Detector):
                 + "You can install it as pip install opencv-contrib-python."
             ) from err
 
-    def detect_faces(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
+    def process(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
         """
         Detect in picture face(s) with ssd
 

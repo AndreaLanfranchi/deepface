@@ -21,7 +21,7 @@ class OpenCvClient(Detector):
         self._detector = self.__build_cascade("haarcascade")
         self._eye_detector = self.__build_cascade("haarcascade_eye")
 
-    def detect_faces(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
+    def process(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
         """
         Detect in picture face(s) with opencv
 

@@ -54,7 +54,7 @@ class DlibClient(Detector):
                 "Please install using 'pip install dlib' "
             ) from e
 
-    def detect_faces(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
+    def process(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
         """
         Detect in picture face(s) with dlib
 
