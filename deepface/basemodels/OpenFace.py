@@ -12,21 +12,35 @@ logger = Logger(module="basemodels.OpenFace")
 tf_version = package_utils.get_tf_major_version()
 if tf_version == 1:
     from keras.models import Model
-    from keras.layers import Conv2D, ZeroPadding2D, Input, concatenate
-    from keras.layers import Dense, Activation, Lambda, Flatten, BatchNormalization
-    from keras.layers import MaxPooling2D, AveragePooling2D
-    from keras import backend as K
-else:
-    from tensorflow.keras.models import Model
-    from tensorflow.keras.layers import Conv2D, ZeroPadding2D, Input, concatenate
-    from tensorflow.keras.layers import (
+    from keras.layers import (
+        Conv2D,
+        ZeroPadding2D,
+        Input,
+        concatenate,
         Dense,
         Activation,
         Lambda,
         Flatten,
         BatchNormalization,
+        MaxPooling2D,
+        AveragePooling2D,
     )
-    from tensorflow.keras.layers import MaxPooling2D, AveragePooling2D
+    from keras import backend as K
+else:
+    from tensorflow.keras.models import Model
+    from tensorflow.keras.layers import (
+        Conv2D,
+        ZeroPadding2D,
+        Input,
+        concatenate,
+        Dense,
+        Activation,
+        Lambda,
+        Flatten,
+        BatchNormalization,
+        MaxPooling2D,
+        AveragePooling2D,
+    )
     from tensorflow.keras import backend as K
 
 # pylint: disable=unnecessary-lambda
