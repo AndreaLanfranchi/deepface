@@ -6,13 +6,13 @@ import pandas
 import numpy
 from deepface.detectors import OpenCv
 from deepface.commons import folder_utils
-from deepface.models.Detector import Detector, FacialAreaRegion
+from deepface.models.Detector import Detector as DetectorBase, FacialAreaRegion
 from deepface.commons.logger import Logger
 
 logger = Logger(module="detectors.SsdWrapper")
 
 
-class SsdClient(Detector):
+class Detector(DetectorBase):
     """
     This class is used to detect faces using OpenCV's SSD face detector.
     Note! This is an optional detector, ensure the library is installed.

@@ -2,7 +2,7 @@ import os
 from typing import Any, List
 import numpy
 import gdown
-from deepface.models.Detector import Detector, FacialAreaRegion
+from deepface.models.Detector import Detector as DetectorBase, FacialAreaRegion
 from deepface.commons import folder_utils
 from deepface.commons.logger import Logger
 
@@ -19,7 +19,7 @@ logger = Logger()
 # LANDMARKS_CONFIDENCE_THRESHOLD = 0.5
 
 
-class YoloClient(Detector):
+class Detector(DetectorBase):
     """
     This class is used to detect faces using YOLOv8 face detector.
     Note! This is an optional detector, ensure the library is installed.

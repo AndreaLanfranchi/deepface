@@ -2,10 +2,10 @@ import os
 from typing import Any, List
 import cv2
 import numpy
-from deepface.models.Detector import Detector, FacialAreaRegion
+from deepface.models.Detector import Detector as DetectorBase, FacialAreaRegion
 
 
-class OpenCvClient(Detector):
+class Detector(DetectorBase):
     """
     This class is used to detect faces using OpenCV face detection.
     """

@@ -1,33 +1,38 @@
 # built-in dependencies
 import time
+import importlib
+import inspect
+import pkgutil
+
 from typing import List, Tuple, Union
 
 # 3rd party dependencies
 import numpy
 
 # project dependencies
+from deepface import detectors as Detectors
 from deepface.modules import detection, preprocessing
-from deepface.models.Detector import (
-    Detector,
-    DetectedFace,
-    FacialAreaRegion,
-    DonotDetect,
-)
-from deepface.detectors import (
-    FastMtCnn,
-    MediaPipe,
-    MtCnn,
-    OpenCv,
-    Dlib,
-    RetinaFace,
-    Ssd,
-    Yolo,
-    YuNet,
-)
+from deepface.models.Detector import Detector, DetectedFace, FacialAreaRegion
+# from deepface.models.Detector import (
+#     Detector,
+#     DetectedFace,
+#     FacialAreaRegion,
+#     DonotDetect,
+# )
+# from deepface.detectors import (
+#     FastMtCnn,
+#     MediaPipe,
+#     MtCnn,
+#     OpenCv,
+#     Dlib,
+#     RetinaFace,
+#     Ssd,
+#     Yolo,
+#     YuNet,
+# )
 from deepface.commons.logger import Logger
 
 logger = Logger(module="deepface/detectors/DetectorWrapper.py")
-
 
 def get_detector(name: str) -> Detector:
     """
@@ -60,27 +65,41 @@ def get_detector(name: str) -> Detector:
     if not "detectors_instances" in globals():
         detectors_instances = {}
 
-    global avaliable_detectors
-    if not "avaliable_detectors" in globals():
-        avaliable_detectors = {
-            "opencv": OpenCv.OpenCvClient,
-            "mtcnn": MtCnn.MtCnnClient,
-            "ssd": Ssd.SsdClient,
-            "dlib": Dlib.DlibClient,
-            "retinaface": RetinaFace.RetinaFaceClient,
-            "mediapipe": MediaPipe.MediaPipeClient,
-            "yolov8": Yolo.YoloClient,
-            "yunet": YuNet.YuNetClient,
-            "fastmtcnn": FastMtCnn.FastMtCnnClient,
-            "donotdetect": DonotDetect,
-        }
+    global available_detectors
+    if not "available_detectors" in globals():
+        available_detectors = {}
+        for _, module_name, _ in pkgutil.walk_packages(Detectors.__path__):
+            if __name__.endswith(module_name):
+                continue # Don't import self
+
+            module = importlib.import_module(name = f"{Detectors.__name__}.{module_name}")
+            for _, obj in inspect.getmembers(module):
+                if inspect.isclass(obj):
+                    if issubclass(obj, Detector) and obj is not Detector:
+                        logger.debug(f"Found {obj.__name__} class in module {module.__name__}")
+                        key_value: str = module.__name__.split(".")[-1]
+                        key_value = key_value.lower()
+                        available_detectors[key_value] = obj
+
+        # available_detectors = {
+        #     "opencv": OpenCv.OpenCvClient,
+        #     "mtcnn": MtCnn.MtCnnClient,
+        #     "ssd": Ssd.SsdClient,
+        #     "dlib": Dlib.DlibClient,
+        #     "retinaface": RetinaFace.RetinaFaceClient,
+        #     "mediapipe": MediaPipe.MediaPipeClient,
+        #     "yolov8": Yolo.YoloClient,
+        #     "yunet": YuNet.YuNetClient,
+        #     "fastmtcnn": FastMtCnn.FastMtCnnClient,
+        #     "donotdetect": DonotDetect,
+        # }
 
     if name not in detectors_instances.keys():
-        if name not in avaliable_detectors.keys():
+        if name not in available_detectors.keys():
             raise KeyError(f"Unknown detector : {name}")
         try:
             tic = time.time()
-            detectors_instances[name] = avaliable_detectors[name]()
+            detectors_instances[name] = available_detectors[name]()
             logger.debug(
                 f"Instantiated detection model : {name} ({time.time() - tic:.3f} seconds)"
             )

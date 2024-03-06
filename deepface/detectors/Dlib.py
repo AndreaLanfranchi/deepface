@@ -4,13 +4,13 @@ import bz2
 import gdown
 import numpy
 from deepface.commons import folder_utils
-from deepface.models.Detector import Detector, FacialAreaRegion
+from deepface.models.Detector import Detector as DetectorBase, FacialAreaRegion
 from deepface.commons.logger import Logger
 
 logger = Logger(module="detectors.DlibWrapper")
 
 
-class DlibClient(Detector):
+class Detector(DetectorBase):
     """
     This class is used to detect faces using dlib's hog face detector.
     Note! This is an optional detector, ensure the library is installed.

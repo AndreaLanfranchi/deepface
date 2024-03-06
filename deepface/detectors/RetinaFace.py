@@ -1,10 +1,10 @@
 from typing import Any, List
 import numpy
 from retinaface import RetinaFace as rf
-from deepface.models.Detector import Detector, FacialAreaRegion
+from deepface.models.Detector import Detector as DetectorBase, FacialAreaRegion
 
 
-class RetinaFaceClient(Detector):
+class Detector(DetectorBase):
     """
     This class is used to detect faces using RetinaFace.
     """

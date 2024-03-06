@@ -1,5 +1,10 @@
 from typing import List, Tuple, Optional
 from abc import ABC, abstractmethod
+
+import importlib
+import inspect
+import pkgutil
+
 import numpy
 
 # Abstract class all specialized face detectors must inherit from.
@@ -30,27 +35,30 @@ class Detector(ABC):
     def name(self) -> str:
         return "<undefined>" if self._name is None else self._name
 
-class DonotDetect(Detector):
-    """
-    This class is used to skip face detection. It is used when the user
-    wants to use a pre-detected face.
-    """
-    def __init__(self):
-        super().__init__()
-        self._name = "DonotDetect"
+    @staticmethod
+    def instance(name: str, singleton: bool = False) -> "Detector":
+        """
+        Returns a new instance of a detector matching the given name.
 
-    def process(self, img: numpy.ndarray) -> List["FacialAreaRegion"]:
-        return [
-            FacialAreaRegion(
-                0,
-                0,
-                img.shape[1],
-                img.shape[0],
-                None,
-                None,
-                None,
-                )
-        ]
+        Args:
+            name (str): The name of the detector to instantiate
+            singleton (bool): If True, the same instance will be returned
+                for the same name. If False, a new instance will be returned
+                each time.
+
+        Returns:
+            detector (Detector): A new instance of the detector
+
+        Raises:
+            ValueError: If the detector name empty
+            KeyError: If the detector name is unknown
+
+        """
+        name = name.lower().strip()
+        if len(name) == 0:
+            raise ValueError("Empty detector name")
+
+        return None
 
 class FacialAreaRegion:
     x: int

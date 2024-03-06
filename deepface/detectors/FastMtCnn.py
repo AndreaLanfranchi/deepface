@@ -1,10 +1,10 @@
 from typing import Any, Union, List
 import cv2
 import numpy
-from deepface.models.Detector import Detector, FacialAreaRegion
+from deepface.models.Detector import Detector as DetectorBase, FacialAreaRegion
 
 
-class FastMtCnnClient(Detector):
+class Detector(DetectorBase):
     """
     This class is used to detect faces using fast mtcnn face detector.
     Note! This is an optional detector, ensure the library is installed.
