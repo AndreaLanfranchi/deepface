@@ -15,7 +15,8 @@ class MediaPipeClient(Detector):
     _detector: Any
 
     def __init__(self):
-        self.name = "mediapipe"
+        super().__init__()
+        self._name = "MediaPipe"
         self.__initialize()
 
     def __initialize(self):

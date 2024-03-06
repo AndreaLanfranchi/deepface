@@ -7,7 +7,8 @@ import numpy
 # returning the region of the image where the face is located.
 class Detector(ABC):
 
-    name: str               # Name of the detector
+    def __init__(self):
+        self._name: Optional[str] = None # Must be filled by specialized classes
 
     @abstractmethod
     def process(self, img: numpy.ndarray) -> List["FacialAreaRegion"]:
@@ -25,13 +26,18 @@ class Detector(ABC):
                 as x, y, w, h, left_eye and right_eye
         """
 
+    @property
+    def name(self) -> str:
+        return "<undefined>" if self._name is None else self._name
+
 class DonotDetect(Detector):
     """
     This class is used to skip face detection. It is used when the user
     wants to use a pre-detected face.
     """
     def __init__(self):
-        self.name = "DonotDetect"
+        super().__init__()
+        self._name = "DonotDetect"
 
     def process(self, img: numpy.ndarray) -> List["FacialAreaRegion"]:
         return [

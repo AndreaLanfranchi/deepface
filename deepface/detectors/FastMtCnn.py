@@ -17,7 +17,8 @@ class FastMtCnnClient(Detector):
     _detector: Any
 
     def __init__(self):
-        self.name = "FastMtCnn"
+        super().__init__()
+        self._name = "FastMtCnn"
         self.__initialize()
 
     def __initialize(self):

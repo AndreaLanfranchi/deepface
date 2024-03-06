@@ -15,7 +15,8 @@ class YuNetClient(Detector):
     _detector: Any
 
     def __init__(self):
-        self.name = "YuNet"
+        super().__init__()
+        self._name = "YuNet"
         self.__initialize()
 
     def __initialize(self) -> Any:

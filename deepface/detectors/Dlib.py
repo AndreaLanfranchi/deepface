@@ -20,7 +20,8 @@ class DlibClient(Detector):
     _predictor: Any
 
     def __init__(self):
-        self.name = "Dlib"
+        super().__init__()
+        self._name = "Dlib"
         self.__initialize()
 
     def __initialize(self):

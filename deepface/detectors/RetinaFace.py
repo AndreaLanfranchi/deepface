@@ -9,10 +9,9 @@ class RetinaFaceClient(Detector):
     This class is used to detect faces using RetinaFace.
     """
 
-    _detector: Any
-
     def __init__(self):
-        self.name = "RetinaFace"
+        super().__init__()
+        self._name = "RetinaFace"
         self._detector = rf.build_model()
 
     def process(self, img: numpy.ndarray) -> List[FacialAreaRegion]:

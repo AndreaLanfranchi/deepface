@@ -18,11 +18,9 @@ class SsdClient(Detector):
     Note! This is an optional detector, ensure the library is installed.
     """
 
-    _detector: Any
-    _opencv_detector: Detector
-
     def __init__(self):
-        self.name = "Ssd"
+        super().__init__()
+        self._name = "Ssd"
         self.__initialize()
 
     def __initialize(self):

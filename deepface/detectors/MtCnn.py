@@ -9,11 +9,10 @@ class MtCnnClient(Detector):
     This class is used to detect faces using MtCnn face detector.
     """
 
-    _detector: MTCNN
-
     def __init__(self):
-        self.name = "MtCnn"
-        self.model = MTCNN()
+        super().__init__()
+        self._name = "MtCnn"
+        self._detector = MTCNN()
 
     def process(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
         """

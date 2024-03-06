@@ -32,7 +32,8 @@ class YoloClient(Detector):
     # _LANDMARKS_CONFIDENCE_THRESHOLD = 0.5
 
     def __init__(self):
-        self.name = "Yolov8"
+        super().__init__()
+        self._name = "Yolov8"
         self.__initialize()
 
     def __initialize(self):

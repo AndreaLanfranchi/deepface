@@ -10,11 +10,9 @@ class OpenCvClient(Detector):
     This class is used to detect faces using OpenCV face detection.
     """
 
-    _detector: Any
-    _eye_detector: Any
-
     def __init__(self):
-        self.name = "OpenCV"
+        super().__init__()
+        self._name = "OpenCV"
         self.__initialize()
 
     def __initialize(self):
