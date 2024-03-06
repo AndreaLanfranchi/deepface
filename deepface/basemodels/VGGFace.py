@@ -35,6 +35,7 @@ else:
 
 # ---------------------------------------
 
+
 # pylint: disable=too-few-public-methods
 class VggFaceClient(FacialRecognition):
     """

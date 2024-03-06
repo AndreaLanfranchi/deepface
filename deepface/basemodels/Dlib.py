@@ -9,6 +9,7 @@ from deepface.models.FacialRecognition import FacialRecognition
 
 logger = Logger(module="basemodels.DlibResNet")
 
+
 class DlibClient(FacialRecognition):
     """
     Dlib model class
@@ -48,6 +49,7 @@ class DlibClient(FacialRecognition):
         img_representation = numpy.expand_dims(img_representation, axis=0)
         return img_representation[0].tolist()
 
+
 class DlibResNet:
     def __init__(self):
 
@@ -81,7 +83,7 @@ class DlibResNet:
             data = zipfile.read()
             with open(output, "wb") as f:
                 f.write(data)
-            
+
             # remove the downloaded file
             os.remove(output)
 
@@ -90,6 +92,7 @@ class DlibResNet:
         self.model = dlib.face_recognition_model_v1(output)
 
         # ---------------------
+
 
 class DlibMetaData:
     def __init__(self):

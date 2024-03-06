@@ -40,6 +40,7 @@ else:
 
 # -------------------------------------
 
+
 # pylint: disable=too-few-public-methods
 class DeepIdClient(FacialRecognition):
     """
@@ -51,7 +52,6 @@ class DeepIdClient(FacialRecognition):
         self.input_shape = (47, 55)
         self.output_shape = 160
         self.model = self.__load_model()
-
 
     def find_embeddings(self, img: numpy.ndarray) -> List[float]:
         """
@@ -65,7 +65,6 @@ class DeepIdClient(FacialRecognition):
         # embedding = model.predict(img, verbose=0)[0].tolist()
         return self.model(img, training=False).numpy()[0].tolist()
 
-
     def __load_model(self) -> Model:
         """
         Construct DeepId model, download its weights and load
@@ -73,7 +72,9 @@ class DeepIdClient(FacialRecognition):
 
         myInput = Input(shape=(self.input_shape[1], self.input_shape[0], 3))
 
-        x = Conv2D(20, (4, 4), name="Conv1", activation="relu", input_shape=(55, 47, 3))(myInput)
+        x = Conv2D(
+            20, (4, 4), name="Conv1", activation="relu", input_shape=(55, 47, 3)
+        )(myInput)
         x = MaxPooling2D(pool_size=2, strides=2, name="Pool1")(x)
         x = Dropout(rate=0.99, name="D1")(x)
 
@@ -100,7 +101,9 @@ class DeepIdClient(FacialRecognition):
         # ---------------------------------
 
         file_name: str = "deepid_keras_weights.h5"
-        url: str = f"https://github.com/serengil/deepface_models/releases/download/v1.0/{file_name}"
+        url: str = (
+            f"https://github.com/serengil/deepface_models/releases/download/v1.0/{file_name}"
+        )
         output = os.path.join(folder_utils.get_weights_dir(), file_name)
 
         if os.path.isfile(output) != True:

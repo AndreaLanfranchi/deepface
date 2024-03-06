@@ -44,6 +44,7 @@ else:
         Dense,
     )
 
+
 # pylint: disable=too-few-public-methods
 class ArcFaceClient(FacialRecognition):
     """
@@ -84,17 +85,20 @@ class ArcFaceClient(FacialRecognition):
             units=self.output_shape,
             activation=None,
             use_bias=True,
-            kernel_initializer="glorot_normal")(arcface_model)
-        embedding = BatchNormalization(momentum=0.9, epsilon=2e-5, name="embedding", scale=True)(
-            arcface_model
-        )
+            kernel_initializer="glorot_normal",
+        )(arcface_model)
+        embedding = BatchNormalization(
+            momentum=0.9, epsilon=2e-5, name="embedding", scale=True
+        )(arcface_model)
         model = Model(inputs, embedding, name=base_model.name)
 
         # ---------------------------------------
         # check the availability of pre-trained weights
 
         file_name: str = "arcface_weights.h5"
-        url: str = f"https://github.com/serengil/deepface_models/releases/download/v1.0/{file_name}",
+        url: str = (
+            f"https://github.com/serengil/deepface_models/releases/download/v1.0/{file_name}",
+        )
         output: str = os.path.join(folder_utils.get_weights_dir(), file_name)
 
         if os.path.isfile(output) != True:
@@ -107,7 +111,6 @@ class ArcFaceClient(FacialRecognition):
 
         return model
 
-
     def __ResNet34(self) -> Model:
         """
         ResNet34 model
@@ -118,7 +121,12 @@ class ArcFaceClient(FacialRecognition):
 
         x = ZeroPadding2D(padding=1, name="conv1_pad")(img_input)
         x = Conv2D(
-            64, 3, strides=1, use_bias=False, kernel_initializer="glorot_normal", name="conv1_conv"
+            64,
+            3,
+            strides=1,
+            use_bias=False,
+            kernel_initializer="glorot_normal",
+            name="conv1_conv",
         )(x)
         x = BatchNormalization(axis=3, epsilon=2e-5, momentum=0.9, name="conv1_bn")(x)
         x = PReLU(shared_axes=[1, 2], name="conv1_prelu")(x)
@@ -128,7 +136,9 @@ class ArcFaceClient(FacialRecognition):
 
         return model
 
-    def __block1(self, x, filters, kernel_size=3, stride=1, conv_shortcut=True, name: str = str()):
+    def __block1(
+        self, x, filters, kernel_size=3, stride=1, conv_shortcut=True, name: str = str()
+    ):
         bn_axis = 3
 
         if conv_shortcut:
@@ -146,7 +156,9 @@ class ArcFaceClient(FacialRecognition):
         else:
             shortcut = x
 
-        x = BatchNormalization(axis=bn_axis, epsilon=2e-5, momentum=0.9, name=name + "_1_bn")(x)
+        x = BatchNormalization(
+            axis=bn_axis, epsilon=2e-5, momentum=0.9, name=name + "_1_bn"
+        )(x)
         x = ZeroPadding2D(padding=1, name=name + "_1_pad")(x)
         x = Conv2D(
             filters,
@@ -156,7 +168,9 @@ class ArcFaceClient(FacialRecognition):
             use_bias=False,
             name=name + "_1_conv",
         )(x)
-        x = BatchNormalization(axis=bn_axis, epsilon=2e-5, momentum=0.9, name=name + "_2_bn")(x)
+        x = BatchNormalization(
+            axis=bn_axis, epsilon=2e-5, momentum=0.9, name=name + "_2_bn"
+        )(x)
         x = PReLU(shared_axes=[1, 2], name=name + "_1_prelu")(x)
 
         x = ZeroPadding2D(padding=1, name=name + "_2_pad")(x)
@@ -168,15 +182,19 @@ class ArcFaceClient(FacialRecognition):
             use_bias=False,
             name=name + "_2_conv",
         )(x)
-        x = BatchNormalization(axis=bn_axis, epsilon=2e-5, momentum=0.9, name=name + "_3_bn")(x)
+        x = BatchNormalization(
+            axis=bn_axis, epsilon=2e-5, momentum=0.9, name=name + "_3_bn"
+        )(x)
 
         x = Add(name=name + "_add")([shortcut, x])
         return x
 
-    def __stack1(self, x, filters, blocks, stride1=2, name: str=str()):
+    def __stack1(self, x, filters, blocks, stride1=2, name: str = str()):
         x = self.__block1(x, filters, stride=stride1, name=name + "_block1")
         for i in range(2, blocks + 1):
-            x = self.__block1(x, filters, conv_shortcut=False, name=name + "_block" + str(i))
+            x = self.__block1(
+                x, filters, conv_shortcut=False, name=name + "_block" + str(i)
+            )
         return x
 
     def __stack_fn(self, x):

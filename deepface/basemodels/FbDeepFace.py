@@ -70,12 +70,16 @@ def load_model(
     """
     base_model = Sequential()
     base_model.add(
-        Convolution2D(32, (11, 11), activation="relu", name="C1", input_shape=(152, 152, 3))
+        Convolution2D(
+            32, (11, 11), activation="relu", name="C1", input_shape=(152, 152, 3)
+        )
     )
     base_model.add(MaxPooling2D(pool_size=3, strides=2, padding="same", name="M2"))
     base_model.add(Convolution2D(16, (9, 9), activation="relu", name="C3"))
     base_model.add(LocallyConnected2D(16, (9, 9), activation="relu", name="L4"))
-    base_model.add(LocallyConnected2D(16, (7, 7), strides=2, activation="relu", name="L5"))
+    base_model.add(
+        LocallyConnected2D(16, (7, 7), strides=2, activation="relu", name="L5")
+    )
     base_model.add(LocallyConnected2D(16, (5, 5), activation="relu", name="L6"))
     base_model.add(Flatten(name="F0"))
     base_model.add(Dense(4096, activation="relu", name="F7"))
@@ -101,6 +105,8 @@ def load_model(
     base_model.load_weights(weight_file)
 
     # drop F8 and D0. F7 is the representation layer.
-    deepface_model = Model(inputs=base_model.layers[0].input, outputs=base_model.layers[-3].output)
+    deepface_model = Model(
+        inputs=base_model.layers[0].input, outputs=base_model.layers[-3].output
+    )
 
     return deepface_model
