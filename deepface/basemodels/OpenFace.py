@@ -43,10 +43,6 @@ else:
     )
     from tensorflow.keras import backend as K
 
-# pylint: disable=unnecessary-lambda
-
-# ---------------------------------------
-
 
 # pylint: disable=too-few-public-methods
 class OpenFaceClient(FacialRecognition):

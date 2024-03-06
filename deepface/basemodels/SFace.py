@@ -11,9 +11,8 @@ from deepface.models.FacialRecognition import FacialRecognition
 
 logger = Logger(module="basemodels.SFace")
 
-# pylint: disable=line-too-long, too-few-public-methods
 
-
+# pylint: disable=too-few-public-methods
 class SFaceClient(FacialRecognition):
     """
     SFace model class
@@ -44,7 +43,9 @@ class SFaceClient(FacialRecognition):
 
 
 def load_model(
+    # pylint: disable=line-too-long
     url="https://github.com/opencv/opencv_zoo/raw/main/models/face_recognition_sface/face_recognition_sface_2021dec.onnx",
+    # pylint: enable=line-too-long
 ) -> Any:
     """
     Construct SFace model, download its weights and load

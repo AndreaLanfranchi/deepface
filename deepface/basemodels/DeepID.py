@@ -35,12 +35,6 @@ else:
         Dropout,
     )
 
-# pylint: disable=line-too-long
-
-
-# -------------------------------------
-
-
 # pylint: disable=too-few-public-methods
 class DeepIdClient(FacialRecognition):
     """
@@ -101,9 +95,11 @@ class DeepIdClient(FacialRecognition):
         # ---------------------------------
 
         file_name: str = "deepid_keras_weights.h5"
+        # pylint: disable=line-too-long
         url: str = (
             f"https://github.com/serengil/deepface_models/releases/download/v1.0/{file_name}"
         )
+        # pylint: enable=line-too-long
         output = os.path.join(folder_utils.get_weights_dir(), file_name)
 
         if os.path.isfile(output) != True:

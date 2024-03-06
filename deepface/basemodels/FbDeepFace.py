@@ -37,7 +37,7 @@ else:
 
 
 # -------------------------------------
-# pylint: disable=line-too-long, too-few-public-methods
+# pylint: disable=too-few-public-methods
 class DeepFaceClient(FacialRecognition):
     """
     Fb's DeepFace model class
@@ -63,7 +63,9 @@ class DeepFaceClient(FacialRecognition):
 
 
 def load_model(
+    # pylint: disable=line-too-long
     url="https://github.com/swghosh/DeepFace/releases/download/weights-vggface2-2d-aligned/VGGFace2_DeepFace_weights_val-0.9034.h5.zip",
+    # pylint: enable=line-too-long
 ) -> Model:
     """
     Construct DeepFace model, download its weights and load

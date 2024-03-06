@@ -9,7 +9,6 @@ from deepface.models.FacialRecognition import FacialRecognition
 
 logger = Logger(module="basemodels.DlibResNet")
 
-
 class DlibClient(FacialRecognition):
     """
     Dlib model class

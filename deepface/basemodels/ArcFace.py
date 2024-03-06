@@ -8,11 +8,6 @@ from deepface.models.FacialRecognition import FacialRecognition
 
 logger = Logger(module="basemodels.ArcFace")
 
-# pylint: disable=unsubscriptable-object
-
-# --------------------------------
-# dependency configuration
-
 tf_version = package_utils.get_tf_major_version()
 
 if tf_version == 1:
