@@ -46,7 +46,7 @@ def detect_faces(
 
     # Validation
     if isinstance(detector, str):
-        detector = Detector.instance(detector)  # raise KeyError if detector is not known
+        detector = Detector.instance(detector)
     if isinstance(source, str):
         source, _ = preprocessing.load_image(source)
 

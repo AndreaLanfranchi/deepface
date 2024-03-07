@@ -17,8 +17,7 @@ class Detector(DetectorBase):
     _detector: Any
 
     def __init__(self):
-        super().__init__()
-        self._name = "FastMtCnn"
+        self._name = str(__name__.rsplit(".", maxsplit=1))
         self.__initialize()
 
     def __initialize(self):

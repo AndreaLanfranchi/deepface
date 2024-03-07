@@ -10,8 +10,7 @@ class Detector(DetectorBase):
     """
 
     def __init__(self):
-        super().__init__()
-        self._name = "MtCnn"
+        self._name = str(__name__.rsplit(".", maxsplit=1))
         self._detector = MTCNN()
 
     def process(self, img: numpy.ndarray) -> List[FacialAreaRegion]:

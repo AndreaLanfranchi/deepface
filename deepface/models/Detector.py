@@ -18,8 +18,7 @@ logger = Logger()
 # returning the region of the image where the face is located.
 class Detector(ABC):
 
-    def __init__(self):
-        self._name: Optional[str] = None  # Must be filled by specialized classes
+    _name: Optional[str] = None # Must be filled by specialized classes
 
     @abstractmethod
     def process(

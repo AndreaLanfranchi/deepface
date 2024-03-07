@@ -11,8 +11,7 @@ class Detector(DetectorBase):
     """
 
     def __init__(self):
-        super().__init__()
-        self._name = "OpenCV"
+        self._name = str(__name__.rsplit(".", maxsplit=1))
         self.__initialize()
 
     def __initialize(self):
