@@ -79,9 +79,9 @@ class Detector(DetectorBase):
             img = cv2.resize(img, (int(width * r), int(height * r)))
             height, width = img.shape[0], img.shape[1]
             resized = True
-        self.model.setInputSize((width, height))
-        self.model.setScoreThreshold(score_threshold)
-        _, faces = self.model.detect(img)
+        self._detector.setInputSize((width, height))
+        self._detector.setScoreThreshold(score_threshold)
+        _, faces = self._detector.detect(img)
         if faces is None:
             return results
         for face in faces:
