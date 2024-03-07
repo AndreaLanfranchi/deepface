@@ -6,7 +6,7 @@ import numpy
 
 # project dependencies
 from deepface.modules import detection, preprocessing
-from deepface.models.Detector import Detector, DetectedFace, FacialAreaRegion
+from core.detector import Detector, DetectedFace, FacialAreaRegion
 from deepface.commons.logger import Logger
 
 logger = Logger(module="deepface/detectors/DetectorWrapper.py")

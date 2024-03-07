@@ -1,6 +1,6 @@
 from typing import Any, List
 import numpy
-from deepface.models.Detector import Detector as DetectorBase, FacialAreaRegion
+from core.detector import Detector as DetectorBase, FacialAreaRegion
 
 
 class Detector(DetectorBase):

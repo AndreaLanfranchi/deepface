@@ -2,7 +2,7 @@ import os
 from typing import Any, List
 import cv2
 import numpy
-from deepface.models.Detector import Detector as DetectorBase, FacialAreaRegion
+from core.detector import Detector as DetectorBase, FacialAreaRegion
 
 
 class Detector(DetectorBase):

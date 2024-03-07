@@ -6,7 +6,7 @@ import pandas
 import numpy
 from deepface.detectors import OpenCv
 from deepface.commons import folder_utils
-from deepface.models.Detector import Detector as DetectorBase, FacialAreaRegion
+from core.detector import Detector as DetectorBase, FacialAreaRegion
 from deepface.commons.logger import Logger
 
 logger = Logger(module="detectors.SsdWrapper")

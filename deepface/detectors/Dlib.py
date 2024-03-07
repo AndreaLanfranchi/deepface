@@ -4,7 +4,7 @@ import bz2
 import gdown
 import numpy
 from deepface.commons import folder_utils
-from deepface.models.Detector import Detector as DetectorBase, FacialAreaRegion
+from core.detector import Detector as DetectorBase, FacialAreaRegion
 from deepface.commons.logger import Logger
 
 logger = Logger(module="detectors.DlibWrapper")
