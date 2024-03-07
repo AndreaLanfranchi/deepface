@@ -1,7 +1,9 @@
 from typing import Any, Union, List
+
 import cv2
 import numpy
-from core.detector import Detector as DetectorBase, FacialAreaRegion
+
+from deepface.core.detector import Detector as DetectorBase, FacialAreaRegion
 
 
 class Detector(DetectorBase):

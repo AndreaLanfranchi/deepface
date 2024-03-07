@@ -1,7 +1,9 @@
 from typing import List
+
 import numpy
 from mtcnn import MTCNN
-from core.detector import Detector as DetectorBase, FacialAreaRegion
+
+from deepface.core.detector import Detector as DetectorBase, FacialAreaRegion
 
 
 class Detector(DetectorBase):

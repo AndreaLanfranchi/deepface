@@ -7,8 +7,8 @@ import inspect
 import pkgutil
 import numpy
 
-from deepface.core.types import Point, RangeInt
-from deepface import detectors as Detectors
+from deepface.core.types import Point, RangeInt, uint32_t
+from deepface.core import detectors
 from deepface.commons.logger import Logger
 
 logger = Logger()
@@ -19,14 +19,14 @@ logger = Logger()
 # returning the region of the image where the face is located.
 class Detector(ABC):
 
-    _name: Optional[str] = None # Must be filled by specialized classes
+    _name: Optional[str] = None  # Must be filled by specialized classes
 
     @abstractmethod
     def process(
         self,
         img: numpy.ndarray,
-        min_height: int = 0,
-        min_width: int = 0,
+        min_height: uint32_t = 0,
+        min_width: uint32_t = 0,
         min_confidence: float = 0.0,
     ) -> List["FacialAreaRegion"]:
         """
@@ -78,14 +78,14 @@ class Detector(ABC):
         global available_detectors
         if not "available_detectors" in globals():
             available_detectors = {}
-            for _, module_name, _ in pkgutil.walk_packages(Detectors.__path__):
+            for _, module_name, _ in pkgutil.walk_packages(detectors.__path__):
 
                 # TODO : Remove this when DetectorWrapper is removed
                 if __name__.endswith(module_name):
                     continue  # Don't import self
 
                 module = importlib.import_module(
-                    name=f"{Detectors.__name__}.{module_name}"
+                    name=f"{detectors.__name__}.{module_name}"
                 )
                 for _, obj in inspect.getmembers(module):
                     if inspect.isclass(obj):

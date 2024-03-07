@@ -1,10 +1,12 @@
 from typing import Any, List
+
 import os
 import bz2
 import gdown
 import numpy
+
 from deepface.commons import folder_utils
-from core.detector import Detector as DetectorBase, FacialAreaRegion
+from deepface.core.detector import Detector as DetectorBase, FacialAreaRegion
 from deepface.commons.logger import Logger
 
 logger = Logger(module="detectors.DlibWrapper")

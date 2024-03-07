@@ -1,10 +1,12 @@
-import os
 from typing import Any, List
+
+import os
 import cv2
 import numpy
 import gdown
+
 from deepface.commons import folder_utils
-from core.detector import Detector as DetectorBase, FacialAreaRegion
+from deepface.core.detector import Detector as DetectorBase, FacialAreaRegion
 from deepface.commons.logger import Logger
 
 logger = Logger(module="detectors.YunetWrapper")

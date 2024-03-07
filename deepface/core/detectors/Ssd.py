@@ -1,12 +1,13 @@
-from typing import Any, List
+from typing import List
+
 import os
 import gdown
 import cv2
 import pandas
 import numpy
-from deepface.detectors import OpenCv
+
 from deepface.commons import folder_utils
-from core.detector import Detector as DetectorBase, FacialAreaRegion
+from deepface.core.detector import Detector as DetectorBase, FacialAreaRegion
 from deepface.commons.logger import Logger
 
 logger = Logger(module="detectors.SsdWrapper")

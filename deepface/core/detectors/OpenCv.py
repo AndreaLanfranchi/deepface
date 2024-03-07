@@ -1,8 +1,10 @@
-import os
 from typing import Any, List
+
+import os
 import cv2
 import numpy
-from core.detector import Detector as DetectorBase, FacialAreaRegion
+
+from deepface.core.detector import Detector as DetectorBase, FacialAreaRegion
 
 
 class Detector(DetectorBase):

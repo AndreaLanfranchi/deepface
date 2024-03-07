@@ -8,8 +8,8 @@ from PIL import Image
 
 # project dependencies
 from deepface.modules import preprocessing
-from core.detector import Detector
-from deepface.detectors import DetectorWrapper
+from deepface.core.detector import Detector
+from deepface.core.detectors import DetectorWrapper
 from deepface.commons import package_utils
 from deepface.commons.logger import Logger
 

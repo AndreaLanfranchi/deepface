@@ -1,7 +1,9 @@
-from typing import Any, List
+from typing import List
+
 import numpy
 from retinaface import RetinaFace as rf
-from core.detector import Detector as DetectorBase, FacialAreaRegion
+
+from deepface.core.detector import Detector as DetectorBase, FacialAreaRegion
 
 
 class Detector(DetectorBase):

@@ -1,8 +1,10 @@
-import os
 from typing import Any, List
+
+import os
 import numpy
 import gdown
-from core.detector import Detector as DetectorBase, FacialAreaRegion
+
+from deepface.core.detector import Detector as DetectorBase, FacialAreaRegion
 from deepface.commons import folder_utils
 from deepface.commons.logger import Logger
 
