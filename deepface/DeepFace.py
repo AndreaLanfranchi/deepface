@@ -361,7 +361,7 @@ def represent(
 def stream(
     db_path: str,
     model_name: str = "VGG-Face",
-    detector_backend: str = "opencv",
+    detector: str = "opencv",
     distance_metric: str = "cosine",
     analyzers:List[str] = ["Age", "Emotion", "Gender"],
     source: Union[str, int] = int(0),
@@ -414,7 +414,7 @@ def stream(
     streaming.analysis(
         db_path=db_path,
         model_name=model_name,
-        detector_backend=detector_backend,
+        detector=detector,
         distance_metric=distance_metric,
         analyzers=analyzers,
         source=source,
