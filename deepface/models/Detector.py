@@ -9,6 +9,7 @@ import pkgutil
 import numpy
 from deepface import detectors as Detectors
 from deepface.commons.logger import Logger
+
 logger = Logger()
 
 
@@ -18,15 +19,24 @@ logger = Logger()
 class Detector(ABC):
 
     def __init__(self):
-        self._name: Optional[str] = None # Must be filled by specialized classes
+        self._name: Optional[str] = None  # Must be filled by specialized classes
 
     @abstractmethod
-    def process(self, img: numpy.ndarray) -> List["FacialAreaRegion"]:
+    def process(
+        self,
+        img: numpy.ndarray,
+        min_height: int = 0,
+        min_width: int = 0,
+        min_confidence: float = 0.0,
+    ) -> List["FacialAreaRegion"]:
         """
         Interface in picture face detection.
 
         Args:
             img (numpy.ndarray): pre-loaded image as numpy array
+            min_height (int): minimum height of the detected face (if any)
+            min_width (int): minimum width of the detected face (if any)
+            min_confidence (float): minimum confidence of the detected face (if any)
 
         Returns:
             results (List[FacialAreaRegion]): A list of FacialAreaRegion objects
@@ -48,7 +58,7 @@ class Detector(ABC):
         Args:
             `name (str)`: The name of the detector to instantiate
             `singleton (bool)`: If True, the same instance will be returned
-        
+
         Return:
             An instance of the `Detector` subclass matching the given name
 
@@ -74,7 +84,9 @@ class Detector(ABC):
                 if __name__.endswith(module_name):
                     continue  # Don't import self
 
-                module = importlib.import_module(name=f"{Detectors.__name__}.{module_name}")
+                module = importlib.import_module(
+                    name=f"{Detectors.__name__}.{module_name}"
+                )
                 for _, obj in inspect.getmembers(module):
                     if inspect.isclass(obj):
                         if issubclass(obj, Detector) and obj is not Detector:
@@ -83,7 +95,7 @@ class Detector(ABC):
                             )
                             key_value: str = str(module.__name__.split(".")[-1]).lower()
                             available_detectors[key_value] = obj
-                            break # Only one detector per module
+                            break  # Only one detector per module
 
         if name not in available_detectors.keys():
             raise NotImplementedError(f"Unknown detector : {name}")
@@ -103,17 +115,17 @@ class Detector(ABC):
                     )
                 instance = detectors_instances[name]
         except Exception as ex:
-            logger.critical(
-                f"Failed to instantiate detector : {name} Error: {str(ex)}"
-            )
+            logger.critical(f"Failed to instantiate detector : {name} Error: {str(ex)}")
             raise ex
 
         return instance
+
 
 class Point:
     """
     This class is used to represent a point in a 2D space
     """
+
     def __init__(self, x: int, y: int):
         self.x = x
         self.y = y
@@ -124,10 +136,12 @@ class Point:
     def __repr__(self):
         return self.__str__()
 
+
 class RangeInt:
     """
     This class is used to represent a range of integers as [start, end]
     """
+
     def __init__(self, start: int, end: int):
         self.start = max(start, 0)
         self.end = max(end, 0)
@@ -138,6 +152,7 @@ class RangeInt:
 
     def __repr__(self):
         return self.__str__()
+
 
 class DetectionResult:
     """
@@ -186,6 +201,7 @@ class DetectionResult:
     @property
     def confidence(self) -> Optional[float]:
         return self._confidence
+
 
 class FacialAreaRegion:
     x: int
