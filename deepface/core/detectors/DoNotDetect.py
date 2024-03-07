@@ -12,7 +12,7 @@ class Detector(DetectorBase):
     """
 
     def __init__(self):
-        self._name = str(__name__.rsplit(".", maxsplit=1))
+        self._name = str(__name__.rsplit(".", maxsplit=1)[-1])
 
     def process(self, img: numpy.ndarray) -> List["FacialAreaRegion"]:
         return [

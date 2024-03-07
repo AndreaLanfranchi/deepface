@@ -13,7 +13,7 @@ class Detector(DetectorBase):
     """
 
     def __init__(self):
-        self._name = str(__name__.rsplit(".", maxsplit=1))
+        self._name = str(__name__.rsplit(".", maxsplit=1)[-1])
         self.__initialize()
 
     def __initialize(self):

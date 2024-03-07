@@ -2,13 +2,10 @@ import time
 from typing import List, Tuple, Optional
 from abc import ABC, abstractmethod
 
-import importlib
-import inspect
-import pkgutil
 import numpy
 
 from deepface.core.types import Point, RangeInt, uint32_t
-from deepface.core import detectors
+from deepface.core import reflection, detectors
 from deepface.commons.logger import Logger
 
 logger = Logger()
@@ -77,25 +74,9 @@ class Detector(ABC):
 
         global available_detectors
         if not "available_detectors" in globals():
-            available_detectors = {}
-            for _, module_name, _ in pkgutil.walk_packages(detectors.__path__):
-
-                # TODO : Remove this when DetectorWrapper is removed
-                if __name__.endswith(module_name):
-                    continue  # Don't import self
-
-                module = importlib.import_module(
-                    name=f"{detectors.__name__}.{module_name}"
-                )
-                for _, obj in inspect.getmembers(module):
-                    if inspect.isclass(obj):
-                        if issubclass(obj, Detector) and obj is not Detector:
-                            logger.debug(
-                                f"Found {obj.__name__} class in module {module.__name__}"
-                            )
-                            key_value: str = str(module.__name__.rsplit(".", maxsplit=1)).lower()
-                            available_detectors[key_value] = obj
-                            break  # Only one detector per module
+            available_detectors = reflection.get_derived_classes(
+                package=detectors, base_class=Detector
+            )
 
         if name not in available_detectors.keys():
             raise NotImplementedError(f"Unknown detector : {name}")

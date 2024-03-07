@@ -34,7 +34,7 @@ class Detector(DetectorBase):
     # _LANDMARKS_CONFIDENCE_THRESHOLD = 0.5
 
     def __init__(self):
-        self._name = str(__name__.rsplit(".", maxsplit=1))
+        self._name = str(__name__.rsplit(".", maxsplit=1)[-1])
         self.__initialize()
 
     def __initialize(self):
