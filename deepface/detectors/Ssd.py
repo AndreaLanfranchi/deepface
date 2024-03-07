@@ -26,7 +26,7 @@ class Detector(DetectorBase):
 
         try:
 
-            weights_folder = folder_utils.get_weights_folder()
+            weights_folder = folder_utils.get_weights_dir()
             file_name = "deploy.prototxt"
             output1 = os.path.join(weights_folder, file_name)
 
@@ -47,7 +47,7 @@ class Detector(DetectorBase):
                 gdown.download(url, output2, quiet=False)
 
             self._detector = cv2.dnn.readNetFromCaffe(output1, output2)
-            self._opencv_detector = OpenCv.OpenCvClient()
+            self._opencv_detector = self.instance("opencv")
 
         except Exception as err:
             raise ValueError(
