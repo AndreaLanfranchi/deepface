@@ -21,23 +21,25 @@ logger = Logger(module="commons.realtime")
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 
+
 class Stream(threading.Thread):
     """
-        A class to read frames from a video capture source in a separate thread.
-        This is necessary due to the "freeze" feature of this module which
-        causes the capture source to accumulate frames in the read queue which
-        cannot be processed fast enoungh when the main thread resumes.
-        The higher FPS connected cameras can provide the more the problem is
-        noticeable. 
-        Credits for the implementation of this class go to the following:
-        https://stackoverflow.com/a/65191619
+    A class to read frames from a video capture source in a separate thread.
+    This is necessary due to the "freeze" feature of this module which
+    causes the capture source to accumulate frames in the read queue which
+    cannot be processed fast enoungh when the main thread resumes.
+    The higher FPS connected cameras can provide the more the problem is
+    noticeable.
+    Credits for the implementation of this class go to the following:
+    https://stackoverflow.com/a/65191619
     """
 
-    def __init__(self,
-                 source: Union[str, int] = int(0),
-                 buffer_frame_size: int = 3,
-                 ):
-        super(Stream, self).__init__(name="VideoStream")
+    def __init__(
+        self,
+        source: Union[str, int] = int(0),
+        buffer_frame_size: int = 3,
+    ):
+        super().__init__(name="VideoStream")
         self.__vc = cv2.VideoCapture(source)
         self.__vc.set(cv2.CAP_PROP_BUFFERSIZE, buffer_frame_size)
         self.__last_read: bool = True
@@ -65,22 +67,25 @@ class Stream(threading.Thread):
     def stop(self):
         self.__stop = True
 
+
 def analysis(
-    db_path:str,
-    model_name:str ="VGG-Face",
-    detector_backend:str="opencv",
-    distance_metric:str="cosine",
-    analyzers:Optional[List[str]] = None,
+    db_path: str,
+    model_name: str = "VGG-Face",
+    detector: str = "opencv",
+    distance_metric: str = "cosine",
+    analyzers: Optional[List[str]] = None,
     source: Union[str, int] = int(0),
     freeze_time_seconds: int = 3,
     valid_frames_count: int = 5,
-    faces_count_threshold: int = sys.maxsize
+    faces_count_threshold: int = sys.maxsize,
 ):
 
     # Parameter validation
-    freeze_time_seconds = max(1, min(freeze_time_seconds, 10))    # In range [1, 10] positive
-    valid_frames_count = max(1, min(valid_frames_count, 5))       # In range [1, 5] positive
-    faces_count_threshold = max(1, faces_count_threshold)         # In range [1, inf] positive
+    freeze_time_seconds = max(
+        1, min(freeze_time_seconds, 10)
+    )  # In range [1, 10] positive
+    valid_frames_count = max(1, min(valid_frames_count, 5))  # In range [1, 5] positive
+    faces_count_threshold = max(1, faces_count_threshold)  # In range [1, inf] positive
 
     # Constants
     capture_window_title: str = "Capture"
@@ -96,7 +101,7 @@ def analysis(
 
     # Lazy load the analysis models (if needed)
     if analyzers is not None:
-        for i in range(len(analyzers)-1, -1, -1):
+        for i in range(len(analyzers) - 1, -1, -1):
             try:
                 _ = DeepFace.get_analysis_model(name=analyzers[i])
             except KeyError as ex:
@@ -109,8 +114,8 @@ def analysis(
         img_path=numpy.zeros(target_size),
         db_path=db_path,
         model_name=model_name,
-        detector_backend=detector_backend,
-        distance_metric=distance_metric
+        detector_backend=detector,
+        distance_metric=distance_metric,
     )
     # -----------------------
     # visualization
@@ -118,7 +123,7 @@ def analysis(
     tic = time.time()
     logger.info("Starting capture source ...")
     stream = Stream(source=source)
-    time.sleep(1) # Wait for the stream to start - 1 second should be enough
+    time.sleep(1)  # Wait for the stream to start - 1 second should be enough
     logger.info(f"Started capture source in {(time.time() - tic):.5f} seconds")
 
     # Logic descritpion:
@@ -141,9 +146,8 @@ def analysis(
     # The whole loop gracefully exits when the user presses 'q' or
     # the capture source is closed/failed.
 
-
     # For each good capture, store the image and the analysis result
-    good_captures : List[Tuple[MatLike, List[Dict[str, Any]]]] = []
+    good_captures: List[Tuple[MatLike, List[Dict[str, Any]]]] = []
 
     while True:
         try:
@@ -160,7 +164,7 @@ def analysis(
                 frame=captured_frame,
                 target_size=target_size,
                 faces_count_threshold=faces_count_threshold,
-                detector_backend=detector_backend,
+                detector_backend=detector,
                 good_captures=good_captures,
                 display_window_title=capture_window_title,
             )
@@ -181,19 +185,22 @@ def analysis(
 
                 # Detect matches for this face
                 matching_results = __get_face_matches(
-                    face = item["face"],
-                    db_path = db_path,
-                    model_name = model_name,
-                    distance_metric = distance_metric
+                    face=item["face"],
+                    db_path=db_path,
+                    model_name=model_name,
+                    distance_metric=distance_metric,
                 )
                 if len(matching_results) > 0:
                     # Applies matches to the best capture
-                    if __process_matches(
-                        best_capture,
-                        item["facial_area"],
-                        matching_results,
-                        detector_backend,
-                    ) == True:
+                    if (
+                        __process_matches(
+                            best_capture,
+                            item["facial_area"],
+                            matching_results,
+                            detector,
+                        )
+                        == True
+                    ):
                         should_freeze = True
                         __cv2_refresh()
 
@@ -242,11 +249,12 @@ def analysis(
 # returns the ASCII code of the key pressed.
 # We use this as a trick to also check if the 'q' key
 # has been pressed by the user.
-def __cv2_refresh(timeout:int = 1):
+def __cv2_refresh(timeout: int = 1):
     timeout = max(1, timeout)
     result: int = cv2.waitKey(timeout) & 0xFF
     if result == ord("q"):
         raise KeyboardInterrupt("User requested to stop")
+
 
 # Process the captured frame as follows:
 # - Adds it to the list of good captures when this
@@ -257,19 +265,19 @@ def __cv2_refresh(timeout:int = 1):
 # discarded. A face is considered too small when its
 # area is less than 1/2rd of target_size.
 def __process_frame(
-        frame: MatLike,
-        target_size: Tuple[int, int],
-        faces_count_threshold: int,
-        detector_backend: str,
-        good_captures: List[Tuple[MatLike, List[Dict[str, Any]]]],
-        display_window_title: str,
+    frame: MatLike,
+    target_size: Tuple[int, int],
+    faces_count_threshold: int,
+    detector_backend: str,
+    good_captures: List[Tuple[MatLike, List[Dict[str, Any]]]],
+    display_window_title: str,
 ):
     try:
         extracted_faces = DeepFace.detect_faces(
             img_path=frame,
             target_size=target_size,
             detector_backend=detector_backend,
-            align=False, # Do not align the detected face
+            align=False,  # Do not align the detected face
         )
 
         # Remove too small detected faces
@@ -301,16 +309,17 @@ def __process_frame(
     except OverflowError:
         good_captures.clear()
 
+
 # Get the best capture from the list of good captures
 # The best capture is the one with the largest facial
 # area. The list of good captures is then reset.
 def __get_best_capture(
-        good_captures: List[Tuple[MatLike, List[Dict[str, Any]]]]
-        ) -> Tuple[MatLike,List[Dict[str, Any]]]:
-    best_area:int = 0
-    best_index:int = 0
+    good_captures: List[Tuple[MatLike, List[Dict[str, Any]]]]
+) -> Tuple[MatLike, List[Dict[str, Any]]]:
+    best_area: int = 0
+    best_index: int = 0
     for i, (_, faces) in enumerate(good_captures):
-        area:int = 0
+        area: int = 0
         for face in faces:
             h: int = face["facial_area"]["h"]
             w: int = face["facial_area"]["w"]
@@ -322,12 +331,11 @@ def __get_best_capture(
     good_captures.clear()
     return ret
 
+
 # Draw box(es) around the detected face(s)
 def __box_faces(
-        picture: MatLike,
-        faces: List[Dict[str, Any]],
-        number: Union[int, None] = None
-        ) -> MatLike:
+    picture: MatLike, faces: List[Dict[str, Any]], number: Union[int, None] = None
+) -> MatLike:
     for face in faces:
         x: int = face["facial_area"]["x"]
         y: int = face["facial_area"]["y"]
@@ -347,11 +355,11 @@ def __box_faces(
             )
     return picture
 
+
 # Draws a box around the provided region
 def __box_face(
-    picture: MatLike,
-    region: Tuple[int, int, int, int] # (x, y, w, h)
-    ) -> MatLike:
+    picture: MatLike, region: Tuple[int, int, int, int]  # (x, y, w, h)
+) -> MatLike:
     x: int = region[0]
     y: int = region[1]
     w: int = region[2]
@@ -359,42 +367,39 @@ def __box_face(
     cv2.rectangle(picture, (x, y), (x + w, y + h), (67, 67, 67), 1)
     return picture
 
+
 # Crop the face from the picture
-def __crop_face(
-    picture: MatLike,
-    region: Dict[str, int]
-    ) -> MatLike:
+def __crop_face(picture: MatLike, region: Dict[str, int]) -> MatLike:
     x: int = region["x"]
     y: int = region["y"]
     w: int = region["w"]
     h: int = region["h"]
     return picture[y : y + h, x : x + w]
 
+
 # Get the matches from the dataset
 # which are the closest to the detected face
 def __get_face_matches(
-    face: numpy.ndarray,
-    db_path: str,
-    model_name: str,
-    distance_metric: str
+    face: numpy.ndarray, db_path: str, model_name: str, distance_metric: str
 ) -> List[pandas.DataFrame]:
 
     matching_results = DeepFace.find(
         img_path=face,
         db_path=db_path,
         model_name=model_name,
-        detector_backend="donotdetect", # Skip detection, we already have the face
-        distance_metric=distance_metric
+        detector_backend="donotdetect",  # Skip detection, we already have the face
+        distance_metric=distance_metric,
     )
     return matching_results
+
 
 # Process the matches and stick the matching face
 # (if any)
 def __process_matches(
-        picture: MatLike,
-        facial_area: Dict[str, Any],
-        matching_results: List[pandas.DataFrame],
-        detector_backend: str,
+    picture: MatLike,
+    facial_area: Dict[str, Any],
+    matching_results: List[pandas.DataFrame],
+    detector_backend: str,
 ) -> bool:
 
     matching_result = matching_results[0]
@@ -424,14 +429,14 @@ def __process_matches(
     h: int = facial_area["h"]
 
     matching_face = matching_faces[0]["face"]
-    matching_face = cv2.resize(matching_face, (int(h/2.5), int(w/2.5)))
+    matching_face = cv2.resize(matching_face, (int(h / 2.5), int(w / 2.5)))
     matching_face *= 255
     matching_face = matching_face[:, :, ::-1]
 
     # Stick the matching face to the original picture
     # in the lower-right corner of the boxed face
     picture[
-        y + h - matching_face.shape[0] : y + h,
-        x + w - matching_face.shape[1] : x + w] = matching_face
+        y + h - matching_face.shape[0] : y + h, x + w - matching_face.shape[1] : x + w
+    ] = matching_face
 
     return True
