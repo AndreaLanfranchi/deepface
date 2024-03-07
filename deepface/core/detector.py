@@ -93,7 +93,7 @@ class Detector(ABC):
                             logger.debug(
                                 f"Found {obj.__name__} class in module {module.__name__}"
                             )
-                            key_value: str = str(module.__name__.split(".")[-1]).lower()
+                            key_value: str = str(module.__name__.rsplit(".", maxsplit=1)).lower()
                             available_detectors[key_value] = obj
                             break  # Only one detector per module
 
