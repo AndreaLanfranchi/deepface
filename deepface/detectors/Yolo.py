@@ -72,9 +72,9 @@ class Detector(DetectorBase):
         Returns:
             results (List[FacialAreaRegion]): A list of FacialAreaRegion objects
         """
-        results = []
+        ret: List[FacialAreaRegion] = []
         if img.shape[0] == 0 or img.shape[1] == 0:
-            return results
+            return ret
 
         # Detect faces
         results = self._detector.predict(img, verbose=False, show=False, conf=0.25)[0]
@@ -104,6 +104,6 @@ class Detector(DetectorBase):
                 right_eye=right_eye,
                 confidence=confidence,
             )
-            results.append(facial_area)
+            ret.append(facial_area)
 
-        return results
+        return ret
