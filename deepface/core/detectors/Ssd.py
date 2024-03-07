@@ -34,7 +34,9 @@ class Detector(DetectorBase):
             # model structure
             if os.path.isfile(output1) != True:
                 logger.info(f"Download : {file_name}")
+                # pylint: disable=line-too-long
                 url = f"https://github.com/opencv/opencv/raw/3.4.0/samples/dnn/face_detector/{file_name}"
+                # pylint: enable=line-too-long
                 gdown.download(url, output1, quiet=False)
 
             file_name = "res10_300x300_ssd_iter_140000.caffemodel"
@@ -43,8 +45,9 @@ class Detector(DetectorBase):
             # pre-trained weights
             if os.path.isfile(output2) != True:
                 logger.info(f"Download : {file_name}")
-
+                # pylint: disable=line-too-long
                 url = f"https://github.com/opencv/opencv_3rdparty/raw/dnn_samples_face_detector_20170830/{file_name}"
+                # pylint: enable=line-too-long
                 gdown.download(url, output2, quiet=False)
 
             self._detector = cv2.dnn.readNetFromCaffe(output1, output2)
