@@ -10,7 +10,7 @@ from deepface.commons.logger import Logger
 logger = Logger()
 
 
-# Notice that all facial attribute analysis models must be inherited from this class
+# Abstract class all specialized face attribute analyzers must inherit from.
 class Analyzer(ABC):
 
     _name: Optional[str] = None  # Must be filled by specialized classes
