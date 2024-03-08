@@ -9,7 +9,6 @@ from deepface.commons.logger import Logger
 
 logger = Logger()
 
-
 # Abstract class all specialized face detectors must inherit from.
 # A face detection consists in finding [0,inf) faces in an image and
 # returning the region of the image where the face is located.
