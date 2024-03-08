@@ -4,7 +4,7 @@ import numpy
 from deepface.basemodels import VGGFace
 from deepface.commons import package_utils, folder_utils
 from deepface.commons.logger import Logger
-from deepface.models.Demography import Analyzer
+from deepface.models.analyzer import Analyzer
 
 logger = Logger(module="extendedmodels.Age")
 
