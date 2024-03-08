@@ -24,9 +24,10 @@ else:
 # Labels for the ethnic phenotypes that can be detected by the model.
 labels = ["asian", "indian", "black", "white", "middle eastern", "latino hispanic"]
 
+
 # pylint: disable=too-few-public-methods
 class RaceClient(Demography):
-    
+
     _model: Model  # The actual model used for the analysis
 
     def __init__(self):
@@ -41,7 +42,9 @@ class RaceClient(Demography):
         classes = 6  # TDOO: What is this magic number?
         with VGGFace.base_model() as base_model:
             base_model_output = Sequential()
-            base_model_output = Convolution2D(classes, (1, 1), name="predictions")(base_model.layers[-4].output)
+            base_model_output = Convolution2D(classes, (1, 1), name="predictions")(
+                base_model.layers[-4].output
+            )
             base_model_output = Flatten()(base_model_output)
             base_model_output = Activation("softmax")(base_model_output)
             self._model = Model(inputs=base_model.input, outputs=base_model_output)

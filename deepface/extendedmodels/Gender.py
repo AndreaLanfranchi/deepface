@@ -25,6 +25,7 @@ else:
 # Labels for the genders that can be detected by the model.
 labels = ["Woman", "Man"]
 
+
 # pylint: disable=too-few-public-methods
 class GenderClient(Demography):
 
@@ -39,10 +40,12 @@ class GenderClient(Demography):
 
     def __initialize(self) -> Model:
 
-        classes = 2 # TDOO: What is this magic number?
+        classes = 2  # TDOO: What is this magic number?
         with VGGFace.base_model() as base_model:
             base_model_output = Sequential()
-            base_model_output = Convolution2D(classes, (1, 1), name="predictions")(base_model.layers[-4].output)
+            base_model_output = Convolution2D(classes, (1, 1), name="predictions")(
+                base_model.layers[-4].output
+            )
             base_model_output = Flatten()(base_model_output)
             base_model_output = Activation("softmax")(base_model_output)
             self._model = Model(inputs=base_model.input, outputs=base_model_output)
