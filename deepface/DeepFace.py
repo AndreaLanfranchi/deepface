@@ -223,7 +223,7 @@ def analyze(
     """
     return demography.analyze(
         img_path=img_path,
-        actions=actions,
+        attributes=actions,
         detector_backend=detector_backend,
         align=align,
         expand_percentage=expand_percentage

@@ -12,7 +12,7 @@ from deepface.modules import detection
 
 def analyze(
     img_path: Union[str, numpy.ndarray],
-    actions: Union[str, tuple, list] = ("emotion", "age", "gender", "race"),
+    attributes: Union[str, tuple, list] = ("emotion", "age", "gender", "race"),
     detector_backend: str = "opencv",
     align: bool = True,
     expand_percentage: int = 0,
@@ -89,22 +89,19 @@ def analyze(
     """
 
     # validate actions
-    if isinstance(actions, str):
-        actions = (actions,)
+    if isinstance(attributes, str):
+        attributes = (attributes,)
 
     # check if actions is not an iterable or empty.
-    if not hasattr(actions, "__getitem__") or not actions:
-        raise ValueError("`actions` must be a list of strings.")
+    if not hasattr(attributes, "__getitem__") or not attributes:
+        raise ValueError("`attributes` must be a list of strings.")
 
-    actions = list(actions)
+    attributes = list(attributes)
 
     # For each action, check if it is valid
-    for action in actions:
-        if action not in ("emotion", "age", "gender", "race"):
-            raise ValueError(
-                f"Invalid action passed ({repr(action)})). "
-                "Valid actions are `emotion`, `age`, `gender`, `race`."
-            )
+    for attribute in attributes:
+        _ = Analyzer.instance(attribute)
+
     # ---------------------------------
     resp_objects = []
 
@@ -124,23 +121,15 @@ def analyze(
         if img_content.shape[0] > 0 and img_content.shape[1] > 0:
             obj = {}
             # facial attribute analysis
-            pbar = tqdm(range(len(actions)), desc="Finding actions")
+            pbar = tqdm(range(len(attributes)), desc="Finding actions")
             for index in pbar:
-                action = actions[index]
+                attribute = attributes[index]
 
-                try:
-                    analyzer: Analyzer = Analyzer.instance(action)
-                except Exception:
-                    continue
-
+                analyzer: Analyzer = Analyzer.instance(attribute)
                 pbar.set_description(f"Action: {analyzer.name}")
                 analysis_result = analyzer.process(img=img_content)
                 obj.update(analysis_result)
-
-                # -----------------------------
-                # mention facial areas
                 obj["region"] = img_region
-                # include image confidence
                 obj["face_confidence"] = img_confidence
 
             resp_objects.append(obj)

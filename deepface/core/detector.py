@@ -9,6 +9,7 @@ from deepface.commons.logger import Logger
 
 logger = Logger.get_instance()
 
+
 # Abstract class all specialized face detectors must inherit from.
 # A face detection consists in finding [0,inf) faces in an image and
 # returning the region of the image where the face is located.
@@ -58,13 +59,23 @@ class Detector(ABC):
             An instance of the `Detector` subclass matching the given name
 
         Raises:
+            `TypeError`: If the name or singleton arguments are not of the expected type
             `ValueError`: If the detector name empty
             `NotImplementedError`: If the detector name is unknown
-
+            'ImportError': If the detector instance cannot be instantiated
         """
+        if not isinstance(name, str):
+            raise TypeError(
+                f"Invalid 'name' argument type [{type(name).__name__}] : expected str"
+            )
+        if not isinstance(singleton, bool):
+            raise TypeError(
+                f"Invalid 'singleton' argument type [{type(singleton).__name__}] : expected bool"
+            )
+
         name = name.lower().strip()
         if len(name) == 0:
-            raise ValueError("Empty detector name")
+            raise KeyError("Empty detector name")
 
         global detectors_instances  # singleton design pattern
         if not "detectors_instances" in globals():
@@ -94,10 +105,13 @@ class Detector(ABC):
                     )
                 instance = detectors_instances[name]
         except Exception as ex:
-            logger.critical(f"{type(ex).__name__} on detector [{name}] Error: {ex.args}")
+            logger.critical(
+                f"{type(ex).__name__} on detector [{name}] Error: {ex.args}"
+            )
             raise ex
 
         return instance
+
 
 class FacialAreaRegion:
     x: int

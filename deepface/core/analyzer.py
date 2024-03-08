@@ -24,7 +24,7 @@ class Analyzer(ABC):
 
         Returns:
             The result of the analysis is returned in the form of
-            Dict[str, Union[str, Dict[str, float]]] object. 
+            Dict[str, Union[str, Dict[str, float]]] object.
 
             For example:
             {
@@ -49,7 +49,7 @@ class Analyzer(ABC):
             }
 
             Note ! The "detail" key might not cause the return of the
-            detailed information in some cases (for example, if the 
+            detailed information in some cases (for example, if the
             attribute 'age').
 
         """
@@ -71,10 +71,20 @@ class Analyzer(ABC):
             An instance of the `Demography` subclass matching the given name
 
         Raises:
-            `ValueError`: If the detector name empty
-            `NotImplementedError`: If the detector name is unknown
-
+            `TypeError`: If the name or singleton arguments are not of the expected type
+            `ValueError`: If the analyzer name empty
+            `NotImplementedError`: If the analyzer name is unknown
+            'ImportError': If the analyzer instance cannot be instantiated
         """
+        if not isinstance(name, str):
+            raise TypeError(
+                f"Invalid 'name' argument type [{type(name).__name__}] : expected str"
+            )
+        if not isinstance(singleton, bool):
+            raise TypeError(
+                f"Invalid 'singleton' argument type [{type(singleton).__name__}] : expected bool"
+            )
+
         name = name.lower().strip()
         if len(name) == 0:
             raise ValueError("Empty analyzer name")
