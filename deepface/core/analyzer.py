@@ -40,7 +40,7 @@ class Analyzer(ABC):
             evaluated. For example (in case of emotion analysis):
             {
                 "emotion": "happiness",
-                "details": {
+                "emotion_analysis": {
                     "happiness": "50.0",
                     "sadness": "10.0",
                     "anger": 5.0,

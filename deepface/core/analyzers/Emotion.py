@@ -75,7 +75,7 @@ class Analyzer(AnalyzerBase):
             for i, label in enumerate(self._labels):
                 estimate = round(emotion_estimates[i] * 100 / estimates_sum, 2)
                 details[label] = estimate
-            result["details"] = details
+            result[f"{self.name.lower}_analisys"] = details
 
         return result
 

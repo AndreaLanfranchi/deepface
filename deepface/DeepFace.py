@@ -11,6 +11,7 @@ import pandas
 import tensorflow
 
 # package dependencies
+from deepface.core.analyzer import Analyzer # Facial Emotions Analyzer
 from deepface.commons import package_utils
 from deepface.commons.logger import Logger
 from deepface.modules import (
@@ -71,8 +72,7 @@ def get_analysis_model(name: str) -> Any:
     Returns:
         reference to built model class instance
     """
-
-    return modeling.get_analysis_model(name=name)
+    return Analyzer.instance(name=name)
 
 def verify(
     img1_path: Union[str, numpy.ndarray],
