@@ -30,47 +30,43 @@ class GenderClient(Demography):
     """
     Gender model class
     """
+    _model: Model  # The actual model used for the analysis
 
     def __init__(self):
-        self.model = load_model()
-        self.model_name = "Gender"
+        self._name = str(__name__.rsplit(".", maxsplit=1)[-1])
+        self.__initialize()
 
     def predict(self, img: numpy.ndarray) -> numpy.ndarray:
-        return self.model.predict(img, verbose=0)[0, :]
+        return self._model.predict(img, verbose=0)[0, :]
 
+    def __initialize(self) -> Model:
+        """
+        Construct gender model, download its weights and load
+        Returns:
+            model (Model)
+        """
 
-def load_model() -> Model:
-    """
-    Construct gender model, download its weights and load
-    Returns:
-        model (Model)
-    """
+        classes = 2 # TDOO: What is this magic number?
+        base_model = VGGFace.base_model()
+        base_model_output = Sequential()
+        base_model_output = Convolution2D(classes, (1, 1), name="predictions")(base_model.layers[-4].output)
+        base_model_output = Flatten()(base_model_output)
+        base_model_output = Activation("softmax")(base_model_output)
 
-    model = VGGFace.base_model()
+        # --------------------------
 
-    # --------------------------
+        self._model = Model(inputs=base_model.input, outputs=base_model_output)
 
-    classes = 2
-    base_model_output = Sequential()
-    base_model_output = Convolution2D(classes, (1, 1), name="predictions")(model.layers[-4].output)
-    base_model_output = Flatten()(base_model_output)
-    base_model_output = Activation("softmax")(base_model_output)
+        # --------------------------
 
-    # --------------------------
+        # load weights
 
-    gender_model = Model(inputs=model.input, outputs=base_model_output)
+        file_name = "gender_model_weights.h5"
+        url = f"https://github.com/serengil/deepface_models/releases/download/v1.0/{file_name}"
+        output = os.path.join(folder_utils.get_weights_dir(), file_name)
 
-    # --------------------------
+        if os.path.isfile(output) != True:
+            logger.info(f"Download : {file_name}")
+            gdown.download(url, output, quiet=False)
 
-    # load weights
-
-    file_name = "gender_model_weights.h5"
-    url = f"https://github.com/serengil/deepface_models/releases/download/v1.0/{file_name}"
-    output = os.path.join(folder_utils.get_weights_dir(), file_name)
-
-    if os.path.isfile(output) != True:
-        logger.info(f"Download : {file_name}")
-        gdown.download(url, output, quiet=False)
-
-    gender_model.load_weights(output)
-    return gender_model
+        self._model.load_weights(output)
