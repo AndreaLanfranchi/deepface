@@ -14,7 +14,7 @@ from deepface.basemodels import (
     Dlib,
     Facenet,
 )
-from deepface.models.analyzer import Analyzer
+from deepface.core.analyzer import Analyzer
 
 from deepface.commons.logger import Logger
 
