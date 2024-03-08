@@ -28,7 +28,8 @@ class ApparentAgeClient(Demography):
     """
     Age model class
     """
-
+    _model: Model  # The actual model used for the analysis
+    
     def __init__(self):
         self._name = str(__name__.rsplit(".", maxsplit=1)[-1])
         self.__initialize()
@@ -44,7 +45,7 @@ class ApparentAgeClient(Demography):
         Returns:
             model (Model)
         """
-        
+
         classes = 101  # TDOO: What is this magic number?
         self._output_indexes = numpy.array(
             list(range(0, classes))

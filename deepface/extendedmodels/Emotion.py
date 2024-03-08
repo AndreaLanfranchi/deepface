@@ -37,10 +37,11 @@ class EmotionClient(Demography):
     """
     Emotion model class
     """
+    _model: Sequential  # The actual model used for the analysis
 
     def __init__(self):
-        self.model = load_model()
-        self.model_name = "Emotion"
+        self._name = str(__name__.rsplit(".", maxsplit=1)[-1])
+        self.__initialize()
 
     def predict(self, img: numpy.ndarray) -> numpy.ndarray:
         img_gray = cv2.cvtColor(img[0], cv2.COLOR_BGR2GRAY)
@@ -50,50 +51,46 @@ class EmotionClient(Demography):
         emotion_predictions = self.model.predict(img_gray, verbose=0)[0, :]
         return emotion_predictions
 
+    def __initialize(self) -> Sequential:
+        """
+        Consruct emotion model, download and load weights
+        """
 
-def load_model() -> Sequential:
-    """
-    Consruct emotion model, download and load weights
-    """
+        num_classes = 7
 
-    num_classes = 7
+        self._model = Sequential()
 
-    model = Sequential()
+        # 1st convolution layer
+        self._model.add(Conv2D(64, (5, 5), activation="relu", input_shape=(48, 48, 1)))
+        self._model.add(MaxPooling2D(pool_size=(5, 5), strides=(2, 2)))
 
-    # 1st convolution layer
-    model.add(Conv2D(64, (5, 5), activation="relu", input_shape=(48, 48, 1)))
-    model.add(MaxPooling2D(pool_size=(5, 5), strides=(2, 2)))
+        # 2nd convolution layer
+        self._model.add(Conv2D(64, (3, 3), activation="relu"))
+        self._model.add(Conv2D(64, (3, 3), activation="relu"))
+        self._model.add(AveragePooling2D(pool_size=(3, 3), strides=(2, 2)))
 
-    # 2nd convolution layer
-    model.add(Conv2D(64, (3, 3), activation="relu"))
-    model.add(Conv2D(64, (3, 3), activation="relu"))
-    model.add(AveragePooling2D(pool_size=(3, 3), strides=(2, 2)))
+        # 3rd convolution layer
+        self._model.add(Conv2D(128, (3, 3), activation="relu"))
+        self._model.add(Conv2D(128, (3, 3), activation="relu"))
+        self._model.add(AveragePooling2D(pool_size=(3, 3), strides=(2, 2)))
 
-    # 3rd convolution layer
-    model.add(Conv2D(128, (3, 3), activation="relu"))
-    model.add(Conv2D(128, (3, 3), activation="relu"))
-    model.add(AveragePooling2D(pool_size=(3, 3), strides=(2, 2)))
+        self._model.add(Flatten())
 
-    model.add(Flatten())
+        # fully connected neural networks
+        self._model.add(Dense(1024, activation="relu"))
+        self._model.add(Dropout(0.2))
+        self._model.add(Dense(1024, activation="relu"))
+        self._model.add(Dropout(0.2))
 
-    # fully connected neural networks
-    model.add(Dense(1024, activation="relu"))
-    model.add(Dropout(0.2))
-    model.add(Dense(1024, activation="relu"))
-    model.add(Dropout(0.2))
+        self._model.add(Dense(num_classes, activation="softmax"))
 
-    model.add(Dense(num_classes, activation="softmax"))
 
-    # ----------------------------
+        file_name = "facial_expression_model_weights.h5"
+        url = f"https://github.com/serengil/deepface_models/releases/download/v1.0/{file_name}",
+        output = os.path.join(folder_utils.get_weights_dir(), file_name)
 
-    file_name = "facial_expression_model_weights.h5"
-    url = f"https://github.com/serengil/deepface_models/releases/download/v1.0/{file_name}",
-    output = os.path.join(folder_utils.get_weights_dir(), file_name)
+        if os.path.isfile(output) != True:
+            logger.info(f"Download : {file_name}")
+            gdown.download(url, output, quiet=False)
 
-    if os.path.isfile(output) != True:
-        logger.info(f"Download : {file_name}")
-        gdown.download(url, output, quiet=False)
-
-    model.load_weights(output)
-
-    return model
+        self._model.load_weights(output)
