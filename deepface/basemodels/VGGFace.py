@@ -7,7 +7,7 @@ from deepface.modules import verification
 from deepface.models.FacialRecognition import FacialRecognition
 from deepface.commons.logger import Logger
 
-logger = Logger(module="basemodels.VGGFace")
+logger = Logger.get_instance()
 
 # ---------------------------------------
 

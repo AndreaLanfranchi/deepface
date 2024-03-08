@@ -2,7 +2,7 @@ import cv2
 from deepface import DeepFace
 from deepface.commons.logger import Logger
 
-logger = Logger("tests/test_facial_recognition_models.py")
+logger = Logger.get_instance()
 
 
 models = ["VGG-Face", "Facenet", "Facenet512", "ArcFace"]

@@ -6,7 +6,7 @@ import pkgutil
 
 from deepface.commons.logger import Logger
 
-Logger = Logger()
+logger = Logger.get_instance()
 
 
 def get_derived_classes(package: Any, base_class: type) -> Dict[str, type]:
@@ -21,7 +21,7 @@ def get_derived_classes(package: Any, base_class: type) -> Dict[str, type]:
         for _, obj in inspect.getmembers(module):
             if inspect.isclass(obj):
                 if issubclass(obj, base_class) and obj is not base_class:
-                    Logger.debug(
+                    logger.debug(
                         f"Found class [{obj.__name__}] in module [{module.__name__}]"
                     )
                     key_value: str = str(

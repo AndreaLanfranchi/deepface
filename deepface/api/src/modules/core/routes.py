@@ -2,7 +2,7 @@ from flask import Blueprint, request
 from deepface.api.src.modules.core import service
 from deepface.commons.logger import Logger
 
-logger = Logger(module="api/src/routes.py")
+logger = Logger.get_instance()
 
 blueprint = Blueprint("routes", __name__)
 

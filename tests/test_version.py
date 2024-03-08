@@ -2,7 +2,7 @@ import json
 from deepface import DeepFace
 from deepface.commons.logger import Logger
 
-logger = Logger("tests/test_version.py")
+logger = Logger.get_instance()
 
 
 def test_version():

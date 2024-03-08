@@ -7,7 +7,7 @@ from deepface.commons import folder_utils
 from deepface.commons.logger import Logger
 from deepface.models.FacialRecognition import FacialRecognition
 
-logger = Logger(module="basemodels.DlibResNet")
+logger = Logger.get_instance()
 
 class DlibClient(FacialRecognition):
     """

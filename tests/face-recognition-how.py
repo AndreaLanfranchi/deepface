@@ -5,7 +5,7 @@ from deepface.modules import verification
 from deepface.models.FacialRecognition import FacialRecognition
 from deepface.commons.logger import Logger
 
-logger = Logger()
+logger = Logger.get_instance()
 
 # ----------------------------------------------
 # build face recognition model

@@ -7,7 +7,7 @@ from deepface.core import analyzers
 from deepface.core import reflection
 from deepface.commons.logger import Logger
 
-logger = Logger()
+logger = Logger.get_instance()
 
 
 # Abstract class all specialized face attribute analyzers must inherit from.

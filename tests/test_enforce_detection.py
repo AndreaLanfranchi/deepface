@@ -3,7 +3,7 @@ import numpy
 from deepface import DeepFace
 from deepface.commons.logger import Logger
 
-logger = Logger("tests/test_enforce_detection.py")
+logger = Logger.get_instance()
 
 
 def test_enabled_enforce_detection_for_non_facial_input():

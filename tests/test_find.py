@@ -5,7 +5,7 @@ from deepface import DeepFace
 from deepface.modules import verification
 from deepface.commons.logger import Logger
 
-logger = Logger("tests/test_find.py")
+logger = Logger.get_instance()
 
 threshold = verification.find_threshold(model_name="VGG-Face", distance_metric="cosine")
 

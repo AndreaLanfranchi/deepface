@@ -3,7 +3,7 @@ from deepface.commons.logger import Logger
 from deepface.api.src.app import create_app
 
 
-logger = Logger("tests/test_api.py")
+logger = Logger.get_instance()
 
 
 class TestVerifyEndpoint(unittest.TestCase):

@@ -8,7 +8,7 @@ from deepface.core.detector import Detector as DetectorBase, FacialAreaRegion
 from deepface.commons import folder_utils
 from deepface.commons.logger import Logger
 
-logger = Logger()
+logger = Logger.get_instance()
 
 # # Model's weights paths
 # PATH = "/.deepface/weights/yolov8n-face.pt"

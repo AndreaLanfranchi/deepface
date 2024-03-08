@@ -6,7 +6,7 @@ from deepface.commons import package_utils, folder_utils
 from deepface.commons.logger import Logger
 from deepface.models.FacialRecognition import FacialRecognition
 
-logger = Logger(module="basemodels.DeepID")
+logger = Logger.get_instance()
 
 tf_version = package_utils.get_tf_major_version()
 

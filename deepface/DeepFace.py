@@ -25,7 +25,7 @@ from deepface.modules import (
 )
 from deepface import __version__
 
-logger = Logger(module="DeepFace")
+logger = Logger.get_instance()
 
 # -----------------------------------
 # configurations for dependencies

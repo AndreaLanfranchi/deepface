@@ -17,7 +17,7 @@ from deepface.basemodels import (
 
 from deepface.commons.logger import Logger
 
-logger = Logger(module="modules.modeling")
+logger = Logger.get_instance()
 
 
 def get_recognition_model(name: str) -> Any:

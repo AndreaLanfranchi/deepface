@@ -9,7 +9,7 @@ from deepface.commons import folder_utils
 from deepface.commons.logger import Logger
 from deepface.models.FacialRecognition import FacialRecognition
 
-logger = Logger(module="basemodels.SFace")
+logger = Logger.get_instance()
 
 
 # pylint: disable=too-few-public-methods

@@ -9,7 +9,7 @@ from deepface.commons import folder_utils
 from deepface.core.detector import Detector as DetectorBase, FacialAreaRegion
 from deepface.commons.logger import Logger
 
-logger = Logger(module="detectors.YunetWrapper")
+logger = Logger.get_instance()
 
 
 class Detector(DetectorBase):

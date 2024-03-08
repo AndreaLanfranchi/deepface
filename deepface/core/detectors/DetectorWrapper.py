@@ -9,7 +9,7 @@ from deepface.modules import detection, preprocessing
 from deepface.core.detector import Detector, DetectedFace, FacialAreaRegion
 from deepface.commons.logger import Logger
 
-logger = Logger(module="deepface/detectors/DetectorWrapper.py")
+logger = Logger.get_instance()
 
 
 def detect_faces(

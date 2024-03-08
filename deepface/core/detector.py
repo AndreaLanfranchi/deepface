@@ -7,7 +7,7 @@ from deepface.core.types import uint32_t
 from deepface.core import reflection, detectors
 from deepface.commons.logger import Logger
 
-logger = Logger()
+logger = Logger.get_instance()
 
 # Abstract class all specialized face detectors must inherit from.
 # A face detection consists in finding [0,inf) faces in an image and

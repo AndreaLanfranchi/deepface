@@ -7,7 +7,7 @@ from deepface.commons import package_utils, folder_utils
 from deepface.commons.logger import Logger
 from deepface.core.analyzer import Analyzer as AnalyzerBase
 
-logger = Logger(module="extendedmodels.Race")
+logger = Logger.get_instance()
 
 # --------------------------
 # pylint: disable=line-too-long

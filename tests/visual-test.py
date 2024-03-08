@@ -2,7 +2,7 @@ import matplotlib.pyplot as pyplot
 from deepface import DeepFace
 from deepface.commons.logger import Logger
 
-logger = Logger()
+logger = Logger.get_instance()
 
 # some models (e.g. Dlib) and detectors (e.g. retinaface) do not have test cases
 # because they require to install huge packages
@@ -54,7 +54,6 @@ dfs = DeepFace.find(
 )
 for df in dfs:
     logger.info(df)
-
 
 
 # img_paths = ["dataset/img11.jpg", "dataset/img11_reflection.jpg", "dataset/couple.jpg"]

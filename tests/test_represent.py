@@ -2,7 +2,7 @@ import cv2
 from deepface import DeepFace
 from deepface.commons.logger import Logger
 
-logger = Logger("tests/test_represent.py")
+logger = Logger.get_instance()
 
 
 def test_standard_represent():

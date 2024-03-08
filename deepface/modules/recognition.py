@@ -15,7 +15,7 @@ from deepface.commons.logger import Logger
 from deepface.modules import representation, detection, modeling, verification
 from deepface.models.FacialRecognition import FacialRecognition
 
-logger = Logger(module="deepface/modules/recognition.py")
+logger = Logger.get_instance()
 
 
 def find(

@@ -15,7 +15,7 @@ from deepface import DeepFace
 from deepface.models.FacialRecognition import FacialRecognition
 from deepface.commons.logger import Logger
 
-logger = Logger(module="commons.realtime")
+logger = Logger.get_instance()
 
 # dependency configuration
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"

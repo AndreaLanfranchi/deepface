@@ -2,11 +2,9 @@ import os
 import logging
 from datetime import datetime
 
-
 # pylint: disable=broad-except
 class Logger:
-    def __init__(self, module=None):
-        self.module = module
+    def __init__(self):
         log_level = os.environ.get("DEEPFACE_LOG_LEVEL", str(logging.INFO))
         try:
             self.log_level = int(log_level)
@@ -17,6 +15,13 @@ class Logger:
                 "Setting app log level to info."
             )
             self.log_level = logging.INFO
+
+    @staticmethod
+    def get_instance():
+        global _logger_instance
+        if _logger_instance is None:
+            _logger_instance = Logger()
+        return _logger_instance
 
     def info(self, message):
         if self.log_level <= logging.INFO:
@@ -39,4 +44,4 @@ class Logger:
             self.dump_log(f"💥 {message}")
 
     def dump_log(self, message):
-        print(f"{str(datetime.now())[2:-7]} {message}")
+        print(f"{str(datetime.now())[2:-7]} {message}", flush=True)

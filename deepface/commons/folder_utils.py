@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 from deepface.commons.logger import Logger
 
-logger = Logger(module="deepface/commons/folder_utils.py")
+logger = Logger.get_instance()
 
 
 def get_data_dir() -> str:

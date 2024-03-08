@@ -13,7 +13,7 @@ from deepface.core.detectors import DetectorWrapper
 from deepface.commons import package_utils
 from deepface.commons.logger import Logger
 
-logger = Logger(module="deepface/modules/detection.py")
+logger = Logger.get_instance()
 
 tf_major_version = package_utils.get_tf_major_version()
 if tf_major_version == 1:

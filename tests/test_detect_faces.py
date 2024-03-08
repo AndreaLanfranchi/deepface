@@ -3,7 +3,7 @@ import pytest
 from deepface import DeepFace
 from deepface.commons.logger import Logger
 
-logger = Logger("tests/test_detect_faces.py")
+logger = Logger.get_instance()
 
 detectors = ["opencv", "mtcnn"]
 
