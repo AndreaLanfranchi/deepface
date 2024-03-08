@@ -22,7 +22,7 @@ def get_derived_classes(package: Any, base_class: type) -> Dict[str, type]:
             if inspect.isclass(obj):
                 if issubclass(obj, base_class) and obj is not base_class:
                     Logger.debug(
-                        f"Found class {obj.__name__} in module {module.__name__}"
+                        f"Found class [{obj.__name__}] in module [{module.__name__}]"
                     )
                     key_value: str = str(
                         module.__name__.rsplit(".", maxsplit=1)[-1]
