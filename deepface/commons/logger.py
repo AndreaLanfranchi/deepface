@@ -18,10 +18,10 @@ class Logger:
 
     @staticmethod
     def get_instance():
-        global _logger_instance
-        if _logger_instance is None:
-            _logger_instance = Logger()
-        return _logger_instance
+        global logger_instance
+        if not "logger_instance" in globals():
+            logger_instance = Logger()
+        return logger_instance
 
     def info(self, message):
         if self.log_level <= logging.INFO:
