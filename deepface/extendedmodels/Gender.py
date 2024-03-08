@@ -23,7 +23,7 @@ else:
 # -------------------------------------
 
 # Labels for the genders that can be detected by the model.
-labels = ["Woman", "Man"]
+labels = ["Female", "Male"]
 
 
 # pylint: disable=too-few-public-methods
