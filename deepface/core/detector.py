@@ -89,10 +89,10 @@ class Detector(ABC):
             else:
                 if name not in detectors_instances.keys():
                     detectors_instances[name] = available_detectors[name]()
+                    logger.debug(
+                        f"Instantiated detector [{name}] ({time.time() - tic:.3f} seconds)"
+                    )
                 instance = detectors_instances[name]
-                logger.debug(
-                    f"Instantiated detector [{name}] ({time.time() - tic:.3f} seconds)"
-                )
         except Exception as ex:
             logger.critical(f"{type(ex).__name__} on detector [{name}] Error: {ex.args}")
             raise ex

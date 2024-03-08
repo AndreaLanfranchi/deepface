@@ -67,10 +67,10 @@ class Demography(ABC):
             else:
                 if name not in analyzers_instances.keys():
                     analyzers_instances[name] = available_analyzers[name]()
+                    logger.debug(
+                        f"Instantiated analyzer [{name}] ({time.time() - tic:.3f} seconds)"
+                    )
                 instance = analyzers_instances[name]
-                logger.debug(
-                    f"Instantiated analyzer [{name}] ({time.time() - tic:.3f} seconds)"
-                )
         except Exception as ex:
             logger.critical(
                 f"{type(ex).__name__} on analyzer [{name}] Error: {ex.args}"
