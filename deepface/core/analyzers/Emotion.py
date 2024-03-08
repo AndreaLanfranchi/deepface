@@ -4,7 +4,7 @@ import numpy
 import cv2
 from deepface.commons import package_utils, folder_utils
 from deepface.commons.logger import Logger
-from deepface.core.analyzer import Analyzer
+from deepface.core.analyzer import Analyzer as AnalyzerBase
 
 logger = Logger(module="extendedmodels.Emotion")
 
@@ -41,7 +41,7 @@ labels = ["anger", "disgust", "fear", "happiness", "sadness", "surprise", "neutr
 
 
 # pylint: disable=too-few-public-methods
-class EmotionClient(Analyzer):
+class Analyzer(AnalyzerBase):
 
     _model: Sequential  # The actual model used for the analysis
 
