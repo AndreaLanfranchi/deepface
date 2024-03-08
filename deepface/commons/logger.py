@@ -39,4 +39,4 @@ class Logger:
             self.dump_log(f"💥 {message}")
 
     def dump_log(self, message):
-        print(f"{str(datetime.now())[2:-7]} - {message}")
+        print(f"{str(datetime.now())[2:-7]} {message}")
