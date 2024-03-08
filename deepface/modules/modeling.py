@@ -14,7 +14,7 @@ from deepface.basemodels import (
     Dlib,
     Facenet,
 )
-from deepface.models import Demography
+from deepface.models.Demography import Demography
 
 from deepface.commons.logger import Logger
 
