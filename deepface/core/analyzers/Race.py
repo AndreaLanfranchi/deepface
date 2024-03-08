@@ -15,7 +15,7 @@ logger = Logger(module="extendedmodels.Race")
 tf_version = package_utils.get_tf_major_version()
 
 if tf_version == 1:
-    from keras.models import Model, Sequential
+    from keras.models import Model
     from keras.layers import Convolution2D, Flatten, Activation
 else:
     from tensorflow.keras.models import Model, Sequential
@@ -40,14 +40,14 @@ class RaceClient(Analyzer):
     def __initialize(self):
 
         classes = 6  # TDOO: What is this magic number?
-        with VGGFace.base_model() as base_model:
-            base_model_output = Sequential()
-            base_model_output = Convolution2D(classes, (1, 1), name="predictions")(
-                base_model.layers[-4].output
-            )
-            base_model_output = Flatten()(base_model_output)
-            base_model_output = Activation("softmax")(base_model_output)
-            self._model = Model(inputs=base_model.input, outputs=base_model_output)
+        base_model = VGGFace.base_model()
+        base_model_output = Sequential()
+        base_model_output = Convolution2D(classes, (1, 1), name="predictions")(
+            base_model.layers[-4].output
+        )
+        base_model_output = Flatten()(base_model_output)
+        base_model_output = Activation("softmax")(base_model_output)
+        self._model = Model(inputs=base_model.input, outputs=base_model_output)
 
         file_name = "race_model_single_batch.h5"
         url = f"https://github.com/serengil/deepface_models/releases/download/v1.0/{file_name}"

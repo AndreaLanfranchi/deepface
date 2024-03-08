@@ -4,10 +4,11 @@ from typing import Any, Dict, List, Union
 # 3rd party dependencies
 import numpy
 from tqdm import tqdm
+from deepface.core.analyzers import Emotion, Gender
 
 # project dependencies
 from deepface.modules import modeling, detection
-from deepface.extendedmodels import Gender, Race, Emotion
+from deepface.core.analyzers import Race
 
 
 def analyze(
