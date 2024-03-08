@@ -16,7 +16,14 @@ tf_version = package_utils.get_tf_major_version()
 
 if tf_version == 1:
     from keras.models import Sequential
-    from keras.layers import Conv2D, MaxPooling2D, AveragePooling2D, Flatten, Dense, Dropout
+    from keras.layers import (
+        Conv2D,
+        MaxPooling2D,
+        AveragePooling2D,
+        Flatten,
+        Dense,
+        Dropout,
+    )
 else:
     from tensorflow.keras.models import Sequential
     from tensorflow.keras.layers import (
@@ -30,7 +37,8 @@ else:
 # -------------------------------------------
 
 # Labels for the emotions that can be detected by the model.
-labels = ["angry", "disgust", "fear", "happy", "sad", "surprise", "neutral"]
+labels = ["anger", "disgust", "fear", "happiness", "sadness", "surprise", "neutral"]
+
 
 # pylint: disable=too-few-public-methods
 class EmotionClient(Demography):
@@ -79,9 +87,10 @@ class EmotionClient(Demography):
 
         self._model.add(Dense(num_classes, activation="softmax"))
 
-
         file_name = "facial_expression_model_weights.h5"
-        url = f"https://github.com/serengil/deepface_models/releases/download/v1.0/{file_name}",
+        url = (
+            f"https://github.com/serengil/deepface_models/releases/download/v1.0/{file_name}",
+        )
         output = os.path.join(folder_utils.get_weights_dir(), file_name)
 
         if os.path.isfile(output) != True:
