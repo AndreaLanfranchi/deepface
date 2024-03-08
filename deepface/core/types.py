@@ -6,9 +6,6 @@ from ctypes import (
 import numpy
 
 from cv2.typing import MatLike
-from deepface.core.detector import Detector
-
-DetectorLike = Union[Detector, str]
 
 class RangeInt:
     """
@@ -51,7 +48,7 @@ class InPictureFace:
 
     def __init__(
         self,
-        detector: DetectorLike,
+        detector: str,
         source: MatLike,
         y: RangeInt,
         x: RangeInt,
