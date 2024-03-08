@@ -11,7 +11,7 @@ logger = Logger()
 
 
 # Notice that all facial attribute analysis models must be inherited from this class
-class Demography(ABC):
+class Analyzer(ABC):
 
     _name: Optional[str] = None  # Must be filled by specialized classes
 
@@ -24,7 +24,7 @@ class Demography(ABC):
         return "<undefined>" if self._name is None else self._name
 
     @staticmethod
-    def instance(name: str, singleton: bool = True) -> "Demography":
+    def instance(name: str, singleton: bool = True) -> "Analyzer":
         """
         `Demography` factory method.
 
@@ -51,7 +51,7 @@ class Demography(ABC):
         global available_analyzers
         if not "available_analyzers" in globals():
             available_analyzers = reflection.get_derived_classes(
-                package=extendedmodels, base_class=Demography
+                package=extendedmodels, base_class=Analyzer
             )
 
         if name not in available_analyzers.keys():

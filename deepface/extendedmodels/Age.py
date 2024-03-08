@@ -4,7 +4,7 @@ import numpy
 from deepface.basemodels import VGGFace
 from deepface.commons import package_utils, folder_utils
 from deepface.commons.logger import Logger
-from deepface.models.Demography import Demography
+from deepface.models.Demography import Analyzer
 
 logger = Logger(module="extendedmodels.Age")
 
@@ -24,7 +24,7 @@ else:
 
 
 # pylint: disable=too-few-public-methods
-class ApparentAgeClient(Demography):
+class ApparentAgeClient(Analyzer):
 
     _model: Model  # The actual model used for the analysis
 

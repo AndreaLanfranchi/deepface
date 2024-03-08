@@ -14,7 +14,7 @@ from deepface.basemodels import (
     Dlib,
     Facenet,
 )
-from deepface.models.Demography import Demography
+from deepface.models.Demography import Analyzer
 
 from deepface.commons.logger import Logger
 
@@ -73,5 +73,5 @@ def get_recognition_model(name: str) -> Any:
     return recognition_model_instances[name]
 
 
-def get_analysis_model(name: str) -> Demography:
-    return Demography.instance(name)
+def get_analysis_model(name: str) -> Analyzer:
+    return Analyzer.instance(name)
