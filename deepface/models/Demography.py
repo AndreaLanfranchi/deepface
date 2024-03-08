@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Optional, Union
 from abc import ABC, abstractmethod
 import numpy
 from deepface.commons import package_utils
@@ -14,9 +14,14 @@ else:
 
 # pylint: disable=too-few-public-methods
 class Demography(ABC):
-    model: Model
-    model_name: str
+
+    _name: Optional[str] = None  # Must be filled by specialized classes
+    _model: Model                # The actual model used for the analysis
 
     @abstractmethod
     def predict(self, img: numpy.ndarray) -> Union[numpy.ndarray, numpy.float64]:
         pass
+
+    @property
+    def name(self) -> str:
+        return "<undefined>" if self._name is None else self._name
