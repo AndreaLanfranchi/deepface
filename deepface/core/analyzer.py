@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Dict, Optional, Union
 from abc import ABC, abstractmethod
 import time
 import numpy
@@ -16,8 +16,43 @@ class Analyzer(ABC):
     _name: Optional[str] = None  # Must be filled by specialized classes
 
     @abstractmethod
-    def process(self, img: numpy.ndarray) -> Union[numpy.ndarray, numpy.float64]:
-        pass
+    def process(
+        self, img: numpy.ndarray, detail: bool = False
+    ) -> Dict[str, Union[str, Dict[str, float]]]:
+        """
+        Process the given image analyzing the face attribute.
+
+        Returns:
+            The result of the analysis is returned in the form of
+            Dict[str, Union[str, Dict[str, float]]] object. 
+
+            For example:
+            {
+                "attribute": "value"
+            }
+            where the literal "attribute" is the name of the attribute
+            being analyzed (lowercase) and value is the most relevant
+            or if you prefer "dominant" attribute value.
+
+            If the `detail` parameter is set to True, the result will also
+            contain more detailed information about the analysis providing
+            the waights (notmalized to 100) of each attribute value
+            evaluated. For example (in case of emotion analysis):
+            {
+                "emotion": "happiness",
+                "details": {
+                    "happiness": "50.0",
+                    "sadness": "10.0",
+                    "anger": 5.0,
+                    [...]
+                }
+            }
+
+            Note ! The "detail" key might not cause the return of the
+            detailed information in some cases (for example, if the 
+            attribute 'age').
+
+        """
 
     @property
     def name(self) -> str:

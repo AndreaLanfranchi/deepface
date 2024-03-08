@@ -1,3 +1,4 @@
+from typing import Dict, Union
 import os
 import gdown
 import numpy
@@ -20,22 +21,35 @@ if tf_version == 1:
 else:
     from tensorflow.keras.models import Model, Sequential
     from tensorflow.keras.layers import Convolution2D, Flatten, Activation
-# --------------------------
-# Labels for the ethnic phenotypes that can be detected by the model.
-labels = ["asian", "indian", "black", "white", "middle eastern", "latino hispanic"]
 
 
 # pylint: disable=too-few-public-methods
 class Analyzer(AnalyzerBase):
 
     _model: Model  # The actual model used for the analysis
+    _labels = ["asian", "indian", "black", "white", "middle eastern", "latino hispanic"]
 
     def __init__(self):
         self._name = str(__name__.rsplit(".", maxsplit=1)[-1])
         self.__initialize()
 
-    def process(self, img: numpy.ndarray) -> numpy.ndarray:
-        return self._model.predict(img, verbose=0)[0, :]
+    def process(
+        self, img: numpy.ndarray, detail: bool = False
+    ) -> Dict[str, Union[str, Dict[str, float]]]:
+
+        result = {}
+        race_estimates = self._model.predict(img, verbose=0)[0, :]
+        result[self.name.lower()] = self._labels[numpy.argmax(race_estimates)]
+
+        if detail:
+            details = {}
+            estimates_sum = numpy.sum(race_estimates)
+            for i, label in enumerate(self._labels):
+                estimate = round(race_estimates[i] * 100 / estimates_sum, 2)
+                details[label] = estimate
+            result["details"] = details
+        
+        return result
 
     def __initialize(self):
 

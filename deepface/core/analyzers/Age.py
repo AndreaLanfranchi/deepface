@@ -1,3 +1,4 @@
+from typing import Dict, Union
 import os
 import gdown
 import numpy
@@ -32,10 +33,14 @@ class Analyzer(AnalyzerBase):
         self._name = str(__name__.rsplit(".", maxsplit=1)[-1])
         self.__initialize()
 
-    def process(self, img: numpy.ndarray) -> numpy.float64:
-        age_predictions = self.model.predict(img, verbose=0)[0, :]
-        apparent_age = numpy.sum(age_predictions * self._output_indexes)
-        return apparent_age
+    def process(
+        self, img: numpy.ndarray, _: bool = False
+    ) -> Dict[str, Union[str, Dict[str, float]]]:
+        result = {}
+        age_predictions = self._model.predict(img, verbose=0)[0, :]
+        apparent_age = numpy.sum(age_predictions * self._output_indexes).astype(float)
+        result[self.name.lower()] = apparent_age
+        return result
 
     def __initialize(self):
 

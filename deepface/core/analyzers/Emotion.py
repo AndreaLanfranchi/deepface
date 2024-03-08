@@ -1,3 +1,4 @@
+from typing import Dict, Union
 import os
 import gdown
 import numpy
@@ -36,26 +37,47 @@ else:
     )
 # -------------------------------------------
 
-# Labels for the emotions that can be detected by the model.
-labels = ["anger", "disgust", "fear", "happiness", "sadness", "surprise", "neutral"]
-
 
 # pylint: disable=too-few-public-methods
 class Analyzer(AnalyzerBase):
 
     _model: Sequential  # The actual model used for the analysis
+    _labels = [
+        "anger",
+        "disgust",
+        "fear",
+        "happiness",
+        "sadness",
+        "surprise",
+        "neutral",
+    ]
 
     def __init__(self):
         self._name = str(__name__.rsplit(".", maxsplit=1)[-1])
         self.__initialize()
 
-    def process(self, img: numpy.ndarray) -> numpy.ndarray:
+    def process(
+        self, img: numpy.ndarray, detail: bool = False
+    ) -> Dict[str, Union[str, Dict[str, float]]]:
+
+        result = {}
+
         img_gray = cv2.cvtColor(img[0], cv2.COLOR_BGR2GRAY)
         img_gray = cv2.resize(img_gray, (48, 48))
         img_gray = numpy.expand_dims(img_gray, axis=0)
 
-        emotion_predictions = self.model.predict(img_gray, verbose=0)[0, :]
-        return emotion_predictions
+        emotion_estimates = self._model.predict(img_gray, verbose=0)[0, :]
+        result[self.name.lower()] = self._labels[numpy.argmax(emotion_estimates)]
+
+        if detail:
+            details = {}
+            estimates_sum = numpy.sum(emotion_estimates)
+            for i, label in enumerate(self._labels):
+                estimate = round(emotion_estimates[i] * 100 / estimates_sum, 2)
+                details[label] = estimate
+            result["details"] = details
+
+        return result
 
     def __initialize(self) -> Sequential:
 

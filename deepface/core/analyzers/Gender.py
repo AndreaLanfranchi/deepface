@@ -1,3 +1,4 @@
+from typing import Dict, Union
 import os
 import gdown
 import numpy
@@ -22,21 +23,33 @@ else:
     from tensorflow.keras.layers import Convolution2D, Flatten, Activation
 # -------------------------------------
 
-# Labels for the genders that can be detected by the model.
-labels = ["Female", "Male"]
-
 
 # pylint: disable=too-few-public-methods
 class Analyzer(AnalyzerBase):
 
     _model: Model  # The actual model used for the analysis
+    _labels = ["Female", "Male"]
 
     def __init__(self):
         self._name = str(__name__.rsplit(".", maxsplit=1)[-1])
         self.__initialize()
 
-    def process(self, img: numpy.ndarray) -> numpy.ndarray:
-        return self._model.predict(img, verbose=0)[0, :]
+    def process(
+        self, img: numpy.ndarray, detail: bool = False
+    ) -> Dict[str, Union[str, Dict[str, float]]]:
+        result = {}
+        gender_estimates = self._model.predict(img, verbose=0)[0, :]
+        result[self.name.lower()] = self._labels[numpy.argmax(gender_estimates)]
+
+        if detail:
+            details = {}
+            estimates_sum = numpy.sum(gender_estimates)
+            for i, label in enumerate(self._labels):
+                estimate = round(gender_estimates[i] * 100 / estimates_sum, 2)
+                details[label] = estimate
+            result["details"] = details
+
+        return result
 
     def __initialize(self) -> Model:
 
