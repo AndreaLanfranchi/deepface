@@ -27,9 +27,7 @@ labels = ["Woman", "Man"]
 
 # pylint: disable=too-few-public-methods
 class GenderClient(Demography):
-    """
-    Gender model class
-    """
+
     _model: Model  # The actual model used for the analysis
 
     def __init__(self):
@@ -40,26 +38,14 @@ class GenderClient(Demography):
         return self._model.predict(img, verbose=0)[0, :]
 
     def __initialize(self) -> Model:
-        """
-        Construct gender model, download its weights and load
-        Returns:
-            model (Model)
-        """
 
         classes = 2 # TDOO: What is this magic number?
-        base_model = VGGFace.base_model()
-        base_model_output = Sequential()
-        base_model_output = Convolution2D(classes, (1, 1), name="predictions")(base_model.layers[-4].output)
-        base_model_output = Flatten()(base_model_output)
-        base_model_output = Activation("softmax")(base_model_output)
-
-        # --------------------------
-
-        self._model = Model(inputs=base_model.input, outputs=base_model_output)
-
-        # --------------------------
-
-        # load weights
+        with VGGFace.base_model() as base_model:
+            base_model_output = Sequential()
+            base_model_output = Convolution2D(classes, (1, 1), name="predictions")(base_model.layers[-4].output)
+            base_model_output = Flatten()(base_model_output)
+            base_model_output = Activation("softmax")(base_model_output)
+            self._model = Model(inputs=base_model.input, outputs=base_model_output)
 
         file_name = "gender_model_weights.h5"
         url = f"https://github.com/serengil/deepface_models/releases/download/v1.0/{file_name}"

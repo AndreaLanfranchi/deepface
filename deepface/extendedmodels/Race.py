@@ -26,9 +26,7 @@ labels = ["asian", "indian", "black", "white", "middle eastern", "latino hispani
 
 # pylint: disable=too-few-public-methods
 class RaceClient(Demography):
-    """
-    Race model class
-    """
+    
     _model: Model  # The actual model used for the analysis
 
     def __init__(self):

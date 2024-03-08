@@ -34,9 +34,7 @@ labels = ["angry", "disgust", "fear", "happy", "sad", "surprise", "neutral"]
 
 # pylint: disable=too-few-public-methods
 class EmotionClient(Demography):
-    """
-    Emotion model class
-    """
+
     _model: Sequential  # The actual model used for the analysis
 
     def __init__(self):
@@ -52,9 +50,6 @@ class EmotionClient(Demography):
         return emotion_predictions
 
     def __initialize(self) -> Sequential:
-        """
-        Consruct emotion model, download and load weights
-        """
 
         num_classes = 7
 

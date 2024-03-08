@@ -25,11 +25,9 @@ else:
 
 # pylint: disable=too-few-public-methods
 class ApparentAgeClient(Demography):
-    """
-    Age model class
-    """
+
     _model: Model  # The actual model used for the analysis
-    
+
     def __init__(self):
         self._name = str(__name__.rsplit(".", maxsplit=1)[-1])
         self.__initialize()
@@ -40,26 +38,18 @@ class ApparentAgeClient(Demography):
         return apparent_age
 
     def __initialize(self):
-        """
-        Construct age model, download its weights and load
-        Returns:
-            model (Model)
-        """
 
         classes = 101  # TDOO: What is this magic number?
-        self._output_indexes = numpy.array(
-            list(range(0, classes))
-        ) 
+        self._output_indexes = numpy.array(list(range(0, classes)))
 
-        base_model = VGGFace.base_model()
-        base_model_output = Sequential()
-        base_model_output = Convolution2D(classes, (1, 1), name="predictions")(
-            base_model.layers[-4].output
-        )
-        base_model_output = Flatten()(base_model_output)
-        base_model_output = Activation("softmax")(base_model_output)
-
-        self._model = Model(inputs=base_model.input, outputs=base_model_output)
+        with VGGFace.base_model() as base_model:
+            base_model_output = Sequential()
+            base_model_output = Convolution2D(classes, (1, 1), name="predictions")(
+                base_model.layers[-4].output
+            )
+            base_model_output = Flatten()(base_model_output)
+            base_model_output = Activation("softmax")(base_model_output)
+            self._model = Model(inputs=base_model.input, outputs=base_model_output)
 
         file_name = "age_model_weights.h5"
         url = (
