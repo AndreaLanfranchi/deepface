@@ -1,11 +1,14 @@
-from typing import Optional
+from typing import Optional, Union
 from ctypes import (
     c_uint32 as uint32_t,
 )
 
 import numpy
 
+from cv2.typing import MatLike
 from deepface.core.detector import Detector
+
+DetectorLike = Union[Detector, str]
 
 class RangeInt:
     """
@@ -48,8 +51,8 @@ class InPictureFace:
 
     def __init__(
         self,
-        detector: Detector,
-        source: numpy.ndarray,
+        detector: DetectorLike,
+        source: MatLike,
         y: RangeInt,
         x: RangeInt,
         left_eye: Optional[Point] = None,
