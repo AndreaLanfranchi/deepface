@@ -26,7 +26,7 @@ class Analyzer(ABC):
     @staticmethod
     def instance(name: str, singleton: bool = True) -> "Analyzer":
         """
-        `Demography` factory method.
+        `Analyzer` factory method.
 
         Args:
             `name (str)`: The name of the analyzer to instantiate
