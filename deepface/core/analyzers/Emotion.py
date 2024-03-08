@@ -49,7 +49,7 @@ class Analyzer(AnalyzerBase):
         self._name = str(__name__.rsplit(".", maxsplit=1)[-1])
         self.__initialize()
 
-    def predict(self, img: numpy.ndarray) -> numpy.ndarray:
+    def process(self, img: numpy.ndarray) -> numpy.ndarray:
         img_gray = cv2.cvtColor(img[0], cv2.COLOR_BGR2GRAY)
         img_gray = cv2.resize(img_gray, (48, 48))
         img_gray = numpy.expand_dims(img_gray, axis=0)

@@ -34,7 +34,7 @@ class Analyzer(AnalyzerBase):
         self._name = str(__name__.rsplit(".", maxsplit=1)[-1])
         self.__initialize()
 
-    def predict(self, img: numpy.ndarray) -> numpy.ndarray:
+    def process(self, img: numpy.ndarray) -> numpy.ndarray:
         return self._model.predict(img, verbose=0)[0, :]
 
     def __initialize(self):

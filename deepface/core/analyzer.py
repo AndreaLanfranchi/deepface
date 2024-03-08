@@ -16,7 +16,7 @@ class Analyzer(ABC):
     _name: Optional[str] = None  # Must be filled by specialized classes
 
     @abstractmethod
-    def predict(self, img: numpy.ndarray) -> Union[numpy.ndarray, numpy.float64]:
+    def process(self, img: numpy.ndarray) -> Union[numpy.ndarray, numpy.float64]:
         pass
 
     @property

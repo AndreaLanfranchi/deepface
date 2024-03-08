@@ -32,7 +32,7 @@ class Analyzer(AnalyzerBase):
         self._name = str(__name__.rsplit(".", maxsplit=1)[-1])
         self.__initialize()
 
-    def predict(self, img: numpy.ndarray) -> numpy.float64:
+    def process(self, img: numpy.ndarray) -> numpy.float64:
         age_predictions = self.model.predict(img, verbose=0)[0, :]
         apparent_age = numpy.sum(age_predictions * self._output_indexes)
         return apparent_age
