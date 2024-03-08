@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 import time
 import numpy
 
-from deepface import extendedmodels
+from deepface.core import analyzers
 from deepface.core import reflection
 from deepface.commons.logger import Logger
 
@@ -51,7 +51,7 @@ class Analyzer(ABC):
         global available_analyzers
         if not "available_analyzers" in globals():
             available_analyzers = reflection.get_derived_classes(
-                package=extendedmodels, base_class=Analyzer
+                package=analyzers, base_class=Analyzer
             )
 
         if name not in available_analyzers.keys():
