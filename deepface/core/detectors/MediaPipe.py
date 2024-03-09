@@ -51,14 +51,14 @@ class Detector(DetectorBase):
 
         img_width = img.shape[1]
         img_height = img.shape[0]
-        results = self._detector.process(img)
+        outcome = self._detector.process(img)
 
         # If no face has been detected, return an empty list
-        if results.detections is None:
+        if outcome.detections is None:
             return results
 
         # Extract the bounding box, the landmarks and the confidence score
-        for current_detection in results.detections:
+        for current_detection in outcome.detections:
             (confidence,) = current_detection.score
 
             bounding_box = current_detection.location_data.relative_bounding_box
