@@ -6,8 +6,6 @@ from deepface.core.detector import Detector
 
 logger = Logger.get_instance()
 
-detectors = ["opencv", "mtcnn"]
-
 def test_all_detectors_must_succeed():
     # All detectors must succeed on a well-known image
     result_keys = ["face", "facial_area", "confidence"]
