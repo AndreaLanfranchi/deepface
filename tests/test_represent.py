@@ -17,32 +17,36 @@ def test_standard_represent():
 
 def test_represent_for_skipped_detector_backend_with_image_path():
     face_img = "dataset/img5.jpg"
-    img_objs = DeepFace.represent(img_path=face_img, detector="donotdetect")
-    assert len(img_objs) >= 1
-    img_obj = img_objs[0]
-    assert "embedding" in img_obj.keys()
-    assert "facial_area" in img_obj.keys()
-    assert isinstance(img_obj["facial_area"], dict)
-    assert "x" in img_obj["facial_area"].keys()
-    assert "y" in img_obj["facial_area"].keys()
-    assert "w" in img_obj["facial_area"].keys()
-    assert "h" in img_obj["facial_area"].keys()
-    assert "face_confidence" in img_obj.keys()
-    logger.info("✅ test represent function for skipped detector and image path input backend done")
+
+    result_keys = ["embedding", "facial_area", "face_confidence"]
+    area_keys = ["x", "y", "w", "h"]
+
+    results = DeepFace.represent(img_path=face_img, detector="donotdetect")
+    assert len(results) == 1
+
+    result = results[0]
+    assert all(key in result for key in result_keys)
+    assert all(key in result["facial_area"] for key in area_keys)
+
+    logger.info(
+        "✅ test represent function for skipped detector and image path input backend done"
+    )
 
 
 def test_represent_for_skipped_detector_backend_with_preloaded_image():
     face_img = "dataset/img5.jpg"
     img = cv2.imread(face_img)
-    img_objs = DeepFace.represent(img_path=img, detector="donoetdetect")
-    assert len(img_objs) >= 1
-    img_obj = img_objs[0]
-    assert "embedding" in img_obj.keys()
-    assert "facial_area" in img_obj.keys()
-    assert isinstance(img_obj["facial_area"], dict)
-    assert "x" in img_obj["facial_area"].keys()
-    assert "y" in img_obj["facial_area"].keys()
-    assert "w" in img_obj["facial_area"].keys()
-    assert "h" in img_obj["facial_area"].keys()
-    assert "face_confidence" in img_obj.keys()
-    logger.info("✅ test represent function for skipped detector and preloaded image done")
+
+    result_keys = ["embedding", "facial_area", "face_confidence"]
+    area_keys = ["x", "y", "w", "h"]
+
+    results = DeepFace.represent(img_path=img, detector="donotdetect")
+    assert len(results) == 1
+
+    result = results[0]
+    assert all(key in result for key in result_keys)
+    assert all(key in result["facial_area"] for key in area_keys)
+
+    logger.info(
+        "✅ test represent function for skipped detector and preloaded image done"
+    )
