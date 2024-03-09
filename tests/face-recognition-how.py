@@ -2,7 +2,7 @@ import matplotlib.pyplot as pyplot
 import numpy
 from deepface import DeepFace
 from deepface.modules import verification
-from deepface.models.decomposer import Decomposer
+from deepface.core.decomposer import Decomposer
 from deepface.commons.logger import Logger
 
 logger = Logger.get_instance()
