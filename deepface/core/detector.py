@@ -72,7 +72,7 @@ class Detector(ABC):
         return "opencv"
 
     @staticmethod
-    def instance(name: str, singleton: bool = True) -> "Detector":
+    def instance(name: Optional[str], singleton: bool = True) -> "Detector":
         """
         `Detector` factory method.
 
@@ -89,7 +89,9 @@ class Detector(ABC):
             `NotImplementedError`: If the detector name is unknown
             'ImportError': If the detector instance cannot be instantiated
         """
-        if not isinstance(name, str):
+        if name is None:
+            name = Detector.default_detector()
+        elif not isinstance(name, str):
             raise TypeError(
                 f"Invalid 'name' argument type [{type(name).__name__}] : expected str"
             )
