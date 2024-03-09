@@ -98,9 +98,8 @@ class Detector(DetectorBase):
 
         imageBlob = cv2.dnn.blobFromImage(image=current_img)
 
-        face_detector = self.model["face_detector"]
-        face_detector.setInput(imageBlob)
-        detections = face_detector.forward()
+        self._detector.setInput(imageBlob)
+        detections = self._detector.forward()
 
         detections_df = pandas.DataFrame(detections[0][0], columns=ssd_labels)
 
