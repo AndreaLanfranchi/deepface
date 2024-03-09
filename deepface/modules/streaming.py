@@ -162,9 +162,9 @@ def analysis(
                 continue
 
             cv2.imshow(capture_window_title, captured_frame)
-            __cv2_refresh()
+            _cv2_refresh()
 
-            __process_frame(
+            _process_frame(
                 frame=captured_frame,
                 target_size=target_size,
                 faces_count_threshold=faces_count_threshold,
@@ -177,9 +177,9 @@ def analysis(
                 continue
 
             # This also resets the good_captures list
-            best_capture, best_faces = __get_best_capture(good_captures)
-            cv2.imshow(capture_window_title, __box_faces(best_capture, best_faces))
-            __cv2_refresh()
+            best_capture, best_faces = _get_best_capture(good_captures)
+            cv2.imshow(capture_window_title, _box_faces(best_capture, best_faces))
+            _cv2_refresh()
 
             # TODO : Perform facial attribute analysis and face recognition
 
@@ -188,7 +188,7 @@ def analysis(
             for item in best_faces:
 
                 # Detect matches for this face
-                matching_results = __get_face_matches(
+                matching_results = _get_face_matches(
                     face=item["face"],
                     db_path=db_path,
                     model_name=decomposer,
@@ -197,7 +197,7 @@ def analysis(
                 if len(matching_results) > 0:
                     # Applies matches to the best capture
                     if (
-                        __process_matches(
+                        _process_matches(
                             best_capture,
                             item["facial_area"],
                             matching_results,
@@ -206,7 +206,7 @@ def analysis(
                         == True
                     ):
                         should_freeze = True
-                        __cv2_refresh()
+                        _cv2_refresh()
 
             if should_freeze:
                 # Count back from time_threshold to 0
@@ -225,7 +225,7 @@ def analysis(
                         cv2.LINE_AA,
                     )
                     cv2.imshow(capture_window_title, best_capture)
-                    __cv2_refresh(1000)
+                    _cv2_refresh(1000)
 
         except KeyboardInterrupt as ex:
             logger.info(f"{ex.args[0]}")
@@ -253,7 +253,7 @@ def analysis(
 # returns the ASCII code of the key pressed.
 # We use this as a trick to also check if the 'q' key
 # has been pressed by the user.
-def __cv2_refresh(timeout: int = 1):
+def _cv2_refresh(timeout: int = 1):
     timeout = max(1, timeout)
     result: int = cv2.waitKey(timeout) & 0xFF
     if result == ord("q"):
@@ -268,7 +268,7 @@ def __cv2_refresh(timeout: int = 1):
 # Note ! Faces validly detected but too small are
 # discarded. A face is considered too small when its
 # area is less than 1/2rd of target_size.
-def __process_frame(
+def _process_frame(
     frame: MatLike,
     target_size: Tuple[int, int],
     faces_count_threshold: int,
@@ -302,8 +302,8 @@ def __process_frame(
         good_captures.append((frame.copy(), extracted_faces))
 
         # Draw boxes around the detected faces
-        cv2.imshow(display_window_title, __box_faces(frame, extracted_faces))
-        __cv2_refresh()
+        cv2.imshow(display_window_title, _box_faces(frame, extracted_faces))
+        _cv2_refresh()
 
     # We only catch the ValueError and OverflowError exceptions here to reset
     # the good_captures list. Other exceptions are not caught here and will be
@@ -317,7 +317,7 @@ def __process_frame(
 # Get the best capture from the list of good captures
 # The best capture is the one with the largest facial
 # area. The list of good captures is then reset.
-def __get_best_capture(
+def _get_best_capture(
     good_captures: List[Tuple[MatLike, List[Dict[str, Any]]]]
 ) -> Tuple[MatLike, List[Dict[str, Any]]]:
     best_area: int = 0
@@ -337,7 +337,7 @@ def __get_best_capture(
 
 
 # Draw box(es) around the detected face(s)
-def __box_faces(
+def _box_faces(
     picture: MatLike, faces: List[Dict[str, Any]], number: Union[int, None] = None
 ) -> MatLike:
     for face in faces:
@@ -345,7 +345,7 @@ def __box_faces(
         y: int = face["facial_area"]["y"]
         w: int = face["facial_area"]["w"]
         h: int = face["facial_area"]["h"]
-        picture = __box_face(picture, (x, y, w, h))
+        picture = _box_face(picture, (x, y, w, h))
         if number is not None:
             cv2.putText(
                 picture,
@@ -361,7 +361,7 @@ def __box_faces(
 
 
 # Draws a box around the provided region
-def __box_face(
+def _box_face(
     picture: MatLike, region: Tuple[int, int, int, int]  # (x, y, w, h)
 ) -> MatLike:
     x: int = region[0]
@@ -383,7 +383,7 @@ def __crop_face(picture: MatLike, region: Dict[str, int]) -> MatLike:
 
 # Get the matches from the dataset
 # which are the closest to the detected face
-def __get_face_matches(
+def _get_face_matches(
     face: numpy.ndarray, db_path: str, model_name: str, distance_metric: str
 ) -> List[pandas.DataFrame]:
 
@@ -399,7 +399,7 @@ def __get_face_matches(
 
 # Process the matches and stick the matching face
 # (if any)
-def __process_matches(
+def _process_matches(
     picture: MatLike,
     facial_area: Dict[str, Any],
     matching_results: List[pandas.DataFrame],
