@@ -72,11 +72,11 @@ class Detector(DetectorBase):
         """
 
         results = []
-        if img.shape[0] == 0 or img.shape[1] == 0:
+        (h, w) = img.shape[:2]
+        if h == 0 or w == 0:
             return results
 
         detected_face = None
-
         ssd_labels = [
             "img_id",
             "is_face",
@@ -87,18 +87,18 @@ class Detector(DetectorBase):
             "bottom",
         ]
 
-        target_size = (300, 300)
+        target_h = 300
+        target_w = 300
+        aspect_ratio_x = w / target_w
+        aspect_ratio_y = h / target_h
 
-        original_size = img.shape
-
-        current_img = cv2.resize(img, target_size)
-
-        aspect_ratio_x = original_size[1] / target_size[1]
-        aspect_ratio_y = original_size[0] / target_size[0]
-
-        imageBlob = cv2.dnn.blobFromImage(image=current_img)
-
-        self._detector.setInput(imageBlob)
+        blob = cv2.dnn.blobFromImage(
+            image=cv2.resize(img, (target_h, target_w)),
+            scalefactor=1.0,
+            size=(target_h, target_w),
+            mean=(104.0, 177.0, 123.0),
+        )
+        self._detector.setInput(blob)
         detections = self._detector.forward()
 
         detections_df = pandas.DataFrame(detections[0][0], columns=ssd_labels)
