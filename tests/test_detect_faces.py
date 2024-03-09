@@ -1,5 +1,4 @@
 import numpy
-import pytest
 from deepface import DeepFace
 from deepface.commons.logger import Logger
 from deepface.core.detector import Detector
