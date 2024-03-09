@@ -130,7 +130,9 @@ def analyze(
 
                 analyzer: Analyzer = Analyzer.instance(attribute)
                 pbar.set_description(f"Attribute: {analyzer.name}")
-                analysis_result = analyzer.process(img=img_content, detail=attributes_details)
+                analysis_result = analyzer.process(
+                    img=img_content, detail=attributes_details
+                )
                 obj.update(analysis_result)
                 obj["region"] = img_region
                 obj["face_confidence"] = img_confidence

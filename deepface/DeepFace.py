@@ -11,7 +11,7 @@ import pandas
 import tensorflow
 
 # package dependencies
-from deepface.core.analyzer import Analyzer # Facial Emotions Analyzer
+from deepface.core.analyzer import Analyzer  # Facial Emotions Analyzer
 from deepface.commons import package_utils
 from deepface.commons.logger import Logger
 from deepface.modules import (
@@ -21,7 +21,7 @@ from deepface.modules import (
     recognition,
     demography,
     detection,
-    streaming
+    streaming,
 )
 from deepface import __version__
 
@@ -37,6 +37,7 @@ if tf_version == 2:
     tensorflow.get_logger().setLevel(logging.ERROR)
 # -----------------------------------
 
+
 def get_recognition_model(name: str) -> Any:
     """
     This function retturns a face recognition model.
@@ -46,7 +47,7 @@ def get_recognition_model(name: str) -> Any:
         name (string): The name of the face recognition model to be returned
             Valid values are any of the following:\n
             "VGG-Face", "Facenet", "OpenFace", "DeepFace", "DeepID", "Dlib", "ArcFace", "SFace"
-            
+
     Exception:
         KeyError: when name is not known
 
@@ -55,6 +56,7 @@ def get_recognition_model(name: str) -> Any:
     """
 
     return modeling.get_recognition_model(name=name)
+
 
 def get_analysis_model(name: str) -> Any:
     """
@@ -73,6 +75,7 @@ def get_analysis_model(name: str) -> Any:
         reference to built model class instance
     """
     return Analyzer.instance(name=name)
+
 
 def verify(
     img1_path: Union[str, numpy.ndarray],
@@ -230,7 +233,7 @@ def analyze(
         attributes_details=attributes_details,
         detector_backend=detector_backend,
         align=align,
-        expand_percentage=expand_percentage
+        expand_percentage=expand_percentage,
     )
 
 
@@ -243,7 +246,7 @@ def find(
     align: bool = True,
     expand_percentage: int = 0,
     threshold: Optional[float] = None,
-    normalization: str = "base"
+    normalization: str = "base",
 ) -> List[pandas.DataFrame]:
     """
     Identify individuals in a database
@@ -303,7 +306,7 @@ def find(
         align=align,
         expand_percentage=expand_percentage,
         threshold=threshold,
-        normalization=normalization
+        normalization=normalization,
     )
 
 
@@ -362,16 +365,17 @@ def represent(
         normalization=normalization,
     )
 
+
 def stream(
     db_path: str,
     model_name: str = "VGG-Face",
     detector: str = "opencv",
     distance_metric: str = "cosine",
-    analyzers:List[str] = ["Age", "Emotion", "Gender"],
+    analyzers: List[str] = ["Age", "Emotion", "Gender"],
     source: Union[str, int] = int(0),
     freeze_time_seconds: int = 3,
     valid_frames_count: int = 5,
-    faces_count_threshold: int = sys.maxsize
+    faces_count_threshold: int = sys.maxsize,
 ) -> None:
     """
     Run real time face recognition and facial attribute analysis
@@ -424,8 +428,9 @@ def stream(
         source=source,
         freeze_time_seconds=freeze_time_seconds,
         valid_frames_count=valid_frames_count,
-        faces_count_threshold=faces_count_threshold
+        faces_count_threshold=faces_count_threshold,
     )
+
 
 def detect_faces(
     img_path: Union[str, numpy.ndarray],
@@ -477,6 +482,7 @@ def detect_faces(
         human_readable=True,
     )
 
+
 def cli() -> None:
     """
     command line interface function will be offered in this block
@@ -484,4 +490,3 @@ def cli() -> None:
     import fire
 
     fire.Fire()
-    

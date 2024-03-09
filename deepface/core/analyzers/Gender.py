@@ -37,10 +37,10 @@ class Analyzer(AnalyzerBase):
     def process(
         self, img: numpy.ndarray, detail: bool = False
     ) -> Dict[str, Union[str, Dict[str, float]]]:
-        
+
         result = {}
         attribute = self.name.lower()
-        
+
         estimates = self._model.predict(img, verbose=0)[0, :]
         result[attribute] = self._labels[numpy.argmax(estimates)]
 
