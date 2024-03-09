@@ -10,7 +10,6 @@ detectors = ["opencv", "mtcnn"]
 
 def test_all_detectors_must_succeed():
     # All detectors must succeed on a well-known image
-
     result_keys = ["face", "facial_area", "confidence"]
     area_keys = ["x", "y", "w", "h"]
 
@@ -28,12 +27,12 @@ def test_all_detectors_must_succeed():
             area = result["facial_area"]
             assert area["w"] > 0 and area["h"] > 0
 
-        logger.info(f"✅ detect_faces for {detector.name} backend test is done")
+        logger.info(f"✅ Detector {detector.name} succeeded")
 
 
-def test_all_detectors_must_faile():
-    # All detectors must fail on a well-known image
-    black_img = numpy.zeros([224, 224, 3])
+def test_all_detectors_must_fail():
+    # All detectors must fail on a black image
+    black_img = numpy.zeros([224, 224, 3], dtype=numpy.uint8)
     for detector in Detector.get_available_detectors():
         try:
             detector = Detector.instance(detector)                   
@@ -49,23 +48,4 @@ def test_all_detectors_must_faile():
             img_path=black_img, detector=detector.name
         )
         assert results is None or len(results) == 0
-
-        logger.info(f"✅ fail_detect_faces for {detector.name} backend test is done")
-
-
-# def test_backends_for_enforced_detection_with_non_facial_inputs():
-#     black_img = numpy.zeros([224, 224, 3])
-#     for detector in detectors:
-#         with pytest.raises(ValueError):
-#             _ = DeepFace.detect_faces(img_path=black_img, detector=detector)
-#     logger.info("✅ detect_faces for enforced detection and non-facial image test is done")
-
-
-# def test_backends_for_not_enforced_detection_with_non_facial_inputs():
-#     black_img = numpy.zeros([224, 224, 3])
-#     for detector in detectors:
-#         objs = DeepFace.detect_faces(
-#             img_path=black_img, detector=detector
-#         )
-#         assert objs[0]["face"].shape == (224, 224, 3)
-#     logger.info("✅ detect_faces for not enforced detection and non-facial image test is done")
+        logger.info(f"✅ Detector {detector.name} successfully failed")
