@@ -12,7 +12,7 @@ logger = Logger.get_instance()
 
 model_name = "VGG-Face"
 
-model: Decomposer = DeepFace.get_recognition_model(name=model_name)
+model: Decomposer = Decomposer.instance(name=model_name)
 
 target_size = model.input_shape
 

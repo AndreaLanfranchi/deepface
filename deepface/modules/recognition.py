@@ -12,7 +12,7 @@ from tqdm import tqdm
 
 # project dependencies
 from deepface.commons.logger import Logger
-from deepface.modules import representation, detection, modeling, verification
+from deepface.modules import representation, detection, verification
 from deepface.core.decomposer import Decomposer
 
 logger = Logger.get_instance()
@@ -21,7 +21,7 @@ logger = Logger.get_instance()
 def find(
     img_path: Union[str, numpy.ndarray],
     db_path: str,
-    model_name: str = "VGG-Face",
+    decomposer: str = "VGG-Face",
     distance_metric: str = "cosine",
     detector: Optional[str] = None,
     align: bool = True,
@@ -87,12 +87,12 @@ def find(
     if os.path.isdir(db_path) is not True:
         raise ValueError(f"{db_path} does not exist or is not a directory.")
 
-    model: Decomposer = modeling.get_recognition_model(model_name)
+    model: Decomposer = Decomposer.instance(decomposer)
     target_size = model.input_shape
 
     # ---------------------------------------
 
-    file_name = f"representations_{model_name}.pkl"
+    file_name = f"representations_{decomposer}.pkl"
     file_name = file_name.replace("-", "_").lower()
     datastore_path = os.path.join(db_path, file_name)
     representations = []
@@ -100,7 +100,7 @@ def find(
     # This is the "record template" for each item in the pickle file
     template_cols: List[str] = [
         "identity",
-        f"{model_name}_representation",
+        f"{model.name}_representation",
         "target_x",
         "target_y",
         "target_w",
@@ -145,7 +145,7 @@ def find(
     if len(new_images)>0:
         representations += _find_bulk_embeddings(
             employees=new_images,
-            model_name=model_name,
+            model_name=decomposer,
             target_size=target_size,
             detector=detector,
             align=align,
@@ -200,7 +200,7 @@ def find(
         source_region = source_obj["facial_area"]
         target_embedding_obj = representation.represent(
             img_path=source_img,
-            model_name=model_name,
+            model_name=decomposer,
             detector="donotdetect",
             align=align,
             normalization=normalization,
@@ -216,7 +216,7 @@ def find(
 
         distances = []
         for _, instance in df.iterrows():
-            source_representation = instance[f"{model_name}_representation"]
+            source_representation = instance[f"{decomposer}_representation"]
             if source_representation is None:
                 distances.append(float("inf")) # no representation for this image
                 continue
@@ -232,12 +232,12 @@ def find(
 
             distances.append(distance_fn(source_representation, target_representation))
 
-        target_threshold = threshold or verification.find_threshold(model_name, distance_metric)
+        target_threshold = threshold or verification.find_threshold(decomposer, distance_metric)
 
         result_df["threshold"] = target_threshold
         result_df["distance"] = distances
 
-        result_df = result_df.drop(columns=[f"{model_name}_representation"])
+        result_df = result_df.drop(columns=[f"{decomposer}_representation"])
         result_df = result_df[result_df["distance"] <= target_threshold]
         result_df = result_df.sort_values(by=["distance"], ascending=True).reset_index(drop=True)
 

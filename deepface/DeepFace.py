@@ -11,11 +11,12 @@ import pandas
 import tensorflow
 
 # package dependencies
-from deepface.core.analyzer import Analyzer  # Facial Emotions Analyzer
+from deepface.core.analyzer import Analyzer      # Facial Emotions Analyzer
+from deepface.core.decomposer import Decomposer  # Abstract class for face decomposers
+
 from deepface.commons import package_utils
 from deepface.commons.logger import Logger
 from deepface.modules import (
-    modeling,
     representation,
     verification,
     recognition,
@@ -55,7 +56,7 @@ def get_recognition_model(name: str) -> Any:
         reference to built model class instance
     """
 
-    return modeling.get_recognition_model(name=name)
+    return Decomposer.instance(name=name)
 
 
 def get_analysis_model(name: str) -> Any:
@@ -279,7 +280,7 @@ def find(
     return recognition.find(
         img_path=img_path,
         db_path=db_path,
-        model_name=model_name,
+        decomposer=model_name,
         distance_metric=distance_metric,
         detector=detector,
         align=align,

@@ -6,7 +6,7 @@ from typing import Any, Dict, Optional, Union
 import numpy
 
 # project dependencies
-from deepface.modules import representation, detection, modeling
+from deepface.modules import representation, detection
 from deepface.core.decomposer import Decomposer
 
 
@@ -78,7 +78,7 @@ def verify(
     tic = time.time()
 
     # --------------------------------
-    model: Decomposer = modeling.get_recognition_model(model_name)
+    model: Decomposer = Decomposer.instance(model_name)
     target_size = model.input_shape
 
     # img pairs might have many faces

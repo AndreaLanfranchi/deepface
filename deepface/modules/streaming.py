@@ -97,7 +97,7 @@ def analysis(
     # ------------------------
     # build models once to store them in the memory
     # otherwise, they will be built after cam started and this will cause delays
-    model: Decomposer = DeepFace.get_recognition_model(name=model_name)
+    model: Decomposer = Decomposer.instance(name=model_name)
 
     # find custom values for this input set
     target_size = model.input_shape
