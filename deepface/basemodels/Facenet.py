@@ -4,7 +4,7 @@ import gdown
 import numpy
 from deepface.commons import package_utils, folder_utils
 from deepface.commons.logger import Logger
-from deepface.models.FacialRecognition import FacialRecognition
+from deepface.models.FacialRecognition import Decomposer
 
 logger = Logger.get_instance()
 
@@ -50,7 +50,7 @@ else:
 
 
 # pylint: disable=too-few-public-methods
-class FaceNet128dClient(FacialRecognition):
+class FaceNet128dClient(Decomposer):
     """
     FaceNet-128d model class
     """
@@ -74,7 +74,7 @@ class FaceNet128dClient(FacialRecognition):
         return self.model(img, training=False).numpy()[0].tolist()
 
 
-class FaceNet512dClient(FacialRecognition):
+class FaceNet512dClient(Decomposer):
     """
     FaceNet-1512d model class
     """

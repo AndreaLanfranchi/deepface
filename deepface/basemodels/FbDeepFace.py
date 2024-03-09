@@ -5,7 +5,7 @@ import gdown
 import numpy
 from deepface.commons import package_utils, folder_utils
 from deepface.commons.logger import Logger
-from deepface.models.FacialRecognition import FacialRecognition
+from deepface.models.FacialRecognition import Decomposer
 
 logger = Logger.get_instance()
 
@@ -38,7 +38,7 @@ else:
 
 # -------------------------------------
 # pylint: disable=too-few-public-methods
-class DeepFaceClient(FacialRecognition):
+class DeepFaceClient(Decomposer):
     """
     Fb's DeepFace model class
     """

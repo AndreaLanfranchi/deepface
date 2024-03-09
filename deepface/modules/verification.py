@@ -7,7 +7,7 @@ import numpy
 
 # project dependencies
 from deepface.modules import representation, detection, modeling
-from deepface.models.FacialRecognition import FacialRecognition
+from deepface.models.FacialRecognition import Decomposer
 
 
 def verify(
@@ -78,7 +78,7 @@ def verify(
     tic = time.time()
 
     # --------------------------------
-    model: FacialRecognition = modeling.get_recognition_model(model_name)
+    model: Decomposer = modeling.get_recognition_model(model_name)
     target_size = model.input_shape
 
     # img pairs might have many faces

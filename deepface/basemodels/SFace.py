@@ -7,13 +7,13 @@ import gdown
 
 from deepface.commons import folder_utils
 from deepface.commons.logger import Logger
-from deepface.models.FacialRecognition import FacialRecognition
+from deepface.models.FacialRecognition import Decomposer
 
 logger = Logger.get_instance()
 
 
 # pylint: disable=too-few-public-methods
-class SFaceClient(FacialRecognition):
+class SFaceClient(Decomposer):
     """
     SFace model class
     """

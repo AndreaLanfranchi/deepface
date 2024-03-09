@@ -5,11 +5,11 @@ import gdown
 import numpy
 from deepface.commons import folder_utils
 from deepface.commons.logger import Logger
-from deepface.models.FacialRecognition import FacialRecognition
+from deepface.models.FacialRecognition import Decomposer
 
 logger = Logger.get_instance()
 
-class DlibClient(FacialRecognition):
+class DlibClient(Decomposer):
     """
     Dlib model class
     """

@@ -13,7 +13,7 @@ import pandas
 
 from deepface import DeepFace
 from deepface.core.detector import Detector
-from deepface.models.FacialRecognition import FacialRecognition
+from deepface.models.FacialRecognition import Decomposer
 from deepface.commons.logger import Logger
 
 logger = Logger.get_instance()
@@ -97,7 +97,7 @@ def analysis(
     # ------------------------
     # build models once to store them in the memory
     # otherwise, they will be built after cam started and this will cause delays
-    model: FacialRecognition = DeepFace.get_recognition_model(name=model_name)
+    model: Decomposer = DeepFace.get_recognition_model(name=model_name)
 
     # find custom values for this input set
     target_size = model.input_shape

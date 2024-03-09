@@ -44,7 +44,13 @@ class Detector(ABC):
 
     @property
     def name(self) -> str:
-        return "<undefined>" if self._name is None else self._name
+        if (
+            self._name is None
+            or not isinstance(self._name, str)
+            or len(self._name) == 0
+        ):
+            return "<undefined>"
+        return self._name
 
     @staticmethod
     def get_available_detectors() -> List[str]:

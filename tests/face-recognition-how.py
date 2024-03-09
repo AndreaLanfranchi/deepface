@@ -2,7 +2,7 @@ import matplotlib.pyplot as pyplot
 import numpy
 from deepface import DeepFace
 from deepface.modules import verification
-from deepface.models.FacialRecognition import FacialRecognition
+from deepface.models.FacialRecognition import Decomposer
 from deepface.commons.logger import Logger
 
 logger = Logger.get_instance()
@@ -12,7 +12,7 @@ logger = Logger.get_instance()
 
 model_name = "VGG-Face"
 
-model: FacialRecognition = DeepFace.get_recognition_model(name=model_name)
+model: Decomposer = DeepFace.get_recognition_model(name=model_name)
 
 target_size = model.input_shape
 

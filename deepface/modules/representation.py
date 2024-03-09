@@ -7,7 +7,7 @@ import cv2
 
 # project dependencies
 from deepface.modules import modeling, detection, preprocessing
-from deepface.models.FacialRecognition import FacialRecognition
+from deepface.models.FacialRecognition import Decomposer
 
 
 def represent(
@@ -55,7 +55,7 @@ def represent(
     """
     resp_objs = []
 
-    model: FacialRecognition = modeling.get_recognition_model(model_name)
+    model: Decomposer = modeling.get_recognition_model(model_name)
 
     # ---------------------------------
     # we have run pre-process in verification. so, this can be skipped if it is coming from verify.

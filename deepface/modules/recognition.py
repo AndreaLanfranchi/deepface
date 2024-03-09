@@ -13,7 +13,7 @@ from tqdm import tqdm
 # project dependencies
 from deepface.commons.logger import Logger
 from deepface.modules import representation, detection, modeling, verification
-from deepface.models.FacialRecognition import FacialRecognition
+from deepface.models.FacialRecognition import Decomposer
 
 logger = Logger.get_instance()
 
@@ -87,7 +87,7 @@ def find(
     if os.path.isdir(db_path) is not True:
         raise ValueError(f"{db_path} does not exist or is not a directory.")
 
-    model: FacialRecognition = modeling.get_recognition_model(model_name)
+    model: Decomposer = modeling.get_recognition_model(model_name)
     target_size = model.input_shape
 
     # ---------------------------------------
