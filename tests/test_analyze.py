@@ -110,7 +110,7 @@ def test_analyze_for_different_detectors():
         for detector in detectors:
             results = DeepFace.analyze(
                 image,
-                attributes=("gender",),
+                attributes="gender",
                 attributes_details=True,
                 detector_backend=detector,
             )
