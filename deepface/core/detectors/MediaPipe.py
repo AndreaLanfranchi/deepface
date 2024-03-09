@@ -1,9 +1,12 @@
 from typing import Any, List
+import cv2
 
 import numpy
 
 from deepface.core.detector import Detector as DetectorBase, FacialAreaRegion
+from deepface.commons.logger import Logger
 
+logger = Logger.get_instance()
 
 class Detector(DetectorBase):
     """
@@ -46,6 +49,10 @@ class Detector(DetectorBase):
             results (List[FacialAreaRegion]): A list of FacialAreaRegion objects
         """
         results = []
+        if len(img.shape) < 3 or img.shape[2] != 3:
+            logger.debug("Converting image to RGB")
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
         if img.shape[0] == 0 or img.shape[1] == 0:
             return results
 
