@@ -1,4 +1,4 @@
-from typing import Dict, Optional, Union
+from typing import Dict, List, Optional, Union
 from abc import ABC, abstractmethod
 import time
 import numpy
@@ -57,6 +57,25 @@ class Analyzer(ABC):
     @property
     def name(self) -> str:
         return "<undefined>" if self._name is None else self._name
+
+    @staticmethod
+    def get_available_attributes() -> List[str]:
+        """
+        Returns the available face attributes that can be analyzed.
+        This corresponds to a list of package names in the `analyzers`
+        package.
+
+        Returns:
+            A list of lowercase strings
+
+        """
+        global available_analyzers
+        if not "available_analyzers" in globals():
+            available_analyzers = reflection.get_derived_classes(
+                package=analyzers, base_class=Analyzer
+            )
+
+        return list(available_analyzers.keys())
 
     @staticmethod
     def instance(name: str, singleton: bool = True) -> "Analyzer":

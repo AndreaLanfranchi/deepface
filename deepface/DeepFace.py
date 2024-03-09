@@ -151,21 +151,26 @@ def verify(
 
 def analyze(
     img_path: Union[str, numpy.ndarray],
-    attributes: Union[tuple, list] = ("emotion", "age", "gender", "race"),
+    attributes: Optional[Union[tuple, list]] = None,
     attributes_details: bool = False,
     detector_backend: str = "opencv",
     align: bool = True,
     expand_percentage: int = 0,
 ) -> List[Dict[str, Any]]:
     """
-    Analyze facial attributes such as age, gender, emotion, and race in the provided image.
+    Analyze facial attributes such as age, gender, emotion, and race from the faces detected
+    in the provided image (if any). If the source image contains multiple faces, the result will
+    include attribute analysis result(s) for each detected face.
+
     Args:
         img_path (str or numpy.ndarray): The exact path to the image, a numpy array in BGR format,
             or a base64 encoded image. If the source image contains multiple faces, the result will
             include information for each detected face.
 
-        attributes (tuple): Attributes to analyze. The default is ('age', 'gender', 'emotion', 'race').
-            You can exclude some of these attributes from the analysis if needed.
+        attributes (tuple / list): An optional list of facial attributes to analyze. If not provided,
+            by default all available attributes analyzers will be used. For a complete list of
+            available attribute analyzers, refer to the list of modules in the
+            `deepface.core.analyzers` package.
 
         attributes_details (bool): Whether to include the details of estimation for each attribute.
 
@@ -181,51 +186,25 @@ def analyze(
 
     Returns:
         results (List[Dict[str, Any]]): A list of dictionaries, where each dictionary represents
-           the analysis results for a detected face. Each dictionary in the list contains the
-           following keys:
+           the analysis results for a detected face.
 
-        - 'region' (dict): Represents the rectangular region of the detected face in the image.
-            - 'x': x-coordinate of the top-left corner of the face.
-            - 'y': y-coordinate of the top-left corner of the face.
-            - 'w': Width of the detected face region.
-            - 'h': Height of the detected face region.
+           Each dictionary in the list contains the following keys:
 
-        - 'age' (float): Estimated age of the detected face.
+           - 'region' (dict): Represents the rectangular region of the detected face in the image.
+               - 'x': x-coordinate of the top-left corner of the face.
+               - 'y': y-coordinate of the top-left corner of the face.
+               - 'w': Width of the detected face region.
+               - 'h': Height of the detected face region.
 
-        - 'face_confidence' (float): Confidence score for the detected face.
-            Indicates the reliability of the face detection.
+           - '<attribute_name>' (str): The name of the attribute being analyzed.
+                - '<attribute_value>': The most relevant or dominant value of the attribute.
 
-        - 'dominant_gender' (str): The dominant gender in the detected face.
-            Either "Man" or "Woman".
+           - '<attribute_name>_analysis' (dict): The detailed analysis of the attribute.
+            (if requested). On behalf of the attribute name each possible value and its
+            weight (normalized to 100) is provided.
 
-        - 'gender' (dict): Confidence scores for each gender category.
-            - 'Man': Confidence score for the male gender.
-            - 'Woman': Confidence score for the female gender.
-
-        - 'dominant_emotion' (str): The dominant emotion in the detected face.
-            Possible values include "sad," "angry," "surprise," "fear," "happy,"
-            "disgust," and "neutral"
-
-        - 'emotion' (dict): Confidence scores for each emotion category.
-            - 'sad': Confidence score for sadness.
-            - 'angry': Confidence score for anger.
-            - 'surprise': Confidence score for surprise.
-            - 'fear': Confidence score for fear.
-            - 'happy': Confidence score for happiness.
-            - 'disgust': Confidence score for disgust.
-            - 'neutral': Confidence score for neutrality.
-
-        - 'dominant_race' (str): The dominant race in the detected face.
-            Possible values include "indian," "asian," "latino hispanic,"
-            "black," "middle eastern," and "white."
-
-        - 'race' (dict): Confidence scores for each race category.
-            - 'indian': Confidence score for Indian ethnicity.
-            - 'asian': Confidence score for Asian ethnicity.
-            - 'latino hispanic': Confidence score for Latino/Hispanic ethnicity.
-            - 'black': Confidence score for Black ethnicity.
-            - 'middle eastern': Confidence score for Middle Eastern ethnicity.
-            - 'white': Confidence score for White ethnicity.
+    Raises:
+        Any exceptions raised by the face detection and attribute analysis modules.
     """
     return demography.analyze(
         img_path=img_path,

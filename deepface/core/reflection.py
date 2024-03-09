@@ -8,7 +8,6 @@ from deepface.commons.logger import Logger
 
 logger = Logger.get_instance()
 
-
 def get_derived_classes(package: Any, base_class: type) -> Dict[str, type]:
     """
     Get classes inheriting from base_class in module.

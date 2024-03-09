@@ -1,6 +1,7 @@
 import cv2
 from deepface import DeepFace
 from deepface.commons.logger import Logger
+from deepface.core.analyzer import Analyzer
 
 logger = Logger.get_instance()
 
@@ -17,35 +18,23 @@ def test_standard_analyze():
     logger.info("✅ test standard analyze done")
 
 
-def test_analyze_with_all_actions_as_tuple():
+def test_analyze_all_attributes_explicit():
     img = "dataset/img4.jpg"
-    attributes = ("age", "gender", "race", "emotion")
-    results = DeepFace.analyze(img, attributes=attributes)
+    selection = "all"
+    attributes = Analyzer.get_available_attributes()
+    results = DeepFace.analyze(img, attributes=selection)
 
     for result in results:
         for attr in attributes:
             assert result.get(attr) is not None
             logger.debug(f"{attr}: {result[attr]}")
 
-    logger.info("✅ test analyze for all actions as tuple done")
+    logger.info("✅ test analyze for all attributes explicit done")
 
 
-def test_analyze_with_all_actions_as_list():
+def test_analyze_with_some_attributes_as_list():
     img = "dataset/img4.jpg"
-    attributes = ["age", "gender", "race", "emotion"]
-    results = DeepFace.analyze(img, attributes=attributes)
-
-    for result in results:
-        for attr in attributes:
-            assert result.get(attr) is not None
-            logger.debug(f"{attr}: {result[attr]}")
-
-    logger.info("✅ test analyze for all actions as list done")
-
-
-def test_analyze_for_some_actions():
-    img = "dataset/img4.jpg"
-    attributes = ["age", "gender"]
+    attributes = ["gender", "race"]
     results = DeepFace.analyze(img, attributes=attributes)
 
     for result in results:
@@ -53,10 +42,43 @@ def test_analyze_for_some_actions():
             assert result.get(attr) is not None
             logger.debug(f"{attr}: {result[attr]}")
         # these are not requested attributes
-        assert result.get("race") is None
+        assert result.get("age") is None
         assert result.get("emotion") is None
 
-    logger.info("✅ test analyze for some actions done")
+    logger.info("✅ test analyze for some attributes as list done")
+
+
+def test_analyze_with_some_attributes_as_tuple():
+    img = "dataset/img4.jpg"
+    attributes = ("gender", "race")
+    results = DeepFace.analyze(img, attributes=attributes)
+
+    for result in results:
+        for attr in attributes:
+            assert result.get(attr) is not None
+            logger.debug(f"{attr}: {result[attr]}")
+        # these are not requested attributes
+        assert result.get("age") is None
+        assert result.get("emotion") is None
+
+    logger.info("✅ test analyze for some attributes as tuple done")
+
+
+def test_analyze_with_some_attributes_as_csv():
+    img = "dataset/img4.jpg"
+    selection = "gender, race"
+    attributes = [attr.strip() for attr in selection.split(",")]
+    results = DeepFace.analyze(img, attributes=selection)
+
+    for result in results:
+        for attr in attributes:
+            assert result.get(attr) is not None
+            logger.debug(f"{attr}: {result[attr]}")
+        # these are not requested attributes
+        assert result.get("age") is None
+        assert result.get("emotion") is None
+
+    logger.info("✅ test analyze for some attributes as csv")
 
 
 def test_analyze_for_preloaded_image():

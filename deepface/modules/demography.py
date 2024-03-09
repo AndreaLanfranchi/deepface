@@ -1,5 +1,5 @@
 # built-in dependencies
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Optional, Union
 
 # 3rd party dependencies
 import numpy
@@ -8,26 +8,33 @@ from deepface.core.analyzer import Analyzer
 
 # project dependencies
 from deepface.modules import detection
+from deepface.commons.logger import Logger
+
+logger = Logger.get_instance()
 
 
 def analyze(
     img_path: Union[str, numpy.ndarray],
-    attributes: Union[str, tuple, list] = ("emotion", "age", "gender", "race"),
+    attributes: Optional[Union[tuple, list]] = None,
     attributes_details: bool = False,
     detector_backend: str = "opencv",
     align: bool = True,
     expand_percentage: int = 0,
 ) -> List[Dict[str, Any]]:
     """
-    Analyze facial attributes such as age, gender, emotion, and race in the provided image.
+    Analyze facial attributes such as age, gender, emotion, and race from the faces detected
+    in the provided image (if any). If the source image contains multiple faces, the result will
+    include attribute analysis result(s) for each detected face.
 
     Args:
         img_path (str or numpy.ndarray): The exact path to the image, a numpy array in BGR format,
             or a base64 encoded image. If the source image contains multiple faces, the result will
             include information for each detected face.
 
-        attributes (tuple): Attributes to analyze. The default is ('age', 'gender', 'emotion', 'race').
-            You can exclude some of these attributes from the analysis if needed.
+        attributes (tuple / list): An optional list of facial attributes to analyze. If not provided,
+            by default all available attributes analyzers will be used. For a complete list of
+            available attribute analyzers, refer to the list of modules in the
+            `deepface.core.analyzers` package.
 
         attributes_details (bool): Whether to include the details of estimation for each attribute.
 
@@ -53,62 +60,41 @@ def analyze(
                - 'w': Width of the detected face region.
                - 'h': Height of the detected face region.
 
-           - 'age' (float): Estimated age of the detected face.
+           - '<attribute_name>' (str): The name of the attribute being analyzed.
+                - '<attribute_value>': The most relevant or dominant value of the attribute.
 
-           - 'face_confidence' (float): Confidence score for the detected face.
-                Indicates the reliability of the face detection.
+           - '<attribute_name>_analysis' (dict): The detailed analysis of the attribute.
+            (if requested). On behalf of the attribute name each possible value and its
+            weight (normalized to 100) is provided.
 
-           - 'dominant_gender' (str): The dominant gender in the detected face.
-                Either "Man" or "Woman."
-
-           - 'gender' (dict): Confidence scores for each gender category.
-               - 'Man': Confidence score for the male gender.
-               - 'Woman': Confidence score for the female gender.
-
-           - 'dominant_emotion' (str): The dominant emotion in the detected face.
-                Possible values include "sad," "angry," "surprise," "fear," "happy,"
-                "disgust," and "neutral."
-
-           - 'emotion' (dict): Confidence scores for each emotion category.
-               - 'sad': Confidence score for sadness.
-               - 'angry': Confidence score for anger.
-               - 'surprise': Confidence score for surprise.
-               - 'fear': Confidence score for fear.
-               - 'happy': Confidence score for happiness.
-               - 'disgust': Confidence score for disgust.
-               - 'neutral': Confidence score for neutrality.
-
-           - 'dominant_race' (str): The dominant race in the detected face.
-                Possible values include "indian," "asian," "latino hispanic,"
-                "black," "middle eastern," and "white."
-
-           - 'race' (dict): Confidence scores for each race category.
-               - 'indian': Confidence score for Indian ethnicity.
-               - 'asian': Confidence score for Asian ethnicity.
-               - 'latino hispanic': Confidence score for Latino/Hispanic ethnicity.
-               - 'black': Confidence score for Black ethnicity.
-               - 'middle eastern': Confidence score for Middle Eastern ethnicity.
-               - 'white': Confidence score for White ethnicity.
+    Raises:
+        Any exceptions raised by the face detection and attribute analysis modules.
     """
 
-    # validate actions
-    if isinstance(attributes, str):
-        attributes = (attributes,)
+    # Assume defaults if not provided
+    if attributes is None:
+        attributes = Analyzer.get_available_attributes()
+    elif isinstance(attributes, str):
+        attributes = attributes.lower().strip()
+        if attributes in ["", "all", "full", "any", "*"]:
+            attributes = Analyzer.get_available_attributes()
+        elif "," in attributes:
+            attributes = [attribute.strip() for attribute in attributes.split(",")]
+        elif " " in attributes:
+            attributes = [attribute.strip() for attribute in attributes.split(".")]
+        elif ";" in attributes:
+            attributes = [attribute.strip() for attribute in attributes.split(";")]
+        else:
+            attributes = (attributes,)
 
     # check if actions is not an iterable or empty.
     if not hasattr(attributes, "__getitem__") or not attributes:
         raise ValueError("`attributes` must be a list of strings.")
 
     attributes = list(attributes)
+    results = []
 
-    # For each action, check if it is valid
-    for attribute in attributes:
-        _ = Analyzer.instance(attribute)
-
-    # ---------------------------------
-    resp_objects = []
-
-    img_objs = detection.detect_faces(
+    detected_faces = detection.detect_faces(
         source=img_path,
         target_size=(224, 224),
         detector=detector_backend,
@@ -117,7 +103,7 @@ def analyze(
         expand_percentage=expand_percentage,
     )
 
-    for img_obj in img_objs:
+    for img_obj in detected_faces:
         img_content = img_obj["face"]
         img_region = img_obj["facial_area"]
         img_confidence = img_obj["confidence"]
@@ -127,7 +113,6 @@ def analyze(
             pbar = tqdm(range(len(attributes)), desc="Analyzing attributes")
             for index in pbar:
                 attribute = attributes[index]
-
                 analyzer: Analyzer = Analyzer.instance(attribute)
                 pbar.set_description(f"Attribute: {analyzer.name}")
                 analysis_result = analyzer.process(
@@ -137,6 +122,6 @@ def analyze(
                 obj["region"] = img_region
                 obj["face_confidence"] = img_confidence
 
-            resp_objects.append(obj)
+            results.append(obj)
 
-    return resp_objects
+    return results
