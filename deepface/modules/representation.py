@@ -12,7 +12,7 @@ from deepface.core.decomposer import Decomposer
 
 def represent(
     img_path: Union[str, numpy.ndarray],
-    model_name: str = "VGG-Face",
+    decomposer: Optional[str] = None,
     detector: Optional[str] = None,
     align: bool = True,
     expand_percentage: int = 0,
@@ -55,7 +55,7 @@ def represent(
     """
     resp_objs = []
 
-    model: Decomposer = Decomposer.instance(model_name)
+    model: Decomposer = Decomposer.instance(decomposer)
 
     # ---------------------------------
     # we have run pre-process in verification. so, this can be skipped if it is coming from verify.

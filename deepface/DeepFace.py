@@ -81,7 +81,7 @@ def get_analysis_model(name: str) -> Any:
 def verify(
     img1_path: Union[str, numpy.ndarray],
     img2_path: Union[str, numpy.ndarray],
-    model_name: str = "VGG-Face",
+    decomposer: Optional[str] = None,
     detector: Optional[str] = None,
     distance_metric: str = "cosine",
     align: bool = True,
@@ -141,7 +141,7 @@ def verify(
     return verification.verify(
         img1_path=img1_path,
         img2_path=img2_path,
-        model_name=model_name,
+        decomposer=decomposer,
         detector=detector,
         distance_metric=distance_metric,
         align=align,
@@ -220,7 +220,7 @@ def analyze(
 def find(
     img_path: Union[str, numpy.ndarray],
     db_path: str,
-    model_name: str = "VGG-Face",
+    decomposer: Optional[str] = None,
     distance_metric: str = "cosine",
     detector: Optional[str] = None,
     align: bool = True,
@@ -280,7 +280,7 @@ def find(
     return recognition.find(
         img_path=img_path,
         db_path=db_path,
-        decomposer=model_name,
+        decomposer=decomposer,
         distance_metric=distance_metric,
         detector=detector,
         align=align,
@@ -292,7 +292,7 @@ def find(
 
 def represent(
     img_path: Union[str, numpy.ndarray],
-    model_name: str = "VGG-Face",
+    decomposer: Optional[str] = None,
     detector: Optional[str] = None,
     align: bool = True,
     expand_percentage: int = 0,
@@ -338,7 +338,7 @@ def represent(
     """
     return representation.represent(
         img_path=img_path,
-        model_name=model_name,
+        decomposer=decomposer,
         detector=detector,
         align=align,
         expand_percentage=expand_percentage,
@@ -348,7 +348,7 @@ def represent(
 
 def stream(
     db_path: str,
-    model_name: str = "VGG-Face",
+    decomposer: Optional[str] = None,
     detector: Optional[str] = None,
     distance_metric: str = "cosine",
     analyzers: List[str] = ["Age", "Emotion", "Gender"],
@@ -401,7 +401,7 @@ def stream(
 
     streaming.analysis(
         db_path=db_path,
-        model_name=model_name,
+        decomposer=decomposer,
         detector=detector,
         distance_metric=distance_metric,
         analyzers=analyzers,

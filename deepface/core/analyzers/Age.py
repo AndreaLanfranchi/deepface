@@ -2,6 +2,7 @@ from typing import Dict, Union
 import os
 import gdown
 import numpy
+
 from deepface.basemodels import VGGFace
 from deepface.commons import package_utils, folder_utils
 from deepface.commons.logger import Logger

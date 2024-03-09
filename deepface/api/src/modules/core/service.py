@@ -8,7 +8,7 @@ def represent(img_path, model_name, detector_backend, align):
         result = {}
         embedding_objs = DeepFace.represent(
             img_path=img_path,
-            model_name=model_name,
+            decomposer=model_name,
             detector=detector_backend,
             align=align,
         )
@@ -25,7 +25,7 @@ def verify(
         obj = DeepFace.verify(
             img1_path=img1_path,
             img2_path=img2_path,
-            model_name=model_name,
+            decomposer=model_name,
             detector=detector_backend,
             distance_metric=distance_metric,
             align=align

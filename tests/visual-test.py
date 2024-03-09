@@ -35,14 +35,14 @@ detector_backends = [
 # verification
 for model_name in model_names:
     obj = DeepFace.verify(
-        img1_path="dataset/img1.jpg", img2_path="dataset/img2.jpg", model_name=model_name
+        img1_path="dataset/img1.jpg", img2_path="dataset/img2.jpg", decomposer=model_name
     )
     logger.info(obj)
     logger.info("---------------------")
 
 # represent
 for model_name in model_names:
-    embedding_objs = DeepFace.represent(img_path="dataset/img1.jpg", model_name=model_name)
+    embedding_objs = DeepFace.represent(img_path="dataset/img1.jpg", decomposer=model_name)
     for embedding_obj in embedding_objs:
         embedding = embedding_obj["embedding"]
         logger.info(f"{model_name} produced {len(embedding)}D vector")
@@ -50,7 +50,7 @@ for model_name in model_names:
 
 # find
 dfs = DeepFace.find(
-    img_path="dataset/img1.jpg", db_path="dataset", model_name="Facenet", detector="mtcnn"
+    img_path="dataset/img1.jpg", db_path="dataset", decomposer="Facenet", detector="mtcnn"
 )
 for df in dfs:
     logger.info(df)

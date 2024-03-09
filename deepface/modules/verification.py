@@ -13,7 +13,7 @@ from deepface.core.decomposer import Decomposer
 def verify(
     img1_path: Union[str, numpy.ndarray],
     img2_path: Union[str, numpy.ndarray],
-    model_name: str = "VGG-Face",
+    decomposer: Optional[str] = None,
     detector: Optional[str] = None,
     distance_metric: str = "cosine",
     align: bool = True,
@@ -78,7 +78,7 @@ def verify(
     tic = time.time()
 
     # --------------------------------
-    model: Decomposer = Decomposer.instance(model_name)
+    model: Decomposer = Decomposer.instance(decomposer)
     target_size = model.input_shape
 
     # img pairs might have many faces
@@ -120,7 +120,7 @@ def verify(
 
         img1_embedding_obj = representation.represent(
             img_path=img1_content,
-            model_name=model_name,
+            decomposer=decomposer,
             detector="donotdetect",
             align=align,
             normalization=normalization,
@@ -133,7 +133,7 @@ def verify(
 
             img2_embedding_obj = representation.represent(
                 img_path=img2_content,
-                model_name=model_name,
+                decomposer=decomposer,
                 detector="donotdetect",
                 align=align,
                 normalization=normalization,
@@ -145,7 +145,7 @@ def verify(
             regions.append((img1_region, img2_region))
 
     # -------------------------------
-    threshold = find_threshold(model_name, distance_metric)
+    threshold = find_threshold(decomposer, distance_metric)
     distance = min(distances)  # best distance
     facial_areas = regions[numpy.argmin(distances)]
 
@@ -154,7 +154,7 @@ def verify(
         "verified": True if distance <= threshold else False,
         "distance": distance,
         "threshold": threshold,
-        "model": model_name,
+        "model": decomposer,
         "detector_backend": detector,
         "similarity_metric": distance_metric,
         "facial_areas": {"img1": facial_areas[0], "img2": facial_areas[1]},
@@ -249,7 +249,7 @@ def find_threshold(model_name: str, distance_metric: str) -> float:
 
     thresholds = {
         # "VGG-Face": {"cosine": 0.40, "euclidean": 0.60, "euclidean_l2": 0.86}, # 2622d
-        "VGG-Face": {
+        "VGGFace": {
             "cosine": 0.68,
             "euclidean": 1.17,
             "euclidean_l2": 1.17,

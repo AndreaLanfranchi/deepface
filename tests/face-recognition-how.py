@@ -10,9 +10,7 @@ logger = Logger.get_instance()
 # ----------------------------------------------
 # build face recognition model
 
-model_name = "VGG-Face"
-
-model: Decomposer = Decomposer.instance(name=model_name)
+model: Decomposer = Decomposer.instance() # Default is VGGFace
 
 target_size = model.input_shape
 
@@ -38,8 +36,8 @@ distance_vector = numpy.square(img1_representation - img2_representation)
 current_distance = numpy.sqrt(distance_vector.sum())
 logger.info(f"Euclidean distance: {current_distance}")
 
-threshold = verification.find_threshold(model_name=model_name, distance_metric="euclidean")
-logger.info(f"Threshold for {model_name}-euclidean pair is {threshold}")
+threshold = verification.find_threshold(model_name=model.name, distance_metric="euclidean")
+logger.info(f"Threshold for {model.name}-euclidean pair is {threshold}")
 
 if current_distance < threshold:
     logger.info(

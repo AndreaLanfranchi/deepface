@@ -66,7 +66,7 @@ class Decomposer(ABC):
         return "VGGFace"
 
     @staticmethod
-    def instance(name: Optional[str], singleton: bool = True) -> "Decomposer":
+    def instance(name: Optional[str] = None, singleton: bool = True) -> "Decomposer":
         """
         `Decomposer` factory method.
 

@@ -44,7 +44,7 @@ class VggFaceClient(Decomposer):
 
     def __init__(self):
         self.model = load_model()
-        self.model_name = "VGG-Face"
+        self.model_name = "VGGFace"
         self.input_shape = (224, 224)
         self.output_shape = 4096
 

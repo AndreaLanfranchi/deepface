@@ -13,6 +13,7 @@ import pandas
 
 from deepface import DeepFace
 from deepface.core.detector import Detector
+from deepface.core.analyzer import Analyzer
 from deepface.core.decomposer import Decomposer
 from deepface.commons.logger import Logger
 
@@ -71,7 +72,7 @@ class Stream(threading.Thread):
 
 def analysis(
     db_path: str,
-    model_name: str = "VGG-Face",
+    decomposer: Optional[str] = None,
     detector: Optional[str] = None,
     distance_metric: str = "cosine",
     analyzers: Optional[List[str]] = None,
@@ -97,7 +98,7 @@ def analysis(
     # ------------------------
     # build models once to store them in the memory
     # otherwise, they will be built after cam started and this will cause delays
-    model: Decomposer = Decomposer.instance(name=model_name)
+    model: Decomposer = Decomposer.instance(name=decomposer)
 
     # find custom values for this input set
     target_size = model.input_shape
@@ -116,7 +117,7 @@ def analysis(
     _ = DeepFace.find(
         img_path=numpy.zeros(target_size, dtype=numpy.uint8),
         db_path=db_path,
-        model_name=model_name,
+        decomposer=decomposer,
         detector=detector,
         distance_metric=distance_metric,
     )
@@ -190,7 +191,7 @@ def analysis(
                 matching_results = __get_face_matches(
                     face=item["face"],
                     db_path=db_path,
-                    model_name=model_name,
+                    model_name=decomposer,
                     distance_metric=distance_metric,
                 )
                 if len(matching_results) > 0:
@@ -389,7 +390,7 @@ def __get_face_matches(
     matching_results = DeepFace.find(
         img_path=face,
         db_path=db_path,
-        model_name=model_name,
+        decomposer=model_name,
         detector="donotdetect",  # Skip detection, we already have the face
         distance_metric=distance_metric,
     )

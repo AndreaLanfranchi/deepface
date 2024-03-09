@@ -21,7 +21,7 @@ logger = Logger.get_instance()
 def find(
     img_path: Union[str, numpy.ndarray],
     db_path: str,
-    decomposer: str = "VGG-Face",
+    decomposer: Optional[str] = None,
     distance_metric: str = "cosine",
     detector: Optional[str] = None,
     align: bool = True,
@@ -145,7 +145,7 @@ def find(
     if len(new_images)>0:
         representations += _find_bulk_embeddings(
             employees=new_images,
-            model_name=decomposer,
+            decomposer=decomposer,
             target_size=target_size,
             detector=detector,
             align=align,
@@ -200,7 +200,7 @@ def find(
         source_region = source_obj["facial_area"]
         target_embedding_obj = representation.represent(
             img_path=source_img,
-            model_name=decomposer,
+            decomposer=decomposer,
             detector="donotdetect",
             align=align,
             normalization=normalization,
@@ -274,7 +274,7 @@ def _list_image_files(path: str) -> Set[str]:
 
 def _find_bulk_embeddings(
     employees: List[str],
-    model_name: str = "VGG-Face",
+    decomposer: Optional[str] = None,
     target_size: tuple = (224, 224),
     detector: Optional[str] = None,
     align: bool = True,
@@ -334,7 +334,7 @@ def _find_bulk_embeddings(
                 img_region = img_obj["facial_area"]
                 embedding_obj = representation.represent(
                     img_path=img_content,
-                    model_name=model_name,
+                    decomposer=decomposer,
                     detector="donotdetect",
                     align=align,
                     normalization=normalization,

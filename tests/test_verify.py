@@ -34,7 +34,7 @@ def test_different_facial_recognition_models():
                 img2 = instance[1]
                 result = instance[2]
 
-                resp_obj = DeepFace.verify(img1, img2, model_name=model, distance_metric=metric)
+                resp_obj = DeepFace.verify(img1, img2, decomposer=model, distance_metric=metric)
 
                 prediction = resp_obj["verified"]
                 distance = round(resp_obj["distance"], 2)
