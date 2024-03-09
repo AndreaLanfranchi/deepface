@@ -65,23 +65,25 @@ class Detector(DetectorBase):
             img_rgb, landmarks=True
         )  # returns boundingbox, prob, landmark
         if detections is not None and len(detections) > 0:
+            try:
+                for current_detection in zip(*detections):
+                    x, y, w, h = self._xyxy_to_xywh(current_detection[0])
+                    confidence = current_detection[1]
+                    left_eye = current_detection[2][0]
+                    right_eye = current_detection[2][1]
 
-            for current_detection in zip(*detections):
-                x, y, w, h = self._xyxy_to_xywh(current_detection[0])
-                confidence = current_detection[1]
-                left_eye = current_detection[2][0]
-                right_eye = current_detection[2][1]
-
-                facial_area = FacialAreaRegion(
-                    x=x,
-                    y=y,
-                    w=w,
-                    h=h,
-                    left_eye=left_eye,
-                    right_eye=right_eye,
-                    confidence=confidence,
-                )
-                results.append(facial_area)
+                    facial_area = FacialAreaRegion(
+                        x=x,
+                        y=y,
+                        w=w,
+                        h=h,
+                        left_eye=left_eye,
+                        right_eye=right_eye,
+                        confidence=confidence,
+                    )
+                    results.append(facial_area)
+            except TypeError:
+                pass # No detections ?
 
         return results
 
