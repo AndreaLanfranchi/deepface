@@ -48,7 +48,7 @@ class VggFaceClient(Decomposer):
         self.input_shape = (224, 224)
         self.output_shape = 4096
 
-    def find_embeddings(self, img: numpy.ndarray) -> List[float]:
+    def process(self, img: numpy.ndarray) -> List[float]:
         """
         find embeddings with VGG-Face model
         Args:

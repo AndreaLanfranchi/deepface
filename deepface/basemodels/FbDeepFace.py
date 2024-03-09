@@ -49,7 +49,7 @@ class DeepFaceClient(Decomposer):
         self.input_shape = (152, 152)
         self.output_shape = 4096
 
-    def find_embeddings(self, img: numpy.ndarray) -> List[float]:
+    def process(self, img: numpy.ndarray) -> List[float]:
         """
         find embeddings with OpenFace model
         Args:

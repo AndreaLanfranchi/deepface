@@ -52,7 +52,7 @@ class ArcFaceClient(Decomposer):
         self.output_shape = 512
         self.model = self.__load_model()
 
-    def find_embeddings(self, img: numpy.ndarray) -> List[float]:
+    def process(self, img: numpy.ndarray) -> List[float]:
         """
         find embeddings with ArcFace model
         Args:

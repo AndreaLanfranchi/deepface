@@ -16,10 +16,7 @@ if tf_version == 2:
 else:
     from keras.models import Model
 
-# Notice that all facial recognition models must be inherited from this class
-
-
-# pylint: disable=too-few-public-methods
+# Abstract class all specialized face decomposers must inherit from.
 class Decomposer(ABC):
 
     _name: Optional[str] = None  # Must be filled by specialized classes
@@ -30,7 +27,7 @@ class Decomposer(ABC):
     output_shape: int
 
     @abstractmethod
-    def find_embeddings(self, img: numpy.ndarray) -> List[float]:
+    def process(self, img: numpy.ndarray) -> List[float]:
         pass
 
     @property

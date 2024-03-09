@@ -24,7 +24,7 @@ class SFaceClient(Decomposer):
         self.input_shape = (112, 112)
         self.output_shape = 128
 
-    def find_embeddings(self, img: numpy.ndarray) -> List[float]:
+    def process(self, img: numpy.ndarray) -> List[float]:
         """
         find embeddings with SFace model - different than regular models
         Args:

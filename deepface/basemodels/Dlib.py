@@ -20,7 +20,7 @@ class DlibClient(Decomposer):
         self.input_shape = (150, 150)
         self.output_shape = 128
 
-    def find_embeddings(self, img: numpy.ndarray) -> List[float]:
+    def process(self, img: numpy.ndarray) -> List[float]:
         """
         find embeddings with Dlib model - different than regular models
         Args:

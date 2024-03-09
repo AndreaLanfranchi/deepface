@@ -99,7 +99,7 @@ def represent(
         # custom normalization
         img = preprocessing.normalize_input(img=img, normalization=normalization)
 
-        embedding = model.find_embeddings(img)
+        embedding = model.process(img)
 
         resp_obj = {}
         resp_obj["embedding"] = embedding

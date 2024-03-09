@@ -61,7 +61,7 @@ class FaceNet128dClient(Decomposer):
         self.input_shape = (160, 160)
         self.output_shape = 128
 
-    def find_embeddings(self, img: numpy.ndarray) -> List[float]:
+    def process(self, img: numpy.ndarray) -> List[float]:
         """
         find embeddings with FaceNet-128d model
         Args:
@@ -85,7 +85,7 @@ class FaceNet512dClient(Decomposer):
         self.input_shape = (160, 160)
         self.output_shape = 512
 
-    def find_embeddings(self, img: numpy.ndarray) -> List[float]:
+    def process(self, img: numpy.ndarray) -> List[float]:
         """
         find embeddings with FaceNet-512d model
         Args:
