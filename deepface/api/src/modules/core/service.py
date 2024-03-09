@@ -40,7 +40,7 @@ def analyze(img_path, actions, detector_backend, align):
         result = {}
         demographies = DeepFace.analyze(
             img_path=img_path,
-            actions=actions,
+            attributes=actions,
             detector_backend=detector_backend,
             align=align
         )

@@ -148,7 +148,8 @@ def verify(
 
 def analyze(
     img_path: Union[str, numpy.ndarray],
-    actions: Union[tuple, list] = ("emotion", "age", "gender", "race"),
+    attributes: Union[tuple, list] = ("emotion", "age", "gender", "race"),
+    attributes_details: bool = False,
     detector_backend: str = "opencv",
     align: bool = True,
     expand_percentage: int = 0,
@@ -160,8 +161,10 @@ def analyze(
             or a base64 encoded image. If the source image contains multiple faces, the result will
             include information for each detected face.
 
-        actions (tuple): Attributes to analyze. The default is ('age', 'gender', 'emotion', 'race').
+        attributes (tuple): Attributes to analyze. The default is ('age', 'gender', 'emotion', 'race').
             You can exclude some of these attributes from the analysis if needed.
+
+        attributes_details (bool): Whether to include the details of estimation for each attribute.
 
         detector_backend (string): face detector backend. Options: 'opencv', 'retinaface',
             'mtcnn', 'ssd', 'dlib', 'mediapipe', 'yolov8' (default is opencv).
@@ -223,7 +226,8 @@ def analyze(
     """
     return demography.analyze(
         img_path=img_path,
-        attributes=actions,
+        attributes=attributes,
+        attributes_details=attributes_details,
         detector_backend=detector_backend,
         align=align,
         expand_percentage=expand_percentage

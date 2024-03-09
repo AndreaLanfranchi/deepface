@@ -13,6 +13,7 @@ from deepface.modules import detection
 def analyze(
     img_path: Union[str, numpy.ndarray],
     attributes: Union[str, tuple, list] = ("emotion", "age", "gender", "race"),
+    attributes_details: bool = False,
     detector_backend: str = "opencv",
     align: bool = True,
     expand_percentage: int = 0,
@@ -25,8 +26,10 @@ def analyze(
             or a base64 encoded image. If the source image contains multiple faces, the result will
             include information for each detected face.
 
-        actions (tuple): Attributes to analyze. The default is ('age', 'gender', 'emotion', 'race').
+        attributes (tuple): Attributes to analyze. The default is ('age', 'gender', 'emotion', 'race').
             You can exclude some of these attributes from the analysis if needed.
+
+        attributes_details (bool): Whether to include the details of estimation for each attribute.
 
         detector_backend (string): face detector backend. Options: 'opencv', 'retinaface',
             'mtcnn', 'ssd', 'dlib', 'mediapipe', 'yolov8' (default is opencv).
@@ -121,13 +124,13 @@ def analyze(
         if img_content.shape[0] > 0 and img_content.shape[1] > 0:
             obj = {}
             # facial attribute analysis
-            pbar = tqdm(range(len(attributes)), desc="Finding actions")
+            pbar = tqdm(range(len(attributes)), desc="Analyzing attributes")
             for index in pbar:
                 attribute = attributes[index]
 
                 analyzer: Analyzer = Analyzer.instance(attribute)
-                pbar.set_description(f"Action: {analyzer.name}")
-                analysis_result = analyzer.process(img=img_content)
+                pbar.set_description(f"Attribute: {analyzer.name}")
+                analysis_result = analyzer.process(img=img_content, detail=attributes_details)
                 obj.update(analysis_result)
                 obj["region"] = img_region
                 obj["face_confidence"] = img_confidence

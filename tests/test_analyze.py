@@ -9,96 +9,69 @@ detectors = ["opencv", "mtcnn"]
 
 def test_standard_analyze():
     img = "dataset/img4.jpg"
-    demography_objs = DeepFace.analyze(img)
-    for demography in demography_objs:
-        logger.debug(demography)
-        assert demography["age"] > 20 and demography["age"] < 40
-        assert demography["dominant_gender"] == "Woman"
+    results = DeepFace.analyze(img)
+    for result in results:
+        logger.debug(result)
+        assert result["age"] > 20 and result["age"] < 40
+        assert result["gender"] == "Female"
     logger.info("✅ test standard analyze done")
 
 
 def test_analyze_with_all_actions_as_tuple():
     img = "dataset/img4.jpg"
-    demography_objs = DeepFace.analyze(
-        img, actions=("age", "gender", "race", "emotion")
-    )
+    attributes = ("age", "gender", "race", "emotion")
+    results = DeepFace.analyze(img, attributes=attributes)
 
-    for demography in demography_objs:
-        logger.debug(f"Demography: {demography}")
-        age = demography["age"]
-        gender = demography["dominant_gender"]
-        race = demography["dominant_race"]
-        emotion = demography["dominant_emotion"]
-        logger.debug(f"Age: {age}")
-        logger.debug(f"Gender: {gender}")
-        logger.debug(f"Race: {race}")
-        logger.debug(f"Emotion: {emotion}")
-        assert demography.get("age") is not None
-        assert demography.get("dominant_gender") is not None
-        assert demography.get("dominant_race") is not None
-        assert demography.get("dominant_emotion") is not None
+    for result in results:
+        for attr in attributes:
+            assert result.get(attr) is not None
+            logger.debug(f"{attr}: {result[attr]}")
 
     logger.info("✅ test analyze for all actions as tuple done")
 
 
 def test_analyze_with_all_actions_as_list():
     img = "dataset/img4.jpg"
-    demography_objs = DeepFace.analyze(
-        img, actions=["age", "gender", "race", "emotion"]
-    )
+    attributes = ["age", "gender", "race", "emotion"]
+    results = DeepFace.analyze(img, attributes=attributes)
 
-    for demography in demography_objs:
-        logger.debug(f"Demography: {demography}")
-        age = demography["age"]
-        gender = demography["dominant_gender"]
-        race = demography["dominant_race"]
-        emotion = demography["dominant_emotion"]
-        logger.debug(f"Age: {age}")
-        logger.debug(f"Gender: {gender}")
-        logger.debug(f"Race: {race}")
-        logger.debug(f"Emotion: {emotion}")
-        assert demography.get("age") is not None
-        assert demography.get("dominant_gender") is not None
-        assert demography.get("dominant_race") is not None
-        assert demography.get("dominant_emotion") is not None
+    for result in results:
+        for attr in attributes:
+            assert result.get(attr) is not None
+            logger.debug(f"{attr}: {result[attr]}")
 
-    logger.info("✅ test analyze for all actions as array done")
+    logger.info("✅ test analyze for all actions as list done")
 
 
 def test_analyze_for_some_actions():
     img = "dataset/img4.jpg"
-    demography_objs = DeepFace.analyze(img, ["age", "gender"])
+    attributes = ["age", "gender"]
+    results = DeepFace.analyze(img, attributes=attributes)
 
-    for demography in demography_objs:
-        age = demography["age"]
-        gender = demography["dominant_gender"]
-
-        logger.debug(f"Age: { age }")
-        logger.debug(f"Gender: {gender}")
-
-        assert demography.get("age") is not None
-        assert demography.get("dominant_gender") is not None
-
-        # these are not in actions
-        assert demography.get("dominant_race") is None
-        assert demography.get("dominant_emotion") is None
+    for result in results:
+        for attr in attributes:
+            assert result.get(attr) is not None
+            logger.debug(f"{attr}: {result[attr]}")
+        # these are not requested attributes
+        assert result.get("race") is None
+        assert result.get("emotion") is None
 
     logger.info("✅ test analyze for some actions done")
 
 
 def test_analyze_for_preloaded_image():
     img = cv2.imread("dataset/img1.jpg")
-    resp_objs = DeepFace.analyze(img)
-    for resp_obj in resp_objs:
-        logger.debug(resp_obj)
-        assert resp_obj["age"] > 20 and resp_obj["age"] < 40
-        assert resp_obj["dominant_gender"] == "Woman"
+    results = DeepFace.analyze(img)
+    for result in results:
+        logger.debug(result)
+        assert result["age"] > 20 and result["age"] < 40
+        assert result["gender"] == "Female"
 
     logger.info("✅ test analyze for pre-loaded image done")
 
 
 def test_analyze_for_different_detectors():
-    img_paths = [
+    images = [
         "dataset/img1.jpg",
         "dataset/img5.jpg",
         "dataset/img6.jpg",
@@ -111,23 +84,31 @@ def test_analyze_for_different_detectors():
         "dataset/img6.jpg",
     ]
 
-    for img_path in img_paths:
+    for image in images:
         for detector in detectors:
             results = DeepFace.analyze(
-                img_path, actions=("gender",), detector_backend=detector
+                image,
+                attributes=("gender",),
+                attributes_details=True,
+                detector_backend=detector,
             )
             for result in results:
                 logger.debug(result)
+                attr_gender = result.get("gender")
+                assert attr_gender is not None
+                assert attr_gender in ["Female", "Male"]
 
-                # validate keys
-                assert "gender" in result.keys()
-                assert "dominant_gender" in result.keys() and result["dominant_gender"] in [
-                    "Man",
-                    "Woman",
-                ]
+                analysis = result.get("gender_analysis")
+                assert analysis is not None
 
-                # validate probabilities
-                if result["dominant_gender"] == "Man":
-                    assert result["gender"]["Man"] > result["gender"]["Woman"]
+                analysis_female = analysis.get("Female")
+                analysis_male = analysis.get("Male")
+                assert analysis_female is not None
+                assert analysis_male is not None
+
+                if attr_gender == "Male":
+                    assert analysis_male > analysis_female
                 else:
-                    assert result["gender"]["Man"] < result["gender"]["Woman"]
+                    assert analysis_female > analysis_male
+
+    logger.info("✅ test analyze for different detectors done")

@@ -61,21 +61,22 @@ class Analyzer(AnalyzerBase):
     ) -> Dict[str, Union[str, Dict[str, float]]]:
 
         result = {}
+        attribute = self.name.lower()
 
         img_gray = cv2.cvtColor(img[0], cv2.COLOR_BGR2GRAY)
         img_gray = cv2.resize(img_gray, (48, 48))
         img_gray = numpy.expand_dims(img_gray, axis=0)
 
-        emotion_estimates = self._model.predict(img_gray, verbose=0)[0, :]
-        result[self.name.lower()] = self._labels[numpy.argmax(emotion_estimates)]
+        estimates = self._model.predict(img_gray, verbose=0)[0, :]
+        result[attribute] = self._labels[numpy.argmax(estimates)]
 
         if detail:
             details = {}
-            estimates_sum = numpy.sum(emotion_estimates)
+            estimates_sum = numpy.sum(estimates)
             for i, label in enumerate(self._labels):
-                estimate = round(emotion_estimates[i] * 100 / estimates_sum, 2)
+                estimate = round(estimates[i] * 100 / estimates_sum, 2)
                 details[label] = estimate
-            result[f"{self.name.lower}_analisys"] = details
+            result[f"{attribute}_analysis"] = details
 
         return result
 

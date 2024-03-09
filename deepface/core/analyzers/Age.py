@@ -34,12 +34,19 @@ class Analyzer(AnalyzerBase):
         self.__initialize()
 
     def process(
-        self, img: numpy.ndarray, _: bool = False
+        self, img: numpy.ndarray, detail: bool = False
     ) -> Dict[str, Union[str, Dict[str, float]]]:
+
         result = {}
-        age_predictions = self._model.predict(img, verbose=0)[0, :]
-        apparent_age = numpy.sum(age_predictions * self._output_indexes).astype(float)
-        result[self.name.lower()] = apparent_age
+        attribute = self.name.lower()
+        estimates = self._model.predict(img, verbose=0)[0, :]
+        attribute_value = numpy.sum(estimates * self._output_indexes).astype(float)
+        result[attribute] = attribute_value
+
+        if detail:
+            details = {}
+            result[f"{attribute}_analysis"] = details
+
         return result
 
     def __initialize(self):

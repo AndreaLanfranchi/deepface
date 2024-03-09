@@ -37,17 +37,20 @@ class Analyzer(AnalyzerBase):
     def process(
         self, img: numpy.ndarray, detail: bool = False
     ) -> Dict[str, Union[str, Dict[str, float]]]:
+        
         result = {}
-        gender_estimates = self._model.predict(img, verbose=0)[0, :]
-        result[self.name.lower()] = self._labels[numpy.argmax(gender_estimates)]
+        attribute = self.name.lower()
+        
+        estimates = self._model.predict(img, verbose=0)[0, :]
+        result[attribute] = self._labels[numpy.argmax(estimates)]
 
-        if detail:
+        if detail == True:
             details = {}
-            estimates_sum = numpy.sum(gender_estimates)
+            estimates_sum = numpy.sum(estimates)
             for i, label in enumerate(self._labels):
-                estimate = round(gender_estimates[i] * 100 / estimates_sum, 2)
+                estimate = round(estimates[i] * 100 / estimates_sum, 2)
                 details[label] = estimate
-            result[f"{self.name.lower}_analisys"] = details
+            result[f"{attribute}_analysis"] = details
 
         return result
 
