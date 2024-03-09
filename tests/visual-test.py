@@ -50,7 +50,7 @@ for model_name in model_names:
 
 # find
 dfs = DeepFace.find(
-    img_path="dataset/img1.jpg", db_path="dataset", model_name="Facenet", detector_backend="mtcnn"
+    img_path="dataset/img1.jpg", db_path="dataset", model_name="Facenet", detector="mtcnn"
 )
 for df in dfs:
     logger.info(df)
@@ -63,7 +63,7 @@ for img_path in img_paths:
     for detector_backend in detector_backends:
         face_objs = DeepFace.detect_faces(
             img_path=img_path,
-            detector_backend=detector_backend,
+            detector=detector_backend,
             align=True,
             # expand_percentage=10,
             # target_size=None,

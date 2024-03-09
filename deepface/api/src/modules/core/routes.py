@@ -24,7 +24,7 @@ def represent():
         return {"message": "you must pass img_path input"}
 
     model_name = input_args.get("model_name", "VGG-Face")
-    detector_backend = input_args.get("detector_backend", "opencv")
+    detector_backend = input_args.get("detector_backend")
     align = input_args.get("align", True)
 
     obj = service.represent(
@@ -55,7 +55,7 @@ def verify():
         return {"message": "you must pass img2_path input"}
 
     model_name = input_args.get("model_name", "VGG-Face")
-    detector_backend = input_args.get("detector_backend", "opencv")
+    detector_backend = input_args.get("detector_backend")
     distance_metric = input_args.get("distance_metric", "cosine")
     align = input_args.get("align", True)
 
@@ -83,7 +83,7 @@ def analyze():
     if img_path is None:
         return {"message": "you must pass img_path input"}
 
-    detector_backend = input_args.get("detector_backend", "opencv")
+    detector_backend = input_args.get("detector_backend")
     align = input_args.get("align", True)
     actions = input_args.get("actions", ["age", "gender", "emotion", "race"])
 

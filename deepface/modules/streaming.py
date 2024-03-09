@@ -12,6 +12,7 @@ from cv2.typing import MatLike
 import pandas
 
 from deepface import DeepFace
+from deepface.core.detector import Detector
 from deepface.models.FacialRecognition import FacialRecognition
 from deepface.commons.logger import Logger
 
@@ -71,7 +72,7 @@ class Stream(threading.Thread):
 def analysis(
     db_path: str,
     model_name: str = "VGG-Face",
-    detector: str = "opencv",
+    detector: Optional[str] = None,
     distance_metric: str = "cosine",
     analyzers: Optional[List[str]] = None,
     source: Union[str, int] = int(0),
@@ -86,6 +87,8 @@ def analysis(
     )  # In range [1, 10] positive
     valid_frames_count = max(1, min(valid_frames_count, 5))  # In range [1, 5] positive
     faces_count_threshold = max(1, faces_count_threshold)  # In range [1, inf] positive
+
+    detector = Detector.instance(detector)
 
     # Constants
     capture_window_title: str = "Capture"
@@ -114,7 +117,7 @@ def analysis(
         img_path=numpy.zeros(target_size),
         db_path=db_path,
         model_name=model_name,
-        detector_backend=detector,
+        detector=detector,
         distance_metric=distance_metric,
     )
     # -----------------------
@@ -164,7 +167,7 @@ def analysis(
                 frame=captured_frame,
                 target_size=target_size,
                 faces_count_threshold=faces_count_threshold,
-                detector_backend=detector,
+                detector=detector,
                 good_captures=good_captures,
                 display_window_title=capture_window_title,
             )
@@ -268,15 +271,15 @@ def __process_frame(
     frame: MatLike,
     target_size: Tuple[int, int],
     faces_count_threshold: int,
-    detector_backend: str,
     good_captures: List[Tuple[MatLike, List[Dict[str, Any]]]],
     display_window_title: str,
+    detector: Optional[Union[str, Detector]] = None,
 ):
     try:
         extracted_faces = DeepFace.detect_faces(
             img_path=frame,
             target_size=target_size,
-            detector_backend=detector_backend,
+            detector=detector,
             align=False,  # Do not align the detected face
         )
 
@@ -387,7 +390,7 @@ def __get_face_matches(
         img_path=face,
         db_path=db_path,
         model_name=model_name,
-        detector_backend="donotdetect",  # Skip detection, we already have the face
+        detector="donotdetect",  # Skip detection, we already have the face
         distance_metric=distance_metric,
     )
     return matching_results
@@ -415,7 +418,7 @@ def __process_matches(
     try:
         matching_faces = DeepFace.detect_faces(
             img_path=matching_identity,
-            detector_backend=detector_backend,
+            detector=detector_backend,
             align=False,
         )
         if len(matching_faces) == 0:

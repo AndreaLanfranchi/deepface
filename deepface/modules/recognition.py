@@ -23,11 +23,11 @@ def find(
     db_path: str,
     model_name: str = "VGG-Face",
     distance_metric: str = "cosine",
-    detector_backend: str = "opencv",
+    detector: Optional[str] = None,
     align: bool = True,
     expand_percentage: int = 0,
     threshold: Optional[float] = None,
-    normalization: str = "base"
+    normalization: str = "base",
 ) -> List[pandas.DataFrame]:
     """
     Identify individuals in a database
@@ -147,7 +147,7 @@ def find(
             employees=new_images,
             model_name=model_name,
             target_size=target_size,
-            detector_backend=detector_backend,
+            detector=detector,
             align=align,
             normalization=normalization
         ) # add new images
@@ -175,7 +175,7 @@ def find(
         source_objs = detection.detect_faces(
             source=img_path,
             target_size=target_size,
-            detector=detector_backend,
+            detector=detector,
             grayscale=False,
             align=align,
             expand_percentage=expand_percentage,
@@ -195,14 +195,13 @@ def find(
     else:
         raise NotImplementedError("Invalid distance_metric passed : ", distance_metric)
 
-
     for source_obj in source_objs:
         source_img = source_obj["face"]
         source_region = source_obj["facial_area"]
         target_embedding_obj = representation.represent(
             img_path=source_img,
             model_name=model_name,
-            detector_backend="donotdetect",
+            detector="donotdetect",
             align=align,
             normalization=normalization,
         )
@@ -233,7 +232,6 @@ def find(
 
             distances.append(distance_fn(source_representation, target_representation))
 
-
         target_threshold = threshold or verification.find_threshold(model_name, distance_metric)
 
         result_df["threshold"] = target_threshold
@@ -244,7 +242,6 @@ def find(
         result_df = result_df.sort_values(by=["distance"], ascending=True).reset_index(drop=True)
 
         resp_obj.append(result_df)
-
 
     logger.debug(f"find function duration {(time.time() - tic):0.5f} seconds")
     return resp_obj
@@ -274,14 +271,15 @@ def _list_image_files(path: str) -> Set[str]:
 
     return results
 
+
 def _find_bulk_embeddings(
     employees: List[str],
     model_name: str = "VGG-Face",
     target_size: tuple = (224, 224),
-    detector_backend: str = "opencv",
+    detector: Optional[str] = None,
     align: bool = True,
     expand_percentage: int = 0,
-    normalization: str = "base"
+    normalization: str = "base",
 ):
     """
     Find embeddings of a list of images
@@ -316,7 +314,7 @@ def _find_bulk_embeddings(
             img_objs = detection.detect_faces(
                 source=employee,
                 target_size=target_size,
-                detector=detector_backend,
+                detector=detector,
                 grayscale=False,
                 align=align,
                 expand_percentage=expand_percentage,
@@ -337,7 +335,7 @@ def _find_bulk_embeddings(
                 embedding_obj = representation.represent(
                     img_path=img_content,
                     model_name=model_name,
-                    detector_backend="donotdetect",
+                    detector="donotdetect",
                     align=align,
                     normalization=normalization,
                 )

@@ -56,7 +56,7 @@ def test_find_with_extracted_faces():
     img_path = os.path.join("dataset","img1.jpg")
     face_objs = DeepFace.detect_faces(img_path)
     img = face_objs[0]["face"]
-    dfs = DeepFace.find(img, db_path="dataset", detector_backend="donotdetect")
+    dfs = DeepFace.find(img, db_path="dataset", detector="donotdetect")
     assert len(dfs) > 0
     for df in dfs:
         assert isinstance(df, pandas.DataFrame)

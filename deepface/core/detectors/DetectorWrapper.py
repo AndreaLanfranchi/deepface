@@ -1,5 +1,5 @@
 # built-in dependencies
-from typing import List, Tuple, Union
+from typing import List, Optional, Tuple, Union
 
 # 3rd party dependencies
 import numpy
@@ -14,7 +14,7 @@ logger = Logger.get_instance()
 
 def detect_faces(
     source: Union[str, numpy.ndarray],
-    detector: Union[str, Detector] = "opencv",
+    detector: Optional[Union[str, Detector]] = None,
     align: bool = True,
     expand_percentage: int = 0,
 ) -> List[DetectedFace]:
@@ -45,8 +45,13 @@ def detect_faces(
     """
 
     # Validation
-    if isinstance(detector, str):
+    if detector is None:
+        detector = Detector.instance(Detector.default_detector())
+    elif isinstance(detector, str):
         detector = Detector.instance(detector)
+    elif not isinstance(detector, Detector):
+        raise TypeError("Invalid 'detector' argument type")
+
     if isinstance(source, str):
         source, _ = preprocessing.load_image(source)
 

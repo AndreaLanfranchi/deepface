@@ -12,7 +12,6 @@ from deepface import DeepFace
 # Sample code to run the stream function using onboard camera
 DeepFace.stream(db_path="dataset",
                 model_name="VGG-Face",
-                detector="opencv",
                 faces_count_threshold = 2,
                 freeze_time_seconds = 3,
                 valid_frames_count = 3,

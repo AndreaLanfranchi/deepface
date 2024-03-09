@@ -1,6 +1,6 @@
 # built-in dependencies
 import time
-from typing import Any, Dict, Union
+from typing import Any, Dict, Optional, Union
 
 # 3rd party dependencies
 import numpy
@@ -14,7 +14,7 @@ def verify(
     img1_path: Union[str, numpy.ndarray],
     img2_path: Union[str, numpy.ndarray],
     model_name: str = "VGG-Face",
-    detector_backend: str = "opencv",
+    detector: Optional[str] = None,
     distance_metric: str = "cosine",
     align: bool = True,
     expand_percentage: int = 0,
@@ -85,7 +85,7 @@ def verify(
     img1_objs = detection.detect_faces(
         source=img1_path,
         target_size=target_size,
-        detector=detector_backend,
+        detector=detector,
         grayscale=False,
         align=align,
         expand_percentage=expand_percentage,
@@ -94,7 +94,7 @@ def verify(
     img2_objs = detection.detect_faces(
         source=img2_path,
         target_size=target_size,
-        detector=detector_backend,
+        detector=detector,
         grayscale=False,
         align=align,
         expand_percentage=expand_percentage,
@@ -121,7 +121,7 @@ def verify(
         img1_embedding_obj = representation.represent(
             img_path=img1_content,
             model_name=model_name,
-            detector_backend="donotdetect",
+            detector="donotdetect",
             align=align,
             normalization=normalization,
         )
@@ -134,7 +134,7 @@ def verify(
             img2_embedding_obj = representation.represent(
                 img_path=img2_content,
                 model_name=model_name,
-                detector_backend="donotdetect",
+                detector="donotdetect",
                 align=align,
                 normalization=normalization,
             )
@@ -155,7 +155,7 @@ def verify(
         "distance": distance,
         "threshold": threshold,
         "model": model_name,
-        "detector_backend": detector_backend,
+        "detector_backend": detector,
         "similarity_metric": distance_metric,
         "facial_areas": {"img1": facial_areas[0], "img2": facial_areas[1]},
         "time": round(time.time() - tic, 2),

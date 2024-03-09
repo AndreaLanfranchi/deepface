@@ -9,7 +9,7 @@ def represent(img_path, model_name, detector_backend, align):
         embedding_objs = DeepFace.represent(
             img_path=img_path,
             model_name=model_name,
-            detector_backend=detector_backend,
+            detector=detector_backend,
             align=align,
         )
         result["results"] = embedding_objs
@@ -26,7 +26,7 @@ def verify(
             img1_path=img1_path,
             img2_path=img2_path,
             model_name=model_name,
-            detector_backend=detector_backend,
+            detector=detector_backend,
             distance_metric=distance_metric,
             align=align
         )
@@ -41,7 +41,7 @@ def analyze(img_path, actions, detector_backend, align):
         demographies = DeepFace.analyze(
             img_path=img_path,
             attributes=actions,
-            detector_backend=detector_backend,
+            detector=detector_backend,
             align=align
         )
         result["results"] = demographies

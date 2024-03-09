@@ -9,7 +9,7 @@ detectors = ["opencv", "mtcnn"]
 
 def test_different_detectors():
     for detector in detectors:
-        img_objs = DeepFace.detect_faces(img_path="dataset/img11.jpg", detector_backend=detector)
+        img_objs = DeepFace.detect_faces(img_path="dataset/img11.jpg", detector=detector)
         for img_obj in img_objs:
             assert "face" in img_obj.keys()
             assert "facial_area" in img_obj.keys()
@@ -29,7 +29,7 @@ def test_backends_for_enforced_detection_with_non_facial_inputs():
     black_img = numpy.zeros([224, 224, 3])
     for detector in detectors:
         with pytest.raises(ValueError):
-            _ = DeepFace.detect_faces(img_path=black_img, detector_backend=detector)
+            _ = DeepFace.detect_faces(img_path=black_img, detector=detector)
     logger.info("✅ detect_faces for enforced detection and non-facial image test is done")
 
 
@@ -37,7 +37,7 @@ def test_backends_for_not_enforced_detection_with_non_facial_inputs():
     black_img = numpy.zeros([224, 224, 3])
     for detector in detectors:
         objs = DeepFace.detect_faces(
-            img_path=black_img, detector_backend=detector
+            img_path=black_img, detector=detector
         )
         assert objs[0]["face"].shape == (224, 224, 3)
     logger.info("✅ detect_faces for not enforced detection and non-facial image test is done")

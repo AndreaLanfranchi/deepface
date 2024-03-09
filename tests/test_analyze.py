@@ -112,7 +112,7 @@ def test_analyze_for_different_detectors():
                 image,
                 attributes="gender",
                 attributes_details=True,
-                detector_backend=detector,
+                detector=detector,
             )
             for result in results:
                 logger.debug(result)

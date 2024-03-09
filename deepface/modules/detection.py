@@ -24,7 +24,7 @@ elif tf_major_version == 2:
 
 def detect_faces(
     source: Union[str, numpy.ndarray],
-    detector: Union[str, Detector] = "opencv",
+    detector: Optional[Union[str, Detector]] = None,
     target_size: Optional[Tuple[int, int]] = None,
     align: bool = True,
     expand_percentage: int = 0,

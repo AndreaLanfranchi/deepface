@@ -47,6 +47,31 @@ class Detector(ABC):
         return "<undefined>" if self._name is None else self._name
 
     @staticmethod
+    def get_available_detectors() -> List[str]:
+        """
+        Get the names of the available face detectors.
+
+        Returns:
+            A list of strings representing the names of the available face detectors.
+        """
+        global available_detectors
+        if not "available_detectors" in globals():
+            available_detectors = reflection.get_derived_classes(
+                package=detectors, base_class=Detector
+            )
+        return list(available_detectors.keys())
+
+    @staticmethod
+    def default_detector() -> str:
+        """
+        Get the default face detector name.
+
+        Returns:
+            The name of the default face detector.
+        """
+        return "opencv"
+
+    @staticmethod
     def instance(name: str, singleton: bool = True) -> "Detector":
         """
         `Detector` factory method.
@@ -75,7 +100,7 @@ class Detector(ABC):
 
         name = name.lower().strip()
         if len(name) == 0:
-            raise KeyError("Empty detector name")
+            name = Detector.default_detector()
 
         global detectors_instances  # singleton design pattern
         if not "detectors_instances" in globals():

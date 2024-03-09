@@ -71,7 +71,7 @@ def test_different_facial_recognition_models():
 
 def test_different_face_detectors():
     for detector in detectors:
-        res = DeepFace.verify("dataset/img1.jpg", "dataset/img2.jpg", detector_backend=detector)
+        res = DeepFace.verify("dataset/img1.jpg", "dataset/img2.jpg", detector=detector)
         assert isinstance(res, dict)
         assert "verified" in res.keys()
         assert res["verified"] in [True, False]

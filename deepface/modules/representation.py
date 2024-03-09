@@ -1,5 +1,5 @@
 # built-in dependencies
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, Optional, List, Union
 
 # 3rd party dependencies
 import numpy
@@ -13,7 +13,7 @@ from deepface.models.FacialRecognition import FacialRecognition
 def represent(
     img_path: Union[str, numpy.ndarray],
     model_name: str = "VGG-Face",
-    detector_backend: str = "opencv",
+    detector: Optional[str] = None,
     align: bool = True,
     expand_percentage: int = 0,
     normalization: str = "base",
@@ -60,11 +60,11 @@ def represent(
     # ---------------------------------
     # we have run pre-process in verification. so, this can be skipped if it is coming from verify.
     target_size = model.input_shape
-    if detector_backend != "donotdetect":
+    if detector != "donotdetect":
         img_objs = detection.detect_faces(
             source=img_path,
             target_size=(target_size[1], target_size[0]),
-            detector=detector_backend,
+            detector=detector,
             grayscale=False,
             align=align,
             expand_percentage=expand_percentage,

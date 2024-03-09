@@ -17,7 +17,7 @@ def analyze(
     img_path: Union[str, numpy.ndarray],
     attributes: Optional[Union[tuple, list]] = None,
     attributes_details: bool = False,
-    detector_backend: str = "opencv",
+    detector: Optional[str] = None,
     align: bool = True,
     expand_percentage: int = 0,
 ) -> List[Dict[str, Any]]:
@@ -97,7 +97,7 @@ def analyze(
     detected_faces = detection.detect_faces(
         source=img_path,
         target_size=(224, 224),
-        detector=detector_backend,
+        detector=detector,
         grayscale=False,
         align=align,
         expand_percentage=expand_percentage,
