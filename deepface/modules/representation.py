@@ -7,7 +7,7 @@ import cv2
 
 # project dependencies
 from deepface.modules import modeling, detection, preprocessing
-from deepface.models.FacialRecognition import Decomposer
+from deepface.models.decomposer import Decomposer
 
 
 def represent(

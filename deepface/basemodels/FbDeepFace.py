@@ -5,7 +5,7 @@ import gdown
 import numpy
 from deepface.commons import package_utils, folder_utils
 from deepface.commons.logger import Logger
-from deepface.models.FacialRecognition import Decomposer
+from deepface.models.decomposer import Decomposer
 
 logger = Logger.get_instance()
 

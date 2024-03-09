@@ -7,7 +7,7 @@ import numpy
 
 # project dependencies
 from deepface.modules import representation, detection, modeling
-from deepface.models.FacialRecognition import Decomposer
+from deepface.models.decomposer import Decomposer
 
 
 def verify(
