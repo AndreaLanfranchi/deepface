@@ -88,7 +88,8 @@ def find(
         raise ValueError(f"{db_path} does not exist or is not a directory.")
 
     model: Decomposer = Decomposer.instance(decomposer)
-    target_size = model.input_shape
+    # target_size = model.input_shape
+    target_size = None
 
     # ---------------------------------------
 

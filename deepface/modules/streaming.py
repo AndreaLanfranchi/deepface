@@ -114,7 +114,7 @@ def analysis(
     # -----------------------
     # call a dummy find function for db_path once to create embeddings in the initialization
     _ = DeepFace.find(
-        img_path=numpy.zeros(target_size, dtype=numpy.uint8),
+        img_path=numpy.zeros((10,10), dtype=numpy.uint8),
         db_path=db_path,
         decomposer=decomposer,
         detector=detector,

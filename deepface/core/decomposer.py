@@ -6,6 +6,7 @@ import numpy
 from deepface import basemodels
 from deepface.commons import package_utils
 from deepface.core import reflection
+from deepface.core.types import BoxDimensions
 from deepface.commons.logger import Logger
 
 logger = Logger.get_instance()
@@ -16,15 +17,13 @@ if tf_version == 2:
 else:
     from keras.models import Model
 
+
 # Abstract class all specialized face decomposers must inherit from.
 class Decomposer(ABC):
 
-    _name: Optional[str] = None  # Must be filled by specialized classes
-
-    model: Union[Model, Any]
-    model_name: str
-    input_shape: Tuple[int, int]
-    output_shape: int
+    _name: Optional[str] = None
+    _input_shape: Optional[BoxDimensions] = None
+    _output_shape: Optional[int] = None
 
     @abstractmethod
     def process(self, img: numpy.ndarray) -> List[float]:
@@ -39,6 +38,10 @@ class Decomposer(ABC):
         ):
             return "<undefined>"
         return self._name
+
+    @property
+    def input_shape(self) -> BoxDimensions:
+        return self._input_shape
 
     @staticmethod
     def get_available_decomposers() -> List[str]:

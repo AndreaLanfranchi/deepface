@@ -91,8 +91,8 @@ def detect_faces(
 
         # resize and padding
         if target_size is not None:
-            factor_0 = target_size[0] / current_img.shape[0]
-            factor_1 = target_size[1] / current_img.shape[1]
+            factor_0 = target_size.height / current_img.shape[0]
+            factor_1 = target_size.width / current_img.shape[1]
             factor = min(factor_0, factor_1)
 
             dsize = (
@@ -101,8 +101,8 @@ def detect_faces(
             )
             current_img = cv2.resize(current_img, dsize)
 
-            diff_0 = target_size[0] - current_img.shape[0]
-            diff_1 = target_size[1] - current_img.shape[1]
+            diff_0 = target_size.height - current_img.shape[0]
+            diff_1 = target_size.width - current_img.shape[1]
             if grayscale is False:
                 # Put the base image in the middle of the padded image
                 current_img = numpy.pad(

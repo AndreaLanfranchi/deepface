@@ -76,7 +76,7 @@ def represent(
         if len(img.shape) == 4:
             img = img[0]  # e.g. (1, 224, 224, 3) to (224, 224, 3)
         if len(img.shape) == 3:
-            img = cv2.resize(img, target_size)
+            img = cv2.resize(img, (target_size.width, target_size.height))
             img = numpy.expand_dims(img, axis=0)
             # when called from verify, this is already normalized. But needed when user given.
             if img.max() > 1:

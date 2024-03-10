@@ -5,6 +5,7 @@ import numpy
 from deepface.commons import package_utils, folder_utils
 from deepface.commons.logger import Logger
 from deepface.core.decomposer import Decomposer
+from deepface.core.types import BoxDimensions
 
 logger = Logger.get_instance()
 
@@ -35,6 +36,7 @@ else:
         Dropout,
     )
 
+
 # pylint: disable=too-few-public-methods
 class DeepIdClient(Decomposer):
     """
@@ -43,9 +45,9 @@ class DeepIdClient(Decomposer):
 
     def __init__(self):
         self._name = str(__name__.rsplit(".", maxsplit=1)[-1])
-        self.input_shape = (47, 55)
-        self.output_shape = 160
-        self.model = self.__load_model()
+        self._input_shape = BoxDimensions(width=47, height=55)
+        self._output_shape = 160
+        self._initialize()
 
     def process(self, img: numpy.ndarray) -> List[float]:
         """
@@ -57,14 +59,11 @@ class DeepIdClient(Decomposer):
         """
         # model.predict causes memory issue when it is called in a for loop
         # embedding = model.predict(img, verbose=0)[0].tolist()
-        return self.model(img, training=False).numpy()[0].tolist()
+        return self._model(img, training=False).numpy()[0].tolist()
 
-    def __load_model(self) -> Model:
-        """
-        Construct DeepId model, download its weights and load
-        """
+    def _initialize(self):
 
-        myInput = Input(shape=(self.input_shape[1], self.input_shape[0], 3))
+        myInput = Input(shape=(self._input_shape.height, self._input_shape.width, 3))
 
         x = Conv2D(
             20, (4, 4), name="Conv1", activation="relu", input_shape=(55, 47, 3)
@@ -90,7 +89,7 @@ class DeepIdClient(Decomposer):
         y = Add()([fc11, fc12])
         y = Activation("relu", name="deepid")(y)
 
-        model = Model(inputs=[myInput], outputs=y)
+        self._model = Model(inputs=[myInput], outputs=y)
 
         # ---------------------------------
 
@@ -106,6 +105,4 @@ class DeepIdClient(Decomposer):
             logger.info(f"Download : {file_name}")
             gdown.download(url, output, quiet=False)
 
-        model.load_weights(output)
-
-        return model
+        self._model.load_weights(output)

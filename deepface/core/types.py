@@ -1,4 +1,5 @@
-from typing import Optional, Union
+from typing import Optional
+from dataclasses import dataclass
 from ctypes import (
     c_uint32 as uint32_t,
 )
@@ -7,38 +8,28 @@ import numpy
 
 from cv2.typing import MatLike
 
+@dataclass
 class RangeInt:
     """
-    This class is used to represent a range of integers as [start, end]
+    Represents a range of integers as [start, end]
     """
+    start: uint32_t = 0
+    end: uint32_t = 0
 
     def __init__(self, start: uint32_t, end: uint32_t):
         self.start = max(start, 0)
         self.end = max(end, 0)
         self.end = max(self.end, self.start)
 
-    def __str__(self):
-        return f"RangeInt(start={self.start}, end={self.end})"
-
-    def __repr__(self):
-        return self.__str__()
-
-
+@dataclass
 class Point:
-    """
-    This class is used to represent a point in a 2D space
-    """
+    x: uint32_t = 0
+    y: uint32_t = 0
 
-    def __init__(self, x: uint32_t, y: uint32_t):
-        self.x = x
-        self.y = y
-
-    def __str__(self):
-        return f"Point(x={self.x}, y={self.y})"
-
-    def __repr__(self):
-        return self.__str__()
-
+@dataclass
+class BoxDimensions:
+    width: uint32_t = 0
+    height: uint32_t = 0
 
 class InPictureFace:
     """
