@@ -22,16 +22,7 @@ class DlibClient(Decomposer):
         self._initialize()
 
     def process(self, img: numpy.ndarray) -> List[float]:
-        """
-        find embeddings with Dlib model - different than regular models
-        Args:
-            img (numpy.ndarray): pre-loaded image in BGR
-        Returns
-            embeddings (list): multi-dimensional vector
-        """
-        # return self.model.predict(img)[0].tolist()
 
-        # detect_faces returns 4 dimensional images
         if len(img.shape) == 4:
             img = img[0]
 
@@ -59,20 +50,20 @@ class DlibClient(Decomposer):
             ) from e
 
         file_name: str = "dlib_face_recognition_resnet_model_v1.dat"
-        url: str = f"http://dlib.net/files/{file_name}.bz2"
         output: str = os.path.join(folder_utils.get_weights_dir(), file_name)
 
         # download pre-trained model if it does not exist
         if os.path.isfile(output) != True:
 
             logger.info(f"Download : {file_name}")
+            
+            compressed_file_name: str = f"{file_name}.bz2"
+            compressed_output = os.path.join(folder_utils.get_weights_dir(), compressed_file_name)
+            url: str = f"http://dlib.net/files/{compressed_file_name}"
 
-            compressed_output = f"{output}.bz2"
             gdown.download(url, compressed_output, quiet=False)
-
             with bz2.BZ2File(compressed_output, "rb") as fr, open(output, "wb") as fw:
                 shutil.copyfileobj(fr, fw)
             os.remove(compressed_output)
-
 
         self._model = dlib.face_recognition_model_v1(output)
