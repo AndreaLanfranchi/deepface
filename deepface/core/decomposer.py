@@ -41,7 +41,13 @@ class Decomposer(ABC):
 
     @property
     def input_shape(self) -> BoxDimensions:
+        assert isinstance(self._input_shape, BoxDimensions)
         return self._input_shape
+
+    @property
+    def output_shape(self) -> int:
+        assert isinstance(self._output_shape, int)
+        return self._output_shape
 
     @staticmethod
     def get_available_decomposers() -> List[str]:
