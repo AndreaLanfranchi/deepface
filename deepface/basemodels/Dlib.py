@@ -50,20 +50,16 @@ class DlibClient(Decomposer):
             ) from e
 
         file_name: str = "dlib_face_recognition_resnet_model_v1.dat"
-        output: str = os.path.join(folder_utils.get_weights_dir(), file_name)
-
-        # download pre-trained model if it does not exist
-        if os.path.isfile(output) != True:
-
+        weight_file: str = os.path.join(folder_utils.get_weights_dir(), file_name)
+        if os.path.isfile(weight_file) != True:
             logger.info(f"Download : {file_name}")
             
             compressed_file_name: str = f"{file_name}.bz2"
             compressed_output = os.path.join(folder_utils.get_weights_dir(), compressed_file_name)
             url: str = f"http://dlib.net/files/{compressed_file_name}"
-
             gdown.download(url, compressed_output, quiet=False)
-            with bz2.BZ2File(compressed_output, "rb") as fr, open(output, "wb") as fw:
+            with bz2.BZ2File(compressed_output, "rb") as fr, open(weight_file, "wb") as fw:
                 shutil.copyfileobj(fr, fw)
             os.remove(compressed_output)
 
-        self._model = dlib.face_recognition_model_v1(output)
+        self._model = dlib.face_recognition_model_v1(weight_file)

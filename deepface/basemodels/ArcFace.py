@@ -55,6 +55,15 @@ class ArcFaceClient(Decomposer):
 
     def _initialize(self):
 
+        file_name: str = "arcface_weights.h5"
+        weight_file: str = os.path.join(folder_utils.get_weights_dir(), file_name)
+        if os.path.isfile(weight_file) != True:
+            logger.info(f"Download : {file_name}")
+
+            url = "https://github.com/serengil/deepface_models/releases/"
+            url += f"download/v1.0/{file_name}"
+            gdown.download(url, weight_file, quiet=False)
+
         self._base_model = self._ResNet34()
         inputs = self._base_model.inputs[0] if self._base_model.inputs else None
         arcface_model = (
@@ -74,23 +83,7 @@ class ArcFaceClient(Decomposer):
         )(arcface_model)
 
         self._model = Model(inputs, embedding, name=self._base_model.name)
-
-        # ---------------------------------------
-        # check the availability of pre-trained weights
-
-        file_name: str = "arcface_weights.h5"
-        url: str = (
-            f"https://github.com/serengil/deepface_models/releases/download/v1.0/{file_name}",
-        )
-        output: str = os.path.join(folder_utils.get_weights_dir(), file_name)
-
-        if os.path.isfile(output) != True:
-            logger.info(f"Download : {file_name}")
-            gdown.download(url, output, quiet=False)
-
-        # ---------------------------------------
-
-        self._model.load_weights(output)
+        self._model.load_weights(weight_file)
 
     def _ResNet34(self) -> Model:
         """

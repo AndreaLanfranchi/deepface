@@ -39,9 +39,6 @@ else:
 
 # pylint: disable=too-few-public-methods
 class DeepIdClient(Decomposer):
-    """
-    DeepId model class
-    """
 
     def __init__(self):
         self._name = str(__name__.rsplit(".", maxsplit=1)[-1])
@@ -50,18 +47,18 @@ class DeepIdClient(Decomposer):
         self._initialize()
 
     def process(self, img: numpy.ndarray) -> List[float]:
-        """
-        find embeddings with DeepId model
-        Args:
-            img (np.ndarray): pre-loaded image in BGR
-        Returns
-            embeddings (list): multi-dimensional vector
-        """
-        # model.predict causes memory issue when it is called in a for loop
-        # embedding = model.predict(img, verbose=0)[0].tolist()
         return self._model(img, training=False).numpy()[0].tolist()
 
     def _initialize(self):
+
+        file_name: str = "deepid_keras_weights.h5"
+        weight_file = os.path.join(folder_utils.get_weights_dir(), file_name)
+        if os.path.isfile(weight_file) != True:
+            logger.info(f"Download : {file_name}")
+
+            url = "https://github.com/serengil/deepface_models/releases/"
+            url += f"download/v1.0/{file_name}"
+            gdown.download(url, weight_file, quiet=False)
 
         myInput = Input(shape=(self._input_shape.height, self._input_shape.width, 3))
 
@@ -90,19 +87,4 @@ class DeepIdClient(Decomposer):
         y = Activation("relu", name="deepid")(y)
 
         self._model = Model(inputs=[myInput], outputs=y)
-
-        # ---------------------------------
-
-        file_name: str = "deepid_keras_weights.h5"
-        # pylint: disable=line-too-long
-        url: str = (
-            f"https://github.com/serengil/deepface_models/releases/download/v1.0/{file_name}"
-        )
-        # pylint: enable=line-too-long
-        output = os.path.join(folder_utils.get_weights_dir(), file_name)
-
-        if os.path.isfile(output) != True:
-            logger.info(f"Download : {file_name}")
-            gdown.download(url, output, quiet=False)
-
-        self._model.load_weights(output)
+        self._model.load_weights(weight_file)

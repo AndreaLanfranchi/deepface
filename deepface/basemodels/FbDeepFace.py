@@ -60,7 +60,7 @@ class DeepFaceClient(Decomposer):
         """
         # model.predict causes memory issue when it is called in a for loop
         # embedding = model.predict(img, verbose=0)[0].tolist()
-        return self.model(img, training=False).numpy()[0].tolist()
+        return self._model(img, training=False).numpy()[0].tolist()
 
 
 def load_model(
