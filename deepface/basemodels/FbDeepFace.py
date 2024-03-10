@@ -6,6 +6,7 @@ import numpy
 from deepface.commons import package_utils, folder_utils
 from deepface.commons.logger import Logger
 from deepface.core.decomposer import Decomposer
+from deepface.core.types import BoxDimensions
 
 logger = Logger.get_instance()
 
@@ -45,9 +46,9 @@ class DeepFaceClient(Decomposer):
 
     def __init__(self):
         self._name = str(__name__.rsplit(".", maxsplit=1)[-1])
-        self.model = load_model()
-        self.input_shape = (152, 152)
-        self.output_shape = 4096
+        self._input_shape = BoxDimensions(152, 152)
+        self._output_shape = 4096
+        self._model = load_model()
 
     def process(self, img: numpy.ndarray) -> List[float]:
         """

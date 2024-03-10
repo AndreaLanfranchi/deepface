@@ -46,7 +46,7 @@ class VggFaceClient(Decomposer):
     def __init__(self):
         self._name = str(__name__.rsplit(".", maxsplit=1)[-1])
         self._input_shape = BoxDimensions(224, 224)
-        self.output_shape = 4096
+        self._output_shape = 4096
         self._initialize()
 
     def process(self, img: numpy.ndarray) -> List[float]:

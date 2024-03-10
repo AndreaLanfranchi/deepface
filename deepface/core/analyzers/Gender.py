@@ -1,19 +1,15 @@
 from typing import Dict, Union
+
 import os
 import gdown
 import numpy
-from deepface.basemodels import VGGFace
+
 from deepface.commons import package_utils, folder_utils
 from deepface.commons.logger import Logger
 from deepface.core.analyzer import Analyzer as AnalyzerBase
 from deepface.core.decomposer import Decomposer
 
 logger = Logger.get_instance()
-
-# -------------------------------------
-# pylint: disable=line-too-long
-# -------------------------------------
-# dependency configurations
 
 tf_version = package_utils.get_tf_major_version()
 if tf_version == 1:
@@ -22,8 +18,6 @@ if tf_version == 1:
 else:
     from tensorflow.keras.models import Model, Sequential
     from tensorflow.keras.layers import Convolution2D, Flatten, Activation
-# -------------------------------------
-
 
 # pylint: disable=too-few-public-methods
 class Analyzer(AnalyzerBase):
