@@ -82,8 +82,17 @@ class Analyzer(AnalyzerBase):
 
     def __initialize(self) -> Sequential:
 
-        num_classes = 7
+        file_name = "facial_expression_model_weights.h5"
+        weight_file = os.path.join(folder_utils.get_weights_dir(), file_name)
 
+        if os.path.isfile(weight_file) != True:
+            logger.info(f"Download : {file_name}")
+
+            url = "https://github.com/serengil/deepface_models/releases/"
+            url += f"download/v1.0/{file_name}"
+            gdown.download(url, weight_file, quiet=False)
+
+        num_classes = 7
         self._model = Sequential()
 
         # 1st convolution layer
@@ -109,15 +118,4 @@ class Analyzer(AnalyzerBase):
         self._model.add(Dropout(0.2))
 
         self._model.add(Dense(num_classes, activation="softmax"))
-
-        file_name = "facial_expression_model_weights.h5"
-        url = (
-            f"https://github.com/serengil/deepface_models/releases/download/v1.0/{file_name}",
-        )
-        output = os.path.join(folder_utils.get_weights_dir(), file_name)
-
-        if os.path.isfile(output) != True:
-            logger.info(f"Download : {file_name}")
-            gdown.download(url, output, quiet=False)
-
-        self._model.load_weights(output)
+        self._model.load_weights(weight_file)

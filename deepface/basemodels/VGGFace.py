@@ -3,6 +3,7 @@ import os
 import gdown
 import numpy
 from deepface.commons import package_utils, folder_utils
+from deepface.core.types import BoxDimensions
 from deepface.modules import verification
 from deepface.core.decomposer import Decomposer
 from deepface.commons.logger import Logger
@@ -44,9 +45,9 @@ class VggFaceClient(Decomposer):
 
     def __init__(self):
         self._name = str(__name__.rsplit(".", maxsplit=1)[-1])
-        self.model = load_model()
-        self.input_shape = (224, 224)
+        self._input_shape = BoxDimensions(224, 224)
         self.output_shape = 4096
+        self._initialize()
 
     def process(self, img: numpy.ndarray) -> List[float]:
         """
@@ -60,98 +61,87 @@ class VggFaceClient(Decomposer):
         # embedding = model.predict(img, verbose=0)[0].tolist()
         # having normalization layer in descriptor troubles for some gpu users (e.g. issue 957, 966)
         # instead we are now calculating it with traditional way not with keras backend
-        embedding = self.model(img, training=False).numpy()[0].tolist()
+        embedding = self._model(img, training=False).numpy()[0].tolist()
         embedding = verification.l2_normalize(embedding)
         return embedding.tolist()
 
+    def _initialize(self):
 
-def base_model() -> Sequential:
-    """
-    Base model of VGG-Face being used for classification - not to find embeddings
-    Returns:
-        model (Sequential): model was trained to classify 2622 identities
-    """
-    model = Sequential()
-    model.add(ZeroPadding2D((1, 1), input_shape=(224, 224, 3)))
-    model.add(Convolution2D(64, (3, 3), activation="relu"))
-    model.add(ZeroPadding2D((1, 1)))
-    model.add(Convolution2D(64, (3, 3), activation="relu"))
-    model.add(MaxPooling2D((2, 2), strides=(2, 2)))
+        file_name = "vgg_face_weights.h5"
+        output = os.path.join(folder_utils.get_weights_dir(), file_name)
 
-    model.add(ZeroPadding2D((1, 1)))
-    model.add(Convolution2D(128, (3, 3), activation="relu"))
-    model.add(ZeroPadding2D((1, 1)))
-    model.add(Convolution2D(128, (3, 3), activation="relu"))
-    model.add(MaxPooling2D((2, 2), strides=(2, 2)))
+        if os.path.isfile(output) != True:
+            logger.info(f"Download : {file_name}")
+            url = "https://github.com/serengil/deepface_models/"
+            url += f"releases/download/v1.0/{file_name}"
+            gdown.download(url, output, quiet=False)
 
-    model.add(ZeroPadding2D((1, 1)))
-    model.add(Convolution2D(256, (3, 3), activation="relu"))
-    model.add(ZeroPadding2D((1, 1)))
-    model.add(Convolution2D(256, (3, 3), activation="relu"))
-    model.add(ZeroPadding2D((1, 1)))
-    model.add(Convolution2D(256, (3, 3), activation="relu"))
-    model.add(MaxPooling2D((2, 2), strides=(2, 2)))
+        base_model = self.base_model()
+        base_model.load_weights(output)
 
-    model.add(ZeroPadding2D((1, 1)))
-    model.add(Convolution2D(512, (3, 3), activation="relu"))
-    model.add(ZeroPadding2D((1, 1)))
-    model.add(Convolution2D(512, (3, 3), activation="relu"))
-    model.add(ZeroPadding2D((1, 1)))
-    model.add(Convolution2D(512, (3, 3), activation="relu"))
-    model.add(MaxPooling2D((2, 2), strides=(2, 2)))
+        # 2622d dimensional model
+        # vgg_face_descriptor = Model(inputs=model.layers[0].input, outputs=model.layers[-2].output)
 
-    model.add(ZeroPadding2D((1, 1)))
-    model.add(Convolution2D(512, (3, 3), activation="relu"))
-    model.add(ZeroPadding2D((1, 1)))
-    model.add(Convolution2D(512, (3, 3), activation="relu"))
-    model.add(ZeroPadding2D((1, 1)))
-    model.add(Convolution2D(512, (3, 3), activation="relu"))
-    model.add(MaxPooling2D((2, 2), strides=(2, 2)))
+        # 4096 dimensional model offers 6% to 14% increasement on accuracy!
+        # - softmax causes underfitting
+        # - added normalization layer to avoid underfitting with euclidean
+        # as described here: https://github.com/serengil/deepface/issues/944
+        base_model_output = Sequential()
+        base_model_output = Flatten()(base_model.layers[-5].output)
+        # keras backend's l2 normalization layer troubles some gpu users (e.g. issue 957, 966)
+        # base_model_output = Lambda(lambda x: K.l2_normalize(x, axis=1), name="norm_layer")(
+        #     base_model_output
+        # )
+        self._model = Model(inputs=base_model.input, outputs=base_model_output)
 
-    model.add(Convolution2D(4096, (7, 7), activation="relu"))
-    model.add(Dropout(0.5))
-    model.add(Convolution2D(4096, (1, 1), activation="relu"))
-    model.add(Dropout(0.5))
-    model.add(Convolution2D(2622, (1, 1)))
-    model.add(Flatten())
-    model.add(Activation("softmax"))
+    def base_model(self) -> Sequential:
+        ret = Sequential()
+        ret.add(
+            ZeroPadding2D(
+                (1, 1), input_shape=(self.input_shape.width, self.input_shape.height, 3)
+            )
+        )
+        ret.add(Convolution2D(64, (3, 3), activation="relu"))
+        ret.add(ZeroPadding2D((1, 1)))
+        ret.add(Convolution2D(64, (3, 3), activation="relu"))
+        ret.add(MaxPooling2D((2, 2), strides=(2, 2)))
 
-    return model
+        ret.add(ZeroPadding2D((1, 1)))
+        ret.add(Convolution2D(128, (3, 3), activation="relu"))
+        ret.add(ZeroPadding2D((1, 1)))
+        ret.add(Convolution2D(128, (3, 3), activation="relu"))
+        ret.add(MaxPooling2D((2, 2), strides=(2, 2)))
 
+        ret.add(ZeroPadding2D((1, 1)))
+        ret.add(Convolution2D(256, (3, 3), activation="relu"))
+        ret.add(ZeroPadding2D((1, 1)))
+        ret.add(Convolution2D(256, (3, 3), activation="relu"))
+        ret.add(ZeroPadding2D((1, 1)))
+        ret.add(Convolution2D(256, (3, 3), activation="relu"))
+        ret.add(MaxPooling2D((2, 2), strides=(2, 2)))
 
-def load_model(
-    url="https://github.com/serengil/deepface_models/releases/download/v1.0/vgg_face_weights.h5",
-) -> Model:
-    """
-    Final VGG-Face model being used for finding embeddings
-    Returns:
-        model (Model): returning 4096 dimensional vectors
-    """
+        ret.add(ZeroPadding2D((1, 1)))
+        ret.add(Convolution2D(512, (3, 3), activation="relu"))
+        ret.add(ZeroPadding2D((1, 1)))
+        ret.add(Convolution2D(512, (3, 3), activation="relu"))
+        ret.add(ZeroPadding2D((1, 1)))
+        ret.add(Convolution2D(512, (3, 3), activation="relu"))
+        ret.add(MaxPooling2D((2, 2), strides=(2, 2)))
 
-    model = base_model()
+        ret.add(ZeroPadding2D((1, 1)))
+        ret.add(Convolution2D(512, (3, 3), activation="relu"))
+        ret.add(ZeroPadding2D((1, 1)))
+        ret.add(Convolution2D(512, (3, 3), activation="relu"))
+        ret.add(ZeroPadding2D((1, 1)))
+        ret.add(Convolution2D(512, (3, 3), activation="relu"))
+        ret.add(MaxPooling2D((2, 2), strides=(2, 2)))
 
-    file_name = "vgg_face_weights.h5"
-    output = os.path.join(folder_utils.get_weights_dir(), file_name)
+        ret.add(Convolution2D(self._output_shape, (7, 7), activation="relu"))
+        ret.add(Dropout(0.5))
+        ret.add(Convolution2D(self._output_shape, (1, 1), activation="relu"))
+        ret.add(Dropout(0.5))
+        ret.add(Convolution2D(2622, (1, 1)))
+        ret.add(Flatten())
+        ret.add(Activation("softmax"))
 
-    if os.path.isfile(output) != True:
-        logger.info(f"Download : {file_name}")
-        gdown.download(url, output, quiet=False)
-
-    model.load_weights(output)
-
-    # 2622d dimensional model
-    # vgg_face_descriptor = Model(inputs=model.layers[0].input, outputs=model.layers[-2].output)
-
-    # 4096 dimensional model offers 6% to 14% increasement on accuracy!
-    # - softmax causes underfitting
-    # - added normalization layer to avoid underfitting with euclidean
-    # as described here: https://github.com/serengil/deepface/issues/944
-    base_model_output = Sequential()
-    base_model_output = Flatten()(model.layers[-5].output)
-    # keras backend's l2 normalization layer troubles some gpu users (e.g. issue 957, 966)
-    # base_model_output = Lambda(lambda x: K.l2_normalize(x, axis=1), name="norm_layer")(
-    #     base_model_output
-    # )
-    vgg_face_descriptor = Model(inputs=model.input, outputs=base_model_output)
-
-    return vgg_face_descriptor
+        return ret

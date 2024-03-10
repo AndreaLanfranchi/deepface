@@ -6,6 +6,7 @@ from deepface.basemodels import VGGFace
 from deepface.commons import package_utils, folder_utils
 from deepface.commons.logger import Logger
 from deepface.core.analyzer import Analyzer as AnalyzerBase
+from deepface.core.decomposer import Decomposer
 
 logger = Logger.get_instance()
 
@@ -56,8 +57,18 @@ class Analyzer(AnalyzerBase):
 
     def __initialize(self) -> Model:
 
+        file_name = "gender_model_weights.h5"
+        weight_file = os.path.join(folder_utils.get_weights_dir(), file_name)
+
+        if os.path.isfile(weight_file) != True:
+            logger.info(f"Download : {file_name}")
+
+            url = "https://github.com/serengil/deepface_models/releases/"
+            url += f"download/v1.0/{file_name}"
+            gdown.download(url, weight_file, quiet=False)
+
         classes = 2  # TDOO: What is this magic number?
-        base_model = VGGFace.base_model()
+        base_model = Decomposer.instance().base_model()  # VGGFace.base_model()
         base_model_output = Sequential()
         base_model_output = Convolution2D(classes, (1, 1), name="predictions")(
             base_model.layers[-4].output
@@ -65,13 +76,4 @@ class Analyzer(AnalyzerBase):
         base_model_output = Flatten()(base_model_output)
         base_model_output = Activation("softmax")(base_model_output)
         self._model = Model(inputs=base_model.input, outputs=base_model_output)
-
-        file_name = "gender_model_weights.h5"
-        url = f"https://github.com/serengil/deepface_models/releases/download/v1.0/{file_name}"
-        output = os.path.join(folder_utils.get_weights_dir(), file_name)
-
-        if os.path.isfile(output) != True:
-            logger.info(f"Download : {file_name}")
-            gdown.download(url, output, quiet=False)
-
-        self._model.load_weights(output)
+        self._model.load_weights(weight_file)

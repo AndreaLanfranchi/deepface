@@ -43,9 +43,6 @@ else:
 
 # pylint: disable=too-few-public-methods
 class ArcFaceClient(Decomposer):
-    """
-    ArcFace model class
-    """
 
     def __init__(self):
         self._name = str(__name__.rsplit(".", maxsplit=1)[-1])
@@ -54,26 +51,15 @@ class ArcFaceClient(Decomposer):
         self._initialize()
 
     def process(self, img: numpy.ndarray) -> List[float]:
-        """
-        find embeddings with ArcFace model
-        Args:
-            img (np.ndarray): pre-loaded image in BGR
-        Returns
-            embeddings (list): multi-dimensional vector
-        """
-        # model.predict causes memory issue when it is called in a for loop
-        # embedding = model.predict(img, verbose=0)[0].tolist()
         return self._model(img, training=False).numpy()[0].tolist()
 
     def _initialize(self):
-        """
-        Construct ArcFace model, download its weights and load
-        Returns:
-            model (Model)
-        """
-        base_model = self._ResNet34()
-        inputs = base_model.inputs[0] if base_model.inputs else None
-        arcface_model = base_model.outputs[0] if base_model.outputs else None
+
+        self._base_model = self._ResNet34()
+        inputs = self._base_model.inputs[0] if self._base_model.inputs else None
+        arcface_model = (
+            self._base_model.outputs[0] if self._base_model.outputs else None
+        )
         arcface_model = BatchNormalization(momentum=0.9, epsilon=2e-5)(arcface_model)
         arcface_model = Dropout(0.4)(arcface_model)
         arcface_model = Flatten()(arcface_model)
@@ -87,7 +73,7 @@ class ArcFaceClient(Decomposer):
             momentum=0.9, epsilon=2e-5, name="embedding", scale=True
         )(arcface_model)
 
-        self._model = Model(inputs, embedding, name=base_model.name)
+        self._model = Model(inputs, embedding, name=self._base_model.name)
 
         # ---------------------------------------
         # check the availability of pre-trained weights

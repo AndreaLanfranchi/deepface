@@ -13,14 +13,15 @@ logger = Logger.get_instance()
 
 tf_version = package_utils.get_tf_major_version()
 if tf_version == 2:
-    from tensorflow.keras.models import Model
+    from tensorflow.keras.models import Model, Sequential
 else:
-    from keras.models import Model
+    from keras.models import Model, Sequential
 
 
 # Abstract class all specialized face decomposers must inherit from.
 class Decomposer(ABC):
 
+    _model: Optional[Union[Model, Sequential]] = None
     _name: Optional[str] = None
     _input_shape: Optional[BoxDimensions] = None
     _output_shape: Optional[int] = None
@@ -48,6 +49,11 @@ class Decomposer(ABC):
     def output_shape(self) -> int:
         assert isinstance(self._output_shape, int)
         return self._output_shape
+
+    @property
+    def model(self) -> Union[Model, Sequential]:
+        assert isinstance(self._model, (Model, Sequential))
+        return self._model
 
     @staticmethod
     def get_available_decomposers() -> List[str]:
