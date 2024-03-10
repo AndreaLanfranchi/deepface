@@ -15,8 +15,8 @@ class DlibClient(Decomposer):
     """
 
     def __init__(self):
+        self._name = str(__name__.rsplit(".", maxsplit=1)[-1])
         self.model = DlibResNet()
-        self.model_name = "Dlib"
         self.input_shape = (150, 150)
         self.output_shape = 128
 

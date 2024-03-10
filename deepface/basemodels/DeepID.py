@@ -42,7 +42,7 @@ class DeepIdClient(Decomposer):
     """
 
     def __init__(self):
-        self.model_name = "DeepId"
+        self._name = str(__name__.rsplit(".", maxsplit=1)[-1])
         self.input_shape = (47, 55)
         self.output_shape = 160
         self.model = self.__load_model()

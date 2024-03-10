@@ -92,7 +92,7 @@ def find(
 
     # ---------------------------------------
 
-    file_name = f"representations_{decomposer}.pkl"
+    file_name = f"representations_{model.name}.pkl"
     file_name = file_name.replace("-", "_").lower()
     datastore_path = os.path.join(db_path, file_name)
     representations = []
@@ -216,7 +216,7 @@ def find(
 
         distances = []
         for _, instance in df.iterrows():
-            source_representation = instance[f"{decomposer}_representation"]
+            source_representation = instance[f"{model.name}_representation"]
             if source_representation is None:
                 distances.append(float("inf")) # no representation for this image
                 continue
@@ -237,7 +237,7 @@ def find(
         result_df["threshold"] = target_threshold
         result_df["distance"] = distances
 
-        result_df = result_df.drop(columns=[f"{decomposer}_representation"])
+        result_df = result_df.drop(columns=[f"{model.name}_representation"])
         result_df = result_df[result_df["distance"] <= target_threshold]
         result_df = result_df.sort_values(by=["distance"], ascending=True).reset_index(drop=True)
 

@@ -23,9 +23,9 @@ class Detector(DetectorBase):
 
     def __init__(self):
         self._name = str(__name__.rsplit(".", maxsplit=1)[-1])
-        self.__initialize()
+        self._initialize()
 
-    def __initialize(self):
+    def _initialize(self):
         try:
             import dlib  # Lazy import.
 

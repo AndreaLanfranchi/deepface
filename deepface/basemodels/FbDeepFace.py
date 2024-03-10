@@ -44,8 +44,8 @@ class DeepFaceClient(Decomposer):
     """
 
     def __init__(self):
+        self._name = str(__name__.rsplit(".", maxsplit=1)[-1])
         self.model = load_model()
-        self.model_name = "DeepFace"
         self.input_shape = (152, 152)
         self.output_shape = 4096
 

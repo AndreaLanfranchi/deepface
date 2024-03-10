@@ -13,7 +13,6 @@ import pandas
 
 from deepface import DeepFace
 from deepface.core.detector import Detector
-from deepface.core.analyzer import Analyzer
 from deepface.core.decomposer import Decomposer
 from deepface.commons.logger import Logger
 

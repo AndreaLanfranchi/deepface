@@ -47,7 +47,7 @@ class ArcFaceClient(Decomposer):
     """
 
     def __init__(self):
-        self.model_name = "ArcFace"
+        self._name = str(__name__.rsplit(".", maxsplit=1)[-1])
         self.input_shape = (112, 112)
         self.output_shape = 512
         self.model = self.__load_model()

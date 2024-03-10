@@ -51,8 +51,8 @@ class OpenFaceClient(Decomposer):
     """
 
     def __init__(self):
+        self._name = str(__name__.rsplit(".", maxsplit=1)[-1])
         self.model = load_model()
-        self.model_name = "OpenFace"
         self.input_shape = (96, 96)
         self.output_shape = 128
 

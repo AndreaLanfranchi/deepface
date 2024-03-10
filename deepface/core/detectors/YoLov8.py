@@ -35,9 +35,9 @@ class Detector(DetectorBase):
 
     def __init__(self):
         self._name = str(__name__.rsplit(".", maxsplit=1)[-1])
-        self.__initialize()
+        self._initialize()
 
-    def __initialize(self):
+    def _initialize(self):
 
         try:
             from ultralytics import YOLO
@@ -82,13 +82,15 @@ class Detector(DetectorBase):
         results = self._detector.predict(img, verbose=False, show=False, conf=0.25)[0]
 
         # For each face, extract the bounding box, the landmarks and confidence
+
         for result in results:
+
+            if result.boxes is None or result.keypoints is None:
+                continue
+
             # Extract the bounding box and the confidence
             x, y, w, h = result.boxes.xywh.tolist()[0]
             confidence = result.boxes.conf.tolist()[0]
-
-            # left_eye_conf = result.keypoints.conf[0][0]
-            # right_eye_conf = result.keypoints.conf[0][1]
             left_eye = result.keypoints.xy[0][0].tolist()
             right_eye = result.keypoints.xy[0][1].tolist()
 

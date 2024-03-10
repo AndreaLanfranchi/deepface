@@ -43,8 +43,8 @@ class VggFaceClient(Decomposer):
     """
 
     def __init__(self):
+        self._name = str(__name__.rsplit(".", maxsplit=1)[-1])
         self.model = load_model()
-        self.model_name = "VGGFace"
         self.input_shape = (224, 224)
         self.output_shape = 4096
 

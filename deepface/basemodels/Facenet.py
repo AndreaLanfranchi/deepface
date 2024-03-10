@@ -56,8 +56,8 @@ class FaceNet128dClient(Decomposer):
     """
 
     def __init__(self):
+        self._name = str(__name__.rsplit(".", maxsplit=1)[-1])
         self.model = load_facenet128d_model()
-        self.model_name = "FaceNet-128d"
         self.input_shape = (160, 160)
         self.output_shape = 128
 
