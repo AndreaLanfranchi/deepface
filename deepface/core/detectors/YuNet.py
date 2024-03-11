@@ -38,7 +38,7 @@ except ModuleNotFoundError:
 
 logger = Logger.get_instance()
 
-# YuNet detector
+# YuNet detector (optional)
 class Detector(DetectorBase):
 
     _detector: Any

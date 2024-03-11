@@ -18,7 +18,7 @@ except ModuleNotFoundError:
 
 logger = Logger.get_instance()
 
-# YoloV8 detector
+# YoloV8 detector (optional)
 class Detector(DetectorBase):
 
     _detector: Any

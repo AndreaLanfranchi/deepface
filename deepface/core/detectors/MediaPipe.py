@@ -16,14 +16,9 @@ except ModuleNotFoundError:
 
 logger = Logger.get_instance()
 
+# MediaPipe detector (optional)
+# see also: https://google.github.io/mediapipe/solutions/face_detection
 class Detector(DetectorBase):
-    """
-    This class is used to detect faces using fast mtcnn face detector.
-    Note! This is an optional detector, ensure the library is installed.
-
-    See also:
-    https://google.github.io/mediapipe/solutions/face_detection
-    """
 
     _detector: Any
 
@@ -38,15 +33,7 @@ class Detector(DetectorBase):
         )
 
     def process(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
-        """
-        Detect in picture face(s) with mediapipe
 
-        Args:
-            img (numpy.ndarray): pre-loaded image as numpy array
-
-        Returns:
-            results (List[FacialAreaRegion]): A list of FacialAreaRegion objects
-        """
         results = []
         if len(img.shape) < 3 or img.shape[2] != 3:
             logger.debug("Converting image to RGB")

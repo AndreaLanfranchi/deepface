@@ -73,6 +73,7 @@ class Detector(DetectorBase):
             "bottom",
         ]
 
+        # TODO: resize to a square ?
         target_h = 300
         target_w = 300
         aspect_ratio_x = w / target_w

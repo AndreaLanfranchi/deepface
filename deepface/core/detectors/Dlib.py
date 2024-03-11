@@ -20,11 +20,8 @@ except ModuleNotFoundError:
 
 logger = Logger.get_instance()
 
+# Dlib detector (optional)
 class Detector(DetectorBase):
-    """
-    This class is used to detect faces using dlib's hog face detector.
-    Note! This is an optional detector, ensure the library is installed.
-    """
 
     _detector: Any
     _predictor: Any

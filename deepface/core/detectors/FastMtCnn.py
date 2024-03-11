@@ -1,4 +1,4 @@
-from typing import Any, Union, List
+from typing import Union, List
 
 import cv2
 import numpy
@@ -14,17 +14,13 @@ except ModuleNotFoundError:
     raise MissingOptionalDependency(what) from None
 
 
+# FastMtCnn detector (optional)
+# see also:
+# https://github.com/timesler/facenet-pytorch
+# https://www.kaggle.com/timesler/guide-to-mtcnn-in-facenet-pytorch
 class Detector(DetectorBase):
-    """
-    This class is used to detect faces using fast mtcnn face detector.
-    Note! This is an optional detector, ensure the library is installed.
 
-    See the following link for more information:
-    https://github.com/timesler/facenet-pytorch
-    Examples https://www.kaggle.com/timesler/guide-to-mtcnn-in-facenet-pytorch
-    """
-
-    _detector: Any
+    _detector: fast_mtcnn
 
     def __init__(self):
         self._name = str(__name__.rsplit(".", maxsplit=1)[-1])
@@ -40,15 +36,7 @@ class Detector(DetectorBase):
         )
 
     def process(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
-        """
-        Detect in picture face(s) with FastMtCnn
 
-        Args:
-            img (numpy.ndarray): pre-loaded image as numpy array
-
-        Returns:
-            results (List[FacialAreaRegion]): A list of FacialAreaRegion objects
-        """
         results = []
         if img.shape[0] == 0 or img.shape[1] == 0:
             return results

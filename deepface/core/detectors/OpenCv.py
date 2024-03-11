@@ -6,7 +6,7 @@ import numpy
 
 from deepface.core.detector import Detector as DetectorBase, FacialAreaRegion
 
-# OpenCV's detector
+# OpenCV's detector (default)
 class Detector(DetectorBase):
 
     def __init__(self):

@@ -5,27 +5,13 @@ from mtcnn import MTCNN
 
 from deepface.core.detector import Detector as DetectorBase, FacialAreaRegion
 
-
+# MtCnn detector
 class Detector(DetectorBase):
-    """
-    This class is used to detect faces using MtCnn face detector.
-    """
-
     def __init__(self):
         self._name = str(__name__.rsplit(".", maxsplit=1)[-1])
         self._detector = MTCNN()
 
     def process(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
-        """
-        Detect in picture face(s) with mtcnn
-
-        Args:
-            img (numpy.ndarray): pre-loaded image as numpy array
-
-        Returns:
-            results (List[FacialAreaRegion]): A list of FacialAreaRegion objects
-        """
-
         results = []
         if img.shape[0] == 0 or img.shape[1] == 0:
             return results
