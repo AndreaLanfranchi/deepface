@@ -6,40 +6,24 @@ import numpy
 
 from deepface.core.detector import Detector as DetectorBase, FacialAreaRegion
 
-
+# OpenCV's detector
 class Detector(DetectorBase):
-    """
-    This class is used to detect faces using OpenCV face detection.
-    """
 
     def __init__(self):
         self._name = str(__name__.rsplit(".", maxsplit=1)[-1])
         self._initialize()
 
     def _initialize(self):
-        self._detector = self.__build_cascade("haarcascade")
-        self._eye_detector = self.__build_cascade("haarcascade_eye")
+        self._detector = self._build_cascade("haarcascade")
+        self._eye_detector = self._build_cascade("haarcascade_eye")
 
     def process(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
-        """
-        Detect in picture face(s) with opencv
 
-        Args:
-            img (numpy.ndarray): pre-loaded image as numpy array
-
-        Returns:
-            results (List[FacialAreaRegion]): A list of FacialAreaRegion objects
-        """
         results = []
         if img.shape[0] == 0 or img.shape[1] == 0:
             return results
-
-        detected_face = None
-
         faces = []
         try:
-            # faces = detector["face_detector"].detectMultiScale(img, 1.3, 5)
-
             # note that, by design, opencv's haarcascade scores are >0 but not capped at 1
             faces, _, scores = self._detector.detectMultiScale3(
                 img, 1.1, 10, outputRejectLevels=True
@@ -120,51 +104,21 @@ class Detector(DetectorBase):
             )
         return left_eye, right_eye
 
-    def __build_cascade(self, model_name="haarcascade") -> Any:
-        """
-        Build a opencv face&eye detector models
-        Returns:
-            model (Any)
-        """
-        opencv_path = self.__get_opencv_path()
-        if model_name == "haarcascade":
-            face_detector_path = opencv_path + "haarcascade_frontalface_default.xml"
-            if os.path.isfile(face_detector_path) != True:
-                raise ValueError(
-                    "Confirm that opencv is installed on your environment! Expected path ",
-                    face_detector_path,
-                    " violated.",
-                )
-            detector = cv2.CascadeClassifier(face_detector_path)
+    def _build_cascade(self, model_name="haarcascade") -> Any:
 
-        elif model_name == "haarcascade_eye":
-            eye_detector_path = opencv_path + "haarcascade_eye.xml"
-            if os.path.isfile(eye_detector_path) != True:
-                raise ValueError(
-                    "Confirm that opencv is installed on your environment! Expected path ",
-                    eye_detector_path,
-                    " violated.",
-                )
-            detector = cv2.CascadeClassifier(eye_detector_path)
+        match model_name:
+            case "haarcascade":
+                file_name = "haarcascade_frontalface_default.xml"
+            case "haarcascade_eye":
+                file_name = "haarcascade_eye.xml"
+            case _:
+                raise NotImplementedError(f"Unknown : {model_name}")
 
-        else:
-            raise ValueError(
-                f"unimplemented model_name for build_cascade - {model_name}"
+        cv2_root = os.path.dirname(cv2.__file__)
+        file_path = os.path.join(cv2_root, "data", file_name)
+        if os.path.isfile(file_path) != True:
+            raise RuntimeError(
+                f"Coulnd't find {file_path}\n" "Check opencv is installed properly"
             )
 
-        return detector
-
-    def __get_opencv_path(self) -> str:
-        """
-        Returns where opencv installed
-        Returns:
-            installation_path (str)
-        """
-        opencv_home = cv2.__file__
-        folders = opencv_home.split(os.path.sep)[0:-1]
-
-        path = folders[0]
-        for folder in folders[1:]:
-            path = path + "/" + folder
-
-        return path + "/data/"
+        return cv2.CascadeClassifier(file_path)

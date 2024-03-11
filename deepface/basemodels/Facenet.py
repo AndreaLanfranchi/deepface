@@ -57,7 +57,7 @@ class FaceNet128dClient(Decomposer):
 
     def __init__(self):
         self._name = str(__name__.rsplit(".", maxsplit=1)[-1])
-        self.model = load_facenet128d_model()
+        self._model = load_facenet128d_model()
         self.input_shape = (160, 160)
         self.output_shape = 128
 
@@ -71,7 +71,7 @@ class FaceNet128dClient(Decomposer):
         """
         # model.predict causes memory issue when it is called in a for loop
         # embedding = model.predict(img, verbose=0)[0].tolist()
-        return self.model(img, training=False).numpy()[0].tolist()
+        return self._model(img, training=False).numpy()[0].tolist()
 
 
 class FaceNet512dClient(Decomposer):

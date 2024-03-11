@@ -7,30 +7,21 @@ import gdown
 from deepface.core.detector import Detector as DetectorBase, FacialAreaRegion
 from deepface.commons import folder_utils
 from deepface.commons.logger import Logger
+from deepface.core.exceptions import MissingOptionalDependency
+
+try:
+    from ultralytics import YOLO
+except ModuleNotFoundError:
+    what: str = f"{__name__} requires `ultralytics` library."
+    what += "You can install by 'pip install ultralytics' "
+    raise MissingOptionalDependency(what) from None
 
 logger = Logger.get_instance()
 
-# # Model's weights paths
-# PATH = "/.deepface/weights/yolov8n-face.pt"
-
-# Google Drive URL from repo (https://github.com/derronqi/yolov8-face) ~6MB
-# WEIGHT_URL = "https://drive.google.com/uc?id=1qcr9DbgsX3ryrz2uU8w4Xm3cOrRywXqb"
-
-# Confidence thresholds for landmarks detection
-# used in alignment_procedure function
-# LANDMARKS_CONFIDENCE_THRESHOLD = 0.5
-
-
+# YoloV8 detector
 class Detector(DetectorBase):
-    """
-    This class is used to detect faces using YOLOv8 face detector.
-    Note! This is an optional detector, ensure the library is installed.
-    """
 
     _detector: Any
-    _WEIGHT_URL: str = (
-        "https://drive.google.com/uc?id=1qcr9DbgsX3ryrz2uU8w4Xm3cOrRywXqb"
-    )
     # _LANDMARKS_CONFIDENCE_THRESHOLD = 0.5
 
     def __init__(self):
@@ -39,41 +30,26 @@ class Detector(DetectorBase):
 
     def _initialize(self):
 
-        try:
-            from ultralytics import YOLO
+        file_name = "yolov8n-face.pt"
+        weight_file = os.path.join(folder_utils.get_weights_dir(), file_name)
 
-            file_name = "yolov8n-face.pt"
-            output = os.path.join(folder_utils.get_weights_dir(), file_name)
+        if not os.path.isfile(weight_file):
+            logger.info(f"Download : {file_name}")
+            try:
+                url: str = (
+                    "https://drive.google.com/uc?id=1qcr9DbgsX3ryrz2uU8w4Xm3cOrRywXqb"
+                )
+                gdown.download(url, weight_file, quiet=False, user_agent="Mozilla/5.0")
+            except Exception as err:
+                raise ValueError(
+                    f"Exception while downloading Yolo weights from {self._WEIGHT_URL}."
+                    f"You may consider to download it to {weight_file} manually."
+                ) from err
 
-            # Download the model's weights if they don't exist
-            if not os.path.isfile(output):
-                logger.info(f"Download : {file_name}")
-                try:
-                    gdown.download(self._WEIGHT_URL, output, quiet=False)
-                except Exception as err:
-                    raise ValueError(
-                        f"Exception while downloading Yolo weights from {self._WEIGHT_URL}."
-                        f"You may consider to download it to {output} manually."
-                    ) from err
-
-        except ModuleNotFoundError as e:
-            raise ImportError(
-                "Yolo is an optional detector, ensure the library is installed. \
-                Please install using 'pip install ultralytics' "
-            ) from e
-
-        self._detector = YOLO(output)
+        self._detector = YOLO(weight_file)
 
     def process(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
-        """
-        Detect in picture face(s) with Yolov8
 
-        Args:
-            img (numpy.ndarray): pre-loaded image as numpy array
-
-        Returns:
-            results (List[FacialAreaRegion]): A list of FacialAreaRegion objects
-        """
         ret: List[FacialAreaRegion] = []
         if img.shape[0] == 0 or img.shape[1] == 0:
             return ret

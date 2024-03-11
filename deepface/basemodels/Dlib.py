@@ -10,6 +10,14 @@ from deepface.commons import folder_utils
 from deepface.commons.logger import Logger
 from deepface.core.decomposer import Decomposer
 from deepface.core.types import BoxDimensions
+from deepface.core.exceptions import MissingOptionalDependency
+
+try:
+    import dlib
+except ModuleNotFoundError:
+    what: str = "`Dlib` is an optional dependency, ensure the library is installed. "
+    what += "You can install by 'pip install dlib' "
+    raise MissingOptionalDependency(what) from None
 
 logger = Logger.get_instance()
 
@@ -41,13 +49,6 @@ class DlibClient(Decomposer):
         return img_representation[0].tolist()
 
     def _initialize(self):
-        try:
-            import dlib
-        except ModuleNotFoundError as e:
-            raise ImportError(
-                "Dlib is an optional dependency, ensure the library is installed."
-                "Please install using 'pip install dlib' "
-            ) from e
 
         file_name: str = "dlib_face_recognition_resnet_model_v1.dat"
         weight_file: str = os.path.join(folder_utils.get_weights_dir(), file_name)

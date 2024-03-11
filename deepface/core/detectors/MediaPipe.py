@@ -5,6 +5,14 @@ import numpy
 
 from deepface.core.detector import Detector as DetectorBase, FacialAreaRegion
 from deepface.commons.logger import Logger
+from deepface.core.exceptions import MissingOptionalDependency
+
+try:
+    import mediapipe as mp
+except ModuleNotFoundError:
+    what: str = f"{__name__} requires `mediapipe` library."
+    what += "You can install by 'pip install mediapipe' "
+    raise MissingOptionalDependency(what) from None
 
 logger = Logger.get_instance()
 
@@ -24,19 +32,10 @@ class Detector(DetectorBase):
         self._initialize()
 
     def _initialize(self):
-        try:
-            import mediapipe as mp
-
-            mp_face_detection = mp.solutions.face_detection
-            self._detector = mp_face_detection.FaceDetection(
-                min_detection_confidence=0.7
-            )
-
-        except ModuleNotFoundError as e:
-            raise ImportError(
-                "MediaPipe is an optional detector, ensure the library is installed."
-                "Please install using 'pip install mediapipe' "
-            ) from e
+        mp_face_detection = mp.solutions.face_detection
+        self._detector = mp_face_detection.FaceDetection(
+            min_detection_confidence=0.7
+        )
 
     def process(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
         """

@@ -4,6 +4,14 @@ import cv2
 import numpy
 
 from deepface.core.detector import Detector as DetectorBase, FacialAreaRegion
+from deepface.core.exceptions import MissingOptionalDependency
+
+try:
+    from facenet_pytorch import MTCNN as fast_mtcnn
+except ModuleNotFoundError:
+    what: str = f"{__name__} requires `facenet-pytorch` library."
+    what += "You can install by 'pip install facenet-pytorch' "
+    raise MissingOptionalDependency(what) from None
 
 
 class Detector(DetectorBase):
@@ -23,23 +31,13 @@ class Detector(DetectorBase):
         self._initialize()
 
     def _initialize(self):
-
-        try:
-            from facenet_pytorch import MTCNN as fast_mtcnn
-
-            self._detector = fast_mtcnn(
-                image_size=160,
-                thresholds=[0.6, 0.7, 0.7],  # MTCNN thresholds
-                post_process=True,
-                device="cpu",
-                select_largest=False,  # return result in descending order
-            )
-
-        except ModuleNotFoundError as e:
-            raise ImportError(
-                "FastMtcnn is an optional detector, ensure the library is installed."
-                "Please install using 'pip install facenet-pytorch' "
-            ) from e
+        self._detector = fast_mtcnn(
+            image_size=160,
+            thresholds=[0.6, 0.7, 0.7],  # MTCNN thresholds
+            post_process=True,
+            device="cpu",
+            select_largest=False,  # return result in descending order
+        )
 
     def process(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
         """

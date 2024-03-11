@@ -9,67 +9,53 @@ import numpy
 from deepface.commons import folder_utils
 from deepface.core.detector import Detector as DetectorBase, FacialAreaRegion
 from deepface.commons.logger import Logger
+from deepface.core.exceptions import MissingOptionalDependency
+
+try:
+    from cv2 import dnn as cv2_dnn
+except ModuleNotFoundError:
+    what: str = f"{__name__} requires `opencv-contrib-python` library."
+    what += "You can install by 'pip install opencv-contrib-python' "
+    raise MissingOptionalDependency(what) from None
 
 logger = Logger.get_instance()
 
-
+# OpenCV's Ssd detector (optional)
 class Detector(DetectorBase):
-    """
-    This class is used to detect faces using OpenCV's SSD face detector.
-    Note! This is an optional detector, ensure the library is installed.
-    """
 
     def __init__(self):
         self._name = str(__name__.rsplit(".", maxsplit=1)[-1])
         self._initialize()
 
     def _initialize(self):
+        weights_folder = folder_utils.get_weights_dir()
+        file_name = "deploy.prototxt"
+        output1 = os.path.join(weights_folder, file_name)
 
-        try:
+        # model structure
+        if os.path.isfile(output1) != True:
+            logger.info(f"Download : {file_name}")
+            # pylint: disable=line-too-long
+            url = f"https://github.com/opencv/opencv/raw/3.4.0/samples/dnn/face_detector/{file_name}"
+            # pylint: enable=line-too-long
+            gdown.download(url, output1, quiet=False)
 
-            weights_folder = folder_utils.get_weights_dir()
-            file_name = "deploy.prototxt"
-            output1 = os.path.join(weights_folder, file_name)
+        file_name = "res10_300x300_ssd_iter_140000.caffemodel"
+        output2 = os.path.join(weights_folder, file_name)
 
-            # model structure
-            if os.path.isfile(output1) != True:
-                logger.info(f"Download : {file_name}")
-                # pylint: disable=line-too-long
-                url = f"https://github.com/opencv/opencv/raw/3.4.0/samples/dnn/face_detector/{file_name}"
-                # pylint: enable=line-too-long
-                gdown.download(url, output1, quiet=False)
+        # pre-trained weights
+        if os.path.isfile(output2) != True:
+            logger.info(f"Download : {file_name}")
+            # pylint: disable=line-too-long
+            url = f"https://github.com/opencv/opencv_3rdparty/raw/dnn_samples_face_detector_20170830/{file_name}"
+            # pylint: enable=line-too-long
+            gdown.download(url, output2, quiet=False)
 
-            file_name = "res10_300x300_ssd_iter_140000.caffemodel"
-            output2 = os.path.join(weights_folder, file_name)
+        self._detector = cv2_dnn.readNetFromCaffe(output1, output2)
+        self._opencv_detector = self.instance("opencv")
 
-            # pre-trained weights
-            if os.path.isfile(output2) != True:
-                logger.info(f"Download : {file_name}")
-                # pylint: disable=line-too-long
-                url = f"https://github.com/opencv/opencv_3rdparty/raw/dnn_samples_face_detector_20170830/{file_name}"
-                # pylint: enable=line-too-long
-                gdown.download(url, output2, quiet=False)
-
-            self._detector = cv2.dnn.readNetFromCaffe(output1, output2)
-            self._opencv_detector = self.instance("opencv")
-
-        except Exception as err:
-            raise ValueError(
-                "Exception while calling opencv.dnn module."
-                + "This is an optional dependency."
-                + "You can install it as pip install opencv-contrib-python."
-            ) from err
 
     def process(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
-        """
-        Detect in picture face(s) with ssd
-
-        Args:
-            img (numpy.ndarray): pre-loaded image as numpy array
-
-        Returns:
-            results (List[FacialAreaRegion]): A list of FacialAreaRegion objects
-        """
 
         results = []
         (h, w) = img.shape[:2]

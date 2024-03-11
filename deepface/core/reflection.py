@@ -4,6 +4,7 @@ import importlib
 import inspect
 import pkgutil
 
+from deepface.core.exceptions import MissingOptionalDependency, InsufficentVersionRequirement
 from deepface.commons.logger import Logger
 
 logger = Logger.get_instance()
@@ -15,7 +16,23 @@ def get_derived_classes(package: Any, base_class: type) -> Dict[str, type]:
 
     results: Dict[str, type] = {}
     for _, module_name, _ in pkgutil.walk_packages(package.__path__):
-        module = importlib.import_module(name=f"{package.__name__}.{module_name}")
+
+        try:
+            module = importlib.import_module(name=f"{package.__name__}.{module_name}")
+        except MissingOptionalDependency as ex:
+            what: str = (
+                f"Skipping module [{module_name}] from package {package.__path__}"
+            )
+            what += f": {ex.message}"
+            logger.warn(what)
+            continue
+        except InsufficentVersionRequirement as ex:
+            what: str = (
+                f"Skipping module [{module_name}] from package {package.__path__}"
+            )
+            what += f": {ex.message}"
+            logger.warn(what)
+            continue
 
         for _, obj in inspect.getmembers(module):
             if inspect.isclass(obj):

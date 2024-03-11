@@ -9,8 +9,16 @@ from deepface.commons import folder_utils
 from deepface.core.detector import Detector as DetectorBase, FacialAreaRegion
 from deepface.commons.logger import Logger
 
-logger = Logger.get_instance()
+from deepface.core.exceptions import MissingOptionalDependency
 
+try:
+    import dlib
+except ModuleNotFoundError:
+    what: str = f"{__name__} requires `dlib` library."
+    what += "You can install by 'pip install dlib' "
+    raise MissingOptionalDependency(what) from None
+
+logger = Logger.get_instance()
 
 class Detector(DetectorBase):
     """
@@ -26,46 +34,30 @@ class Detector(DetectorBase):
         self._initialize()
 
     def _initialize(self):
-        try:
-            import dlib  # Lazy import.
+        file_name = "shape_predictor_5_face_landmarks.dat"
+        weight_file = os.path.join(folder_utils.get_weights_dir(), file_name)
 
-            file_name = "shape_predictor_5_face_landmarks.dat"
-            weight_file = os.path.join(folder_utils.get_weights_dir(), file_name)
+        # check required file exists in the home/.deepface/weights folder
+        if os.path.isfile(weight_file) != True:
 
-            # check required file exists in the home/.deepface/weights folder
-            if os.path.isfile(weight_file) != True:
+            logger.info(f"Download : {file_name}")
+            source_file = f"{file_name}.bz2"
 
-                logger.info(f"Download : {file_name}")
-                source_file = f"{file_name}.bz2"
+            url = f"http://dlib.net/files/{source_file}"
+            dest = os.path.join(folder_utils.get_weights_dir(), source_file)
+            gdown.download(url, dest, quiet=False)
 
-                url = f"http://dlib.net/files/{source_file}"
-                dest = os.path.join(folder_utils.get_weights_dir(), source_file)
-                gdown.download(url, dest, quiet=False)
+            # TODO : shutils
+            zipfile = bz2.BZ2File(dest)
+            data = zipfile.read()
+            with open(weight_file, "wb") as f:
+                f.write(data)
 
-                zipfile = bz2.BZ2File(dest)
-                data = zipfile.read()
-                with open(weight_file, "wb") as f:
-                    f.write(data)
+        self._detector = dlib.get_frontal_face_detector()
+        self._predictor = dlib.shape_predictor(weight_file)
 
-            self._detector = dlib.get_frontal_face_detector()
-            self._predictor = dlib.shape_predictor(weight_file)
-
-        except ModuleNotFoundError as e:
-            raise ImportError(
-                "Dlib is an optional detector, ensure the library is installed."
-                "Please install using 'pip install dlib' "
-            ) from e
 
     def process(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
-        """
-        Detect in picture face(s) with dlib
-
-        Args:
-            img (numpy.ndarray): pre-loaded image as numpy array
-
-        Returns:
-            results (List[FacialAreaRegion]): A list of FacialAreaRegion objects
-        """
         results = []
         if img.shape[0] == 0 or img.shape[1] == 0:
             return results
