@@ -2,6 +2,7 @@ from typing import Any, List
 
 import os
 import bz2
+import shutil
 import gdown
 import numpy
 
@@ -44,11 +45,10 @@ class Detector(DetectorBase):
             dest = os.path.join(folder_utils.get_weights_dir(), source_file)
             gdown.download(url, dest, quiet=False)
 
-            # TODO : shutils
-            zipfile = bz2.BZ2File(dest)
-            data = zipfile.read()
-            with open(weight_file, "wb") as f:
-                f.write(data)
+            with bz2.BZ2File(dest, "rb") as zipfile, open(weight_file, "wb") as f:
+                shutil.copyfileobj(zipfile, f)
+
+            os.remove(dest)
 
         self._detector = dlib.get_frontal_face_detector()
         self._predictor = dlib.shape_predictor(weight_file)
