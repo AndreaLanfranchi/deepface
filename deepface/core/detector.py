@@ -68,7 +68,7 @@ class Detector(ABC):
         return list(available_detectors.keys())
 
     @staticmethod
-    def default_detector() -> str:
+    def get_default() -> str:
         """
         Get the default face detector name.
 
@@ -96,7 +96,7 @@ class Detector(ABC):
             'ImportError': If the detector instance cannot be instantiated
         """
         if name is None:
-            name = Detector.default_detector()
+            name = Detector.get_default()
         elif not isinstance(name, str):
             raise TypeError(
                 f"Invalid 'name' argument type [{type(name).__name__}] : expected str"
@@ -108,7 +108,7 @@ class Detector(ABC):
 
         name = name.lower().strip()
         if len(name) == 0:
-            name = Detector.default_detector()
+            name = Detector.get_default()
 
         global detectors_instances  # singleton design pattern
         if not "detectors_instances" in globals():
@@ -145,7 +145,6 @@ class Detector(ABC):
 
         return instance
 
-
 class FacialAreaRegion:
     x: int
     y: int
@@ -172,8 +171,6 @@ class FacialAreaRegion:
         self.left_eye = left_eye
         self.right_eye = right_eye
         self.confidence = confidence
-
-
 class DetectedFace:
     img: numpy.ndarray
     facial_area: FacialAreaRegion

@@ -46,7 +46,7 @@ def detect_faces(
 
     # Validation
     if detector is None:
-        detector = Detector.instance(Detector.default_detector())
+        detector = Detector.instance(Detector.get_default())
     elif isinstance(detector, str):
         detector = Detector.instance(detector)
     elif not isinstance(detector, Detector):
