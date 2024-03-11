@@ -7,7 +7,7 @@ import cv2
 
 # project dependencies
 from deepface.modules import detection, preprocessing
-from deepface.core.decomposer import Representer
+from deepface.core.representer import Representer
 
 
 def represent(

@@ -7,7 +7,7 @@ import gdown
 
 from deepface.commons import folder_utils
 from deepface.commons.logger import Logger
-from deepface.core.decomposer import Representer
+from deepface.core.representer import Representer
 
 logger = Logger.get_instance()
 

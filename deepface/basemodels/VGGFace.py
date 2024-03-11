@@ -5,7 +5,7 @@ import numpy
 from deepface.commons import package_utils, folder_utils
 from deepface.core.types import BoxDimensions
 from deepface.modules import verification
-from deepface.core.decomposer import Representer
+from deepface.core.representer import Representer
 from deepface.commons.logger import Logger
 
 logger = Logger.get_instance()

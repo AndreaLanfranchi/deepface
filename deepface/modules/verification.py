@@ -7,7 +7,7 @@ import numpy
 
 # project dependencies
 from deepface.modules import representation, detection
-from deepface.core.decomposer import Representer
+from deepface.core.representer import Representer
 
 
 def verify(

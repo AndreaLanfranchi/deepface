@@ -13,7 +13,7 @@ from tqdm import tqdm
 # project dependencies
 from deepface.commons.logger import Logger
 from deepface.modules import representation, detection, verification
-from deepface.core.decomposer import Representer
+from deepface.core.representer import Representer
 
 logger = Logger.get_instance()
 

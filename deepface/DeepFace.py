@@ -12,7 +12,7 @@ import tensorflow
 
 # package dependencies
 from deepface.core.analyzer import Analyzer      # Facial Emotions Analyzer
-from deepface.core.decomposer import Representer  # Abstract class for face decomposers
+from deepface.core.representer import Representer  # Abstract class for face decomposers
 
 from deepface.commons import package_utils
 from deepface.commons.logger import Logger

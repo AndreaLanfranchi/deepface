@@ -7,7 +7,7 @@ import numpy
 from deepface.commons import package_utils, folder_utils
 from deepface.commons.logger import Logger
 from deepface.core.analyzer import Analyzer as AnalyzerBase
-from deepface.core.decomposer import Representer
+from deepface.core.representer import Representer
 
 logger = Logger.get_instance()
 

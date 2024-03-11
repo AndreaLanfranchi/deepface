@@ -8,7 +8,7 @@ import numpy
 
 from deepface.commons import folder_utils
 from deepface.commons.logger import Logger
-from deepface.core.decomposer import Representer
+from deepface.core.representer import Representer
 from deepface.core.types import BoxDimensions
 from deepface.core.exceptions import MissingOptionalDependency
 
