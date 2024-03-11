@@ -4,7 +4,7 @@ import gdown
 import numpy
 from deepface.commons import package_utils, folder_utils
 from deepface.commons.logger import Logger
-from deepface.core.representer import Representer
+from deepface.core.representer import Representer as RepresenterBase
 from deepface.core.types import BoxDimensions
 
 logger = Logger.get_instance()
@@ -41,8 +41,8 @@ else:
     )
 
 
-# pylint: disable=too-few-public-methods
-class ArcFaceClient(Representer):
+# ArcFace respresenter model
+class Representer(RepresenterBase):
 
     def __init__(self):
         self._name = str(__name__.rsplit(".", maxsplit=1)[-1])
