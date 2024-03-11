@@ -8,7 +8,7 @@ import numpy
 
 from deepface.commons import folder_utils
 from deepface.commons.logger import Logger
-from deepface.core.decomposer import Decomposer
+from deepface.core.decomposer import Representer
 from deepface.core.types import BoxDimensions
 from deepface.core.exceptions import MissingOptionalDependency
 
@@ -21,7 +21,7 @@ except ModuleNotFoundError:
 
 logger = Logger.get_instance()
 
-class DlibClient(Decomposer):
+class DlibClient(Representer):
 
     def __init__(self):
         self._name = str(__name__.rsplit(".", maxsplit=1)[-1])

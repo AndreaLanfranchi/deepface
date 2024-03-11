@@ -5,7 +5,7 @@ import tensorflow
 import numpy
 from deepface.commons import package_utils, folder_utils
 from deepface.commons.logger import Logger
-from deepface.core.decomposer import Decomposer
+from deepface.core.decomposer import Representer
 
 logger = Logger.get_instance()
 
@@ -45,7 +45,7 @@ else:
 
 
 # pylint: disable=too-few-public-methods
-class OpenFaceClient(Decomposer):
+class OpenFaceClient(Representer):
     """
     OpenFace model class
     """

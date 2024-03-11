@@ -7,13 +7,13 @@ import gdown
 
 from deepface.commons import folder_utils
 from deepface.commons.logger import Logger
-from deepface.core.decomposer import Decomposer
+from deepface.core.decomposer import Representer
 
 logger = Logger.get_instance()
 
 
 # pylint: disable=too-few-public-methods
-class SFaceClient(Decomposer):
+class SFaceClient(Representer):
     """
     SFace model class
     """

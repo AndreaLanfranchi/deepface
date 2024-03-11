@@ -5,7 +5,7 @@ import gdown
 import numpy
 from deepface.commons import package_utils, folder_utils
 from deepface.commons.logger import Logger
-from deepface.core.decomposer import Decomposer
+from deepface.core.decomposer import Representer
 from deepface.core.types import BoxDimensions
 
 logger = Logger.get_instance()
@@ -39,7 +39,7 @@ else:
 
 # -------------------------------------
 # pylint: disable=too-few-public-methods
-class DeepFaceClient(Decomposer):
+class DeepFaceClient(Representer):
     """
     Fb's DeepFace model class
     """

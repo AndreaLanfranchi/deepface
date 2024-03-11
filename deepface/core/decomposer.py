@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 import time
-from typing import Any, List, Optional, Tuple, Union
+from typing import Any, List, Optional, Union
 import numpy
 
 from deepface import basemodels
@@ -19,7 +19,9 @@ else:
 
 
 # Abstract class all specialized face decomposers must inherit from.
-class Decomposer(ABC):
+# Creates the synthetic digital representation of a face.
+# It is assumed the input picture is already a face previously detected.
+class Representer(ABC):
 
     _model: Optional[Union[Model, Sequential]] = None
     _name: Optional[str] = None
@@ -66,7 +68,7 @@ class Decomposer(ABC):
         global available_decomposers
         if not "available_decomposers" in globals():
             available_decomposers = reflection.get_derived_classes(
-                package=basemodels, base_class=Decomposer
+                package=basemodels, base_class=Representer
             )
         return list(available_decomposers.keys())
 
@@ -81,7 +83,7 @@ class Decomposer(ABC):
         return "VGGFace"
 
     @staticmethod
-    def instance(name: Optional[str] = None, singleton: bool = True) -> "Decomposer":
+    def instance(name: Optional[str] = None, singleton: bool = True) -> "Representer":
         """
         `Decomposer` factory method.
 
@@ -99,7 +101,7 @@ class Decomposer(ABC):
             'ImportError': If the detector instance cannot be instantiated
         """
         if name is None:
-            name = Decomposer.get_default()
+            name = Representer.get_default()
         elif not isinstance(name, str):
             raise TypeError(
                 f"Invalid 'name' argument type [{type(name).__name__}] : expected str"
@@ -111,7 +113,7 @@ class Decomposer(ABC):
 
         name = name.lower().strip()
         if len(name) == 0:
-            name = Decomposer.get_default()
+            name = Representer.get_default()
 
         global decomposers_instances  # singleton design pattern
         if not "decomposers_instances" in globals():
@@ -120,7 +122,7 @@ class Decomposer(ABC):
         global available_decomposers
         if not "available_decomposers" in globals():
             available_decomposers = reflection.get_derived_classes(
-                package=basemodels, base_class=Decomposer
+                package=basemodels, base_class=Representer
             )
 
         if name not in available_decomposers.keys():

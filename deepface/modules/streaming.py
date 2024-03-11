@@ -13,7 +13,7 @@ import pandas
 
 from deepface import DeepFace
 from deepface.core.detector import Detector
-from deepface.core.decomposer import Decomposer
+from deepface.core.decomposer import Representer
 from deepface.commons.logger import Logger
 
 logger = Logger.get_instance()
@@ -97,7 +97,7 @@ def analysis(
     # ------------------------
     # build models once to store them in the memory
     # otherwise, they will be built after cam started and this will cause delays
-    model: Decomposer = Decomposer.instance(name=decomposer)
+    model: Representer = Representer.instance(name=decomposer)
 
     # find custom values for this input set
     target_size = model.input_shape

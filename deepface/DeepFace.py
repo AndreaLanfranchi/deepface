@@ -12,7 +12,7 @@ import tensorflow
 
 # package dependencies
 from deepface.core.analyzer import Analyzer      # Facial Emotions Analyzer
-from deepface.core.decomposer import Decomposer  # Abstract class for face decomposers
+from deepface.core.decomposer import Representer  # Abstract class for face decomposers
 
 from deepface.commons import package_utils
 from deepface.commons.logger import Logger
@@ -56,7 +56,7 @@ def get_recognition_model(name: str) -> Any:
         reference to built model class instance
     """
 
-    return Decomposer.instance(name=name)
+    return Representer.instance(name=name)
 
 
 def get_analysis_model(name: str) -> Any:

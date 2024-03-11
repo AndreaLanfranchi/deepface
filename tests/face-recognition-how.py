@@ -2,7 +2,7 @@ import matplotlib.pyplot as pyplot
 import numpy
 from deepface import DeepFace
 from deepface.modules import verification
-from deepface.core.decomposer import Decomposer
+from deepface.core.decomposer import Representer
 from deepface.commons.logger import Logger
 
 logger = Logger.get_instance()
@@ -10,7 +10,7 @@ logger = Logger.get_instance()
 # ----------------------------------------------
 # build face recognition model
 
-model: Decomposer = Decomposer.instance() # Default is VGGFace
+model: Representer = Representer.instance() # Default is VGGFace
 
 target_size = model.input_shape
 

@@ -7,7 +7,7 @@ import cv2
 
 # project dependencies
 from deepface.modules import detection, preprocessing
-from deepface.core.decomposer import Decomposer
+from deepface.core.decomposer import Representer
 
 
 def represent(
@@ -55,7 +55,7 @@ def represent(
     """
     resp_objs = []
 
-    model: Decomposer = Decomposer.instance(decomposer)
+    model: Representer = Representer.instance(decomposer)
 
     # ---------------------------------
     # we have run pre-process in verification. so, this can be skipped if it is coming from verify.

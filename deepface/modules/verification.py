@@ -7,7 +7,7 @@ import numpy
 
 # project dependencies
 from deepface.modules import representation, detection
-from deepface.core.decomposer import Decomposer
+from deepface.core.decomposer import Representer
 
 
 def verify(
@@ -78,7 +78,7 @@ def verify(
     tic = time.time()
 
     # --------------------------------
-    model: Decomposer = Decomposer.instance(decomposer)
+    model: Representer = Representer.instance(decomposer)
     target_size = model.input_shape
 
     # img pairs might have many faces

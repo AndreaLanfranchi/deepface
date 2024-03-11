@@ -7,7 +7,7 @@ import numpy
 from deepface.commons import package_utils, folder_utils
 from deepface.commons.logger import Logger
 from deepface.core.analyzer import Analyzer as AnalyzerBase
-from deepface.core.decomposer import Decomposer
+from deepface.core.decomposer import Representer
 
 logger = Logger.get_instance()
 
@@ -62,7 +62,7 @@ class Analyzer(AnalyzerBase):
             gdown.download(url, weight_file, quiet=False)
 
         classes = 2  # TDOO: What is this magic number?
-        base_model = Decomposer.instance().base_model()  # VGGFace.base_model()
+        base_model = Representer.instance().base_model()  # VGGFace.base_model()
         base_model_output = Sequential()
         base_model_output = Convolution2D(classes, (1, 1), name="predictions")(
             base_model.layers[-4].output
