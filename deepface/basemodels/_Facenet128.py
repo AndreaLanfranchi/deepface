@@ -1,59 +1,48 @@
 from typing import List
+
 import os
+import tensorflow
 import gdown
 import numpy
-from deepface.commons import package_utils, folder_utils
+
+from deepface.core.exceptions import InsufficentVersionRequirement
+from deepface.commons import folder_utils
 from deepface.commons.logger import Logger
-from deepface.core.representer import Representer
+from deepface.core.representer import Representer as RepresenterBase
+
+tensorflow_version_major = int(tensorflow.__version__.split(".", maxsplit=1)[0])
+if tensorflow_version_major < 2:
+    raise InsufficentVersionRequirement("Tensorflow reequires version >=2.0.0")
+
+# pylint: disable=wrong-import-order
+# pylint: disable=wrong-import-position
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import (
+    Activation,
+    BatchNormalization,
+    Concatenate,
+    Conv2D,
+    Dense,
+    Dropout,
+    GlobalAveragePooling2D,
+    Input,
+    Lambda,
+    MaxPooling2D,
+    add,
+)
+from tensorflow.keras import backend as K
+# pylint: enable=wrong-import-position
+# pylint: enable=wrong-import-order
+
 
 logger = Logger.get_instance()
 
-# --------------------------------
-# dependency configuration
-
-tf_version = package_utils.get_tf_major_version()
-
-if tf_version == 1:
-    from keras.models import Model
-    from keras.layers import (
-        Activation,
-        BatchNormalization,
-        Concatenate,
-        Conv2D,
-        Dense,
-        Dropout,
-        GlobalAveragePooling2D,
-        Input,
-        Lambda,
-        MaxPooling2D,
-        add,
-    )
-    from keras import backend as K
-else:
-    from tensorflow.keras.models import Model
-    from tensorflow.keras.layers import (
-        Activation,
-        BatchNormalization,
-        Concatenate,
-        Conv2D,
-        Dense,
-        Dropout,
-        GlobalAveragePooling2D,
-        Input,
-        Lambda,
-        MaxPooling2D,
-        add,
-    )
-    from tensorflow.keras import backend as K
-
-# --------------------------------
-
-
-# pylint: disable=too-few-public-methods
-class FaceNet128dClient(Representer):
+# FaceNet-128d model
+class FaceNet128dClient(RepresenterBase):
     """
     FaceNet-128d model class
     """
+    _model: Model
 
     def __init__(self):
         self._name = str(__name__.rsplit(".", maxsplit=1)[-1])

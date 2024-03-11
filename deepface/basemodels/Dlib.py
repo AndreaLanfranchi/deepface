@@ -21,6 +21,7 @@ except ModuleNotFoundError:
 
 logger = Logger.get_instance()
 
+
 # Dlib respresenter model (optional)
 class Representer(RepresenterBase):
 
@@ -55,12 +56,16 @@ class Representer(RepresenterBase):
         weight_file: str = os.path.join(folder_utils.get_weights_dir(), file_name)
         if os.path.isfile(weight_file) != True:
             logger.info(f"Download : {file_name}")
-            
+
             compressed_file_name: str = f"{file_name}.bz2"
-            compressed_output = os.path.join(folder_utils.get_weights_dir(), compressed_file_name)
+            compressed_output = os.path.join(
+                folder_utils.get_weights_dir(), compressed_file_name
+            )
             url: str = f"http://dlib.net/files/{compressed_file_name}"
             gdown.download(url, compressed_output, quiet=False)
-            with bz2.BZ2File(compressed_output, "rb") as fr, open(weight_file, "wb") as fw:
+            with bz2.BZ2File(compressed_output, "rb") as fr, open(
+                weight_file, "wb"
+            ) as fw:
                 shutil.copyfileobj(fr, fw)
             os.remove(compressed_output)
 

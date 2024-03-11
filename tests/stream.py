@@ -11,7 +11,6 @@ from deepface import DeepFace
 
 # Sample code to run the stream function using onboard camera
 DeepFace.stream(db_path="dataset",
-                decomposer="dlib",
                 faces_count_threshold = 2,
                 freeze_time_seconds = 2,
                 valid_frames_count = 5,

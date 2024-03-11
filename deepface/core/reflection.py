@@ -18,6 +18,10 @@ def get_derived_classes(package: Any, base_class: type) -> Dict[str, type]:
     for _, module_name, _ in pkgutil.walk_packages(package.__path__):
 
         try:
+            
+            if module_name.startswith("_"):
+                continue # Means it is a private module
+
             module = importlib.import_module(name=f"{package.__name__}.{module_name}")
         except MissingOptionalDependency as ex:
             what: str = (
