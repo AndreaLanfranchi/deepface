@@ -20,9 +20,11 @@ def get_derived_classes(package: Any, base_class: type) -> Dict[str, type]:
         try:
             
             if module_name.startswith("_"):
-                continue # Means it is a private module
+                continue # Means it is a private module but for this
+                # case, I consider it as "skipped" module
 
             module = importlib.import_module(name=f"{package.__name__}.{module_name}")
+            
         except MissingOptionalDependency as ex:
             what: str = (
                 f"Skipping module [{module_name}] from package {package.__path__}"

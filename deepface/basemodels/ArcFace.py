@@ -5,9 +5,9 @@ import tensorflow
 import gdown
 import numpy
 
-from deepface.core.exceptions import InsufficentVersionRequirement
 from deepface.commons import folder_utils
 from deepface.commons.logger import Logger
+from deepface.core.exceptions import InsufficentVersionRequirement
 from deepface.core.representer import Representer as RepresenterBase
 from deepface.core.types import BoxDimensions
 
@@ -17,8 +17,8 @@ if tensorflow_version_major < 2:
 
 # pylint: disable=wrong-import-order
 # pylint: disable=wrong-import-position
-from tensorflow.keras.models import Model
 from tensorflow.python.keras.engine import training
+from tensorflow.keras import Model
 from tensorflow.keras.layers import (
     ZeroPadding2D,
     Input,
@@ -30,6 +30,7 @@ from tensorflow.keras.layers import (
     Flatten,
     Dense,
 )
+
 # pylint: enable=wrong-import-position
 # pylint: enable=wrong-import-order
 
