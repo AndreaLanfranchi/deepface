@@ -51,13 +51,8 @@ class FaceNet128dClient(RepresenterBase):
         self.output_shape = 128
 
     def process(self, img: numpy.ndarray) -> List[float]:
-        """
-        find embeddings with FaceNet-128d model
-        Args:
-            img (numpy.ndarray): pre-loaded image in BGR
-        Returns
-            embeddings (list): multi-dimensional vector
-        """
+        # TODO: shouldn't we ensure image is resized to fit in the input_shape?
+        
         # model.predict causes memory issue when it is called in a for loop
         # embedding = model.predict(img, verbose=0)[0].tolist()
         return self._model(img, training=False).numpy()[0].tolist()

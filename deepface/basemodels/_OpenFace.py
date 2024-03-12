@@ -57,15 +57,8 @@ class OpenFaceClient(Representer):
         self.output_shape = 128
 
     def process(self, img: numpy.ndarray) -> List[float]:
-        """
-        find embeddings with OpenFace model
-        Args:
-            img (numpy.ndarray): pre-loaded image in BGR
-        Returns
-            embeddings (list): multi-dimensional vector
-        """
-        # model.predict causes memory issue when it is called in a for loop
-        # embedding = model.predict(img, verbose=0)[0].tolist()
+        
+        # TODO: shouldn't we ensure image is resized to fit in the input_shape?
         return self.model(img, training=False).numpy()[0].tolist()
 
 

@@ -47,6 +47,7 @@ class Representer(RepresenterBase):
         self._initialize()
 
     def process(self, img: numpy.ndarray) -> List[float]:
+        # TODO: shouldn't we ensure image is resized to fit in the input_shape?
         return self._model(img, training=False).numpy()[0].tolist()
 
     def _initialize(self):
@@ -162,4 +163,4 @@ class Representer(RepresenterBase):
             inputs=base_model.layers[0].input, outputs=base_model.layers[-3].output
         )
 
-        #return deepface_model
+        # return deepface_model

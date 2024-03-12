@@ -25,14 +25,7 @@ class SFaceClient(Representer):
         self.output_shape = 128
 
     def process(self, img: numpy.ndarray) -> List[float]:
-        """
-        find embeddings with SFace model - different than regular models
-        Args:
-            img (numpy.ndarray): pre-loaded image in BGR
-        Returns
-            embeddings (list): multi-dimensional vector
-        """
-        # return self.model.predict(img)[0].tolist()
+        # TODO: shouldn't we ensure image is resized to fit in the input_shape?
 
         # revert the image to original format and preprocess using the model
         input_blob = (img[0] * 255).astype(numpy.uint8)

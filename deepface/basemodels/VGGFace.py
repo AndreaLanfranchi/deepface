@@ -50,13 +50,8 @@ class VggFaceClient(Representer):
         self._initialize()
 
     def process(self, img: numpy.ndarray) -> List[float]:
-        """
-        find embeddings with VGG-Face model
-        Args:
-            img (numpy.ndarray): pre-loaded image in BGR
-        Returns
-            embeddings (list): multi-dimensional vector
-        """
+        # TODO: shouldn't we ensure image is resized to fit in the input_shape?
+        
         # model.predict causes memory issue when it is called in a for loop
         # embedding = model.predict(img, verbose=0)[0].tolist()
         # having normalization layer in descriptor troubles for some gpu users (e.g. issue 957, 966)

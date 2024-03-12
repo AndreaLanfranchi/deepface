@@ -33,6 +33,7 @@ class Representer(RepresenterBase):
 
     def process(self, img: numpy.ndarray) -> List[float]:
 
+        # TODO: shouldn't we ensure image is resized to fit in the input_shape?
         if len(img.shape) == 4:
             img = img[0]
 
