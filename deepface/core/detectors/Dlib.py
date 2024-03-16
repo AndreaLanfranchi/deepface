@@ -1,4 +1,4 @@
-from typing import Any, List
+from typing import Any, List, Optional
 
 import os
 import bz2
@@ -6,14 +6,16 @@ import shutil
 import gdown
 import numpy
 
+from deepface.core.types import BoxDimensions, InPictureFace, Point, RangeInt
 from deepface.commons import folder_utils
-from deepface.core.detector import Detector as DetectorBase, FacialAreaRegion
+from deepface.core.detector import Detector as DetectorBase
 from deepface.commons.logger import Logger
 
 from deepface.core.exceptions import MissingOptionalDependency
 
 try:
     import dlib
+    from dlib import Detector as DlibDetector
 except ModuleNotFoundError:
     what: str = f"{__name__} requires `dlib` library."
     what += "You can install by 'pip install dlib' "
@@ -21,10 +23,11 @@ except ModuleNotFoundError:
 
 logger = Logger.get_instance()
 
+
 # Dlib detector (optional)
 class Detector(DetectorBase):
 
-    _detector: Any
+    _detector: DlibDetector
     _predictor: Any
 
     def __init__(self):
@@ -50,47 +53,62 @@ class Detector(DetectorBase):
 
             os.remove(dest)
 
+        # dlib's HOG + Linear SVM face detector
         self._detector = dlib.get_frontal_face_detector()
         self._predictor = dlib.shape_predictor(weight_file)
 
+    def process(
+        self,
+        img: numpy.ndarray,
+        min_dims: Optional[BoxDimensions] = None,
+        min_confidence: float = 0.0,
+    ) -> List[InPictureFace]:
 
-    def process(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
-        results = []
-        if img.shape[0] == 0 or img.shape[1] == 0:
-            return results
+        # Validation of inputs
+        super().process(img, min_dims, min_confidence)
+        results: List[InPictureFace] = []
 
         # note that, by design, dlib's fhog face detector scores are >0 but not capped at 1
-        detections, scores, _ = self._detector.run(img, 1)
+        rects, scores, _ = self._detector.run(img, 1)
+        assert len(rects) == len(scores)
 
-        if len(detections) > 0:
+        for rect, score in zip(rects, scores):
+            if min_confidence is not None and score < min_confidence:
+                continue
 
-            for idx, detection in enumerate(detections):
-                left = detection.left()
-                right = detection.right()
-                top = detection.top()
-                bottom = detection.bottom()
+            x_range = RangeInt(rect.left(), min(rect.right(), img.shape[1]))
+            y_range = RangeInt(rect.top(), min(rect.bottom(), img.shape[0]))
 
-                y = int(max(0, top))
-                h = int(min(bottom, img.shape[0]) - y)
-                x = int(max(0, left))
-                w = int(min(right, img.shape[1]) - x)
+            if min_dims is not None:
+                if min_dims.width > 0 and x_range.span < min_dims.width:
+                    continue
+                if min_dims.height > 0 and y_range.span < min_dims.height:
+                    continue
 
-                shape = self._predictor(img, detection)
-                left_eye = (shape.part(2).x, shape.part(2).y)
-                right_eye = (shape.part(0).x, shape.part(0).y)
+            le_point = None
+            re_point = None
+            landmarks = self._predictor(img, rect)
+            if len(landmarks) >= 3:
+                le_point = Point(landmarks.part(2).x, landmarks.part(2).y)
+                re_point = Point(landmarks.part(0).x, landmarks.part(0).y)
 
-                # never saw confidence higher than +3.5 github.com/davisking/dlib/issues/761
-                confidence = scores[idx]
+                # Martian positions ?
+                # TODO Decide whether to discard the face or to not include the eyes
+                if not x_range.contains(le_point.x) or not y_range.contains(le_point.y):
+                    le_point = None
+                if not x_range.contains(re_point.x) or not y_range.contains(re_point.y):
+                    re_point = None
 
-                facial_area = FacialAreaRegion(
-                    x=x,
-                    y=y,
-                    w=w,
-                    h=h,
-                    left_eye=left_eye,
-                    right_eye=right_eye,
-                    confidence=min(max(0, confidence), 1.0),
+            results.append(
+                InPictureFace(
+                    detector=self.name,
+                    source=img,
+                    y_range=y_range,
+                    x_range=x_range,
+                    left_eye=le_point,
+                    right_eye=re_point,
+                    confidence=score,
                 )
-                results.append(facial_area)
+            )
 
         return results

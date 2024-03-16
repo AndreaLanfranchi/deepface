@@ -1,47 +1,40 @@
 from typing import List
+
 import os
+import tensorflow
 import gdown
 import numpy
-from deepface.commons import package_utils, folder_utils
+
+from deepface.commons import folder_utils
 from deepface.core.types import BoxDimensions
 from deepface.modules import verification
 from deepface.core.representer import Representer
 from deepface.commons.logger import Logger
+from deepface.core.exceptions import InsufficentVersionRequirement
+
+tensorflow_version_major = int(tensorflow.__version__.split(".", maxsplit=1)[0])
+if tensorflow_version_major < 2:
+    raise InsufficentVersionRequirement("Tensorflow reequires version >=2.0.0")
+
+# pylint: disable=wrong-import-order
+# pylint: disable=wrong-import-position
+from tensorflow.keras.models import Model, Sequential
+from tensorflow.keras.layers import (
+    Convolution2D,
+    ZeroPadding2D,
+    MaxPooling2D,
+    Flatten,
+    Dropout,
+    Activation,
+)
+
+# pylint: enable=wrong-import-position
+# pylint: enable=wrong-import-order
 
 logger = Logger.get_instance()
 
-# ---------------------------------------
 
-tf_version = package_utils.get_tf_major_version()
-if tf_version == 1:
-    from keras.models import Model, Sequential
-    from keras.layers import (
-        Convolution2D,
-        ZeroPadding2D,
-        MaxPooling2D,
-        Flatten,
-        Dropout,
-        Activation,
-    )
-else:
-    from tensorflow.keras.models import Model, Sequential
-    from tensorflow.keras.layers import (
-        Convolution2D,
-        ZeroPadding2D,
-        MaxPooling2D,
-        Flatten,
-        Dropout,
-        Activation,
-    )
-
-# ---------------------------------------
-
-
-# pylint: disable=too-few-public-methods
 class VggFaceClient(Representer):
-    """
-    VGG-Face model class
-    """
 
     def __init__(self):
         self._name = str(__name__.rsplit(".", maxsplit=1)[-1])
@@ -51,7 +44,7 @@ class VggFaceClient(Representer):
 
     def process(self, img: numpy.ndarray) -> List[float]:
         # TODO: shouldn't we ensure image is resized to fit in the input_shape?
-        
+
         # model.predict causes memory issue when it is called in a for loop
         # embedding = model.predict(img, verbose=0)[0].tolist()
         # having normalization layer in descriptor troubles for some gpu users (e.g. issue 957, 966)
@@ -90,53 +83,49 @@ class VggFaceClient(Representer):
         self._model = Model(inputs=base_model.input, outputs=base_model_output)
 
     def base_model(self) -> Sequential:
-        ret = Sequential()
-        ret.add(
-            ZeroPadding2D(
-                (1, 1), input_shape=(self.input_shape.width, self.input_shape.height, 3)
-            )
+        ret = Sequential(
+            [
+                ZeroPadding2D(
+                    (1, 1),
+                    input_shape=(self.input_shape.width, self.input_shape.height, 3),
+                ),
+                Convolution2D(64, (3, 3), activation="relu"),
+                ZeroPadding2D((1, 1)),
+                Convolution2D(64, (3, 3), activation="relu"),
+                MaxPooling2D((2, 2), strides=(2, 2)),
+                ZeroPadding2D((1, 1)),
+                Convolution2D(128, (3, 3), activation="relu"),
+                ZeroPadding2D((1, 1)),
+                Convolution2D(128, (3, 3), activation="relu"),
+                MaxPooling2D((2, 2), strides=(2, 2)),
+                ZeroPadding2D((1, 1)),
+                Convolution2D(256, (3, 3), activation="relu"),
+                ZeroPadding2D((1, 1)),
+                Convolution2D(256, (3, 3), activation="relu"),
+                ZeroPadding2D((1, 1)),
+                Convolution2D(256, (3, 3), activation="relu"),
+                MaxPooling2D((2, 2), strides=(2, 2)),
+                ZeroPadding2D((1, 1)),
+                Convolution2D(512, (3, 3), activation="relu"),
+                ZeroPadding2D((1, 1)),
+                Convolution2D(512, (3, 3), activation="relu"),
+                ZeroPadding2D((1, 1)),
+                Convolution2D(512, (3, 3), activation="relu"),
+                MaxPooling2D((2, 2), strides=(2, 2)),
+                ZeroPadding2D((1, 1)),
+                Convolution2D(512, (3, 3), activation="relu"),
+                ZeroPadding2D((1, 1)),
+                Convolution2D(512, (3, 3), activation="relu"),
+                ZeroPadding2D((1, 1)),
+                Convolution2D(512, (3, 3), activation="relu"),
+                MaxPooling2D((2, 2), strides=(2, 2)),
+                Convolution2D(self._output_shape, (7, 7), activation="relu"),
+                Dropout(0.5),
+                Convolution2D(self._output_shape, (1, 1), activation="relu"),
+                Dropout(0.5),
+                Convolution2D(2622, (1, 1)),
+                Flatten(),
+                Activation("softmax"),
+            ]
         )
-        ret.add(Convolution2D(64, (3, 3), activation="relu"))
-        ret.add(ZeroPadding2D((1, 1)))
-        ret.add(Convolution2D(64, (3, 3), activation="relu"))
-        ret.add(MaxPooling2D((2, 2), strides=(2, 2)))
-
-        ret.add(ZeroPadding2D((1, 1)))
-        ret.add(Convolution2D(128, (3, 3), activation="relu"))
-        ret.add(ZeroPadding2D((1, 1)))
-        ret.add(Convolution2D(128, (3, 3), activation="relu"))
-        ret.add(MaxPooling2D((2, 2), strides=(2, 2)))
-
-        ret.add(ZeroPadding2D((1, 1)))
-        ret.add(Convolution2D(256, (3, 3), activation="relu"))
-        ret.add(ZeroPadding2D((1, 1)))
-        ret.add(Convolution2D(256, (3, 3), activation="relu"))
-        ret.add(ZeroPadding2D((1, 1)))
-        ret.add(Convolution2D(256, (3, 3), activation="relu"))
-        ret.add(MaxPooling2D((2, 2), strides=(2, 2)))
-
-        ret.add(ZeroPadding2D((1, 1)))
-        ret.add(Convolution2D(512, (3, 3), activation="relu"))
-        ret.add(ZeroPadding2D((1, 1)))
-        ret.add(Convolution2D(512, (3, 3), activation="relu"))
-        ret.add(ZeroPadding2D((1, 1)))
-        ret.add(Convolution2D(512, (3, 3), activation="relu"))
-        ret.add(MaxPooling2D((2, 2), strides=(2, 2)))
-
-        ret.add(ZeroPadding2D((1, 1)))
-        ret.add(Convolution2D(512, (3, 3), activation="relu"))
-        ret.add(ZeroPadding2D((1, 1)))
-        ret.add(Convolution2D(512, (3, 3), activation="relu"))
-        ret.add(ZeroPadding2D((1, 1)))
-        ret.add(Convolution2D(512, (3, 3), activation="relu"))
-        ret.add(MaxPooling2D((2, 2), strides=(2, 2)))
-
-        ret.add(Convolution2D(self._output_shape, (7, 7), activation="relu"))
-        ret.add(Dropout(0.5))
-        ret.add(Convolution2D(self._output_shape, (1, 1), activation="relu"))
-        ret.add(Dropout(0.5))
-        ret.add(Convolution2D(2622, (1, 1)))
-        ret.add(Flatten())
-        ret.add(Activation("softmax"))
-
         return ret

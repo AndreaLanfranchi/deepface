@@ -1,9 +1,10 @@
-from typing import Union, List
+from typing import List, Optional
 
 import cv2
 import numpy
 
-from deepface.core.detector import Detector as DetectorBase, FacialAreaRegion
+from deepface.core.types import BoxDimensions, InPictureFace, Point, RangeInt
+from deepface.core.detector import Detector as DetectorBase
 from deepface.core.exceptions import MissingOptionalDependency
 
 try:
@@ -27,57 +28,70 @@ class Detector(DetectorBase):
         self._initialize()
 
     def _initialize(self):
-        self._detector = fast_mtcnn(
-            image_size=160,
-            thresholds=[0.6, 0.7, 0.7],  # MTCNN thresholds
-            post_process=True,
-            device="cpu",
-            select_largest=False,  # return result in descending order
-        )
+        # TODO: Use CUDA if available
+        self._detector = fast_mtcnn(device="cpu")
 
-    def process(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
+    def process(
+        self,
+        img: numpy.ndarray,
+        min_dims: Optional[BoxDimensions] = None,
+        min_confidence: float = 0.0,
+    ) -> List[InPictureFace]:
 
-        results = []
-        if img.shape[0] == 0 or img.shape[1] == 0:
-            return results
+        # Validation of inputs
+        super().process(img, min_dims, min_confidence)
+        results: List[InPictureFace] = []
 
+        # TODO: check image has less than 4 channels
+
+        # mtcnn expects RGB but OpenCV read BGR
         # TODO: Verify if the image is in the right BGR format
         # before converting it to RGB
-        img_rgb = cv2.cvtColor(
-            img, cv2.COLOR_BGR2RGB
-        )  # mtcnn expects RGB but OpenCV read BGR
+        img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
-        detections = self._detector.detect(
-            img_rgb, landmarks=True
-        )  # returns boundingbox, prob, landmark
-        if detections is not None and len(detections) > 0:
-            try:
-                for current_detection in zip(*detections):
-                    x, y, w, h = self._xyxy_to_xywh(current_detection[0])
-                    confidence = current_detection[1]
-                    left_eye = current_detection[2][0]
-                    right_eye = current_detection[2][1]
+        boxes, probs, points = self._detector.detect(img_rgb, landmarks=True)
+        for box, prob, point in zip(boxes, probs, points):
 
-                    facial_area = FacialAreaRegion(
-                        x=x,
-                        y=y,
-                        w=w,
-                        h=h,
-                        left_eye=left_eye,
-                        right_eye=right_eye,
-                        confidence=confidence,
-                    )
-                    results.append(facial_area)
-            except TypeError:
-                pass # No detections ?
+            if box is None or not isinstance(box, (list, tuple)) or len(box) != 4:
+                continue # No detection or tampered data
+
+            if prob < min_confidence:
+                continue # Confidence too low
+
+            x_range = RangeInt(start=box[0], end=min(img.shape[1], box[2]))
+            y_range = RangeInt(start=box[1], end=min(img.shape[0], box[3]))
+            if(x_range.span <= 0 or y_range.span <= 0):
+                continue # Invalid detection
+
+            if min_dims is not None:
+                if min_dims.width > 0 and x_range.span < min_dims.width:
+                    continue
+                if min_dims.height > 0 and y_range.span < min_dims.height:
+                    continue
+
+            le_point = None
+            re_point = None
+            if point is not None and len(point) >= 2:
+                le_point = Point(x=point[0][0], y=point[0][1])
+                re_point = Point(x=point[1][0], y=point[1][1])
+
+                # Martian positions ?
+                # TODO Decide whether to discard the face or to not include the eyes
+                if not x_range.contains(le_point.x) or not y_range.contains(le_point.y):
+                    le_point = None
+                if not x_range.contains(re_point.x) or not y_range.contains(re_point.y):
+                    re_point = None
+
+            results.append(
+                InPictureFace(
+                    detector=self.name,
+                    source=img,
+                    y_range=y_range,
+                    x_range=x_range,
+                    left_eye=le_point,
+                    right_eye=re_point,
+                    confidence=float(prob),
+                )
+            )
 
         return results
-
-    def _xyxy_to_xywh(self, xyxy: Union[list, tuple]) -> list:
-        """
-        Convert xyxy format to xywh format.
-        """
-        x, y = xyxy[0], xyxy[1]
-        w = xyxy[2] - x + 1
-        h = xyxy[3] - y + 1
-        return [x, y, w, h]

@@ -1,18 +1,16 @@
-# common dependencies
+from typing import Any, Dict, List, Tuple, Union, Optional
+
 import os
 import sys
 import warnings
 import logging
-from typing import Any, Dict, List, Tuple, Union, Optional
-
-# 3rd party dependencies
 import numpy
 import pandas
 import tensorflow
 
 # package dependencies
-from deepface.core.analyzer import Analyzer      # Facial Emotions Analyzer
-from deepface.core.representer import Representer  # Abstract class for face decomposers
+from deepface.core.analyzer import Analyzer        # Facial Emotions Analyzer
+from deepface.core.representer import Representer  # Abstract class for face represemter
 
 from deepface.commons import package_utils
 from deepface.commons.logger import Logger
@@ -404,7 +402,7 @@ def stream(
         decomposer=decomposer,
         detector=detector,
         distance_metric=distance_metric,
-        analyzers=analyzers,
+        attributes=analyzers,
         source=source,
         freeze_time_seconds=freeze_time_seconds,
         valid_frames_count=valid_frames_count,
@@ -414,7 +412,7 @@ def stream(
 
 def detect_faces(
     img_path: Union[str, numpy.ndarray],
-    target_size: Optional[Tuple[int, int]] = (224, 224),
+    target_size: Optional[Tuple[int, int]] = None,
     detector: Optional[str] = None,
     align: bool = True,
     expand_percentage: int = 0,

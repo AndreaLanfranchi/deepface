@@ -12,6 +12,7 @@ from cv2.typing import MatLike
 import pandas
 
 from deepface import DeepFace
+from deepface.core.analyzer import Analyzer
 from deepface.core.detector import Detector
 from deepface.core.representer import Representer
 from deepface.commons.logger import Logger
@@ -74,7 +75,7 @@ def analysis(
     decomposer: Optional[str] = None,
     detector: Optional[str] = None,
     distance_metric: str = "cosine",
-    analyzers: Optional[List[str]] = None,
+    attributes: Optional[List[str]] = None,
     source: Union[str, int] = int(0),
     freeze_time_seconds: int = 3,
     valid_frames_count: int = 5,
@@ -102,14 +103,14 @@ def analysis(
     # find custom values for this input set
     target_size = model.input_shape
 
-    # Lazy load the analysis models (if needed)
-    if analyzers is not None:
-        for i in range(len(analyzers) - 1, -1, -1):
+    # Lazy load the attributes analyzers
+    if attributes is not None:
+        for i in range(len(attributes) - 1, -1, -1):
             try:
-                _ = DeepFace.get_analysis_model(name=analyzers[i])
-            except KeyError as ex:
-                logger.error(ex.args[0])
-                analyzers.pop(i)
+                _ = Analyzer.instance(attributes[i])
+            except Exception as ex:
+                logger.warn(f"Invalid attribute [{attributes[i]}] :{ex.args[0]}")
+                attributes.pop(i)
 
     # -----------------------
     # call a dummy find function for db_path once to create embeddings in the initialization
@@ -165,7 +166,6 @@ def analysis(
 
             _process_frame(
                 frame=captured_frame,
-                target_size=target_size,
                 faces_count_threshold=faces_count_threshold,
                 detector=detector,
                 good_captures=good_captures,
@@ -184,28 +184,28 @@ def analysis(
 
             # Display the results
             should_freeze = False
-            for item in best_faces:
+            # for item in best_faces:
 
-                # Detect matches for this face
-                matching_results = _get_face_matches(
-                    face=item["face"],
-                    db_path=db_path,
-                    model_name=decomposer,
-                    distance_metric=distance_metric,
-                )
-                if len(matching_results) > 0:
-                    # Applies matches to the best capture
-                    if (
-                        _process_matches(
-                            best_capture,
-                            item["facial_area"],
-                            matching_results,
-                            detector,
-                        )
-                        == True
-                    ):
-                        should_freeze = True
-                        _cv2_refresh()
+            #     # Detect matches for this face
+            #     matching_results = _get_face_matches(
+            #         face=item["face"],
+            #         db_path=db_path,
+            #         model_name=decomposer,
+            #         distance_metric=distance_metric,
+            #     )
+            #     if len(matching_results) > 0:
+            #         # Applies matches to the best capture
+            #         if (
+            #             _process_matches(
+            #                 best_capture,
+            #                 item["facial_area"],
+            #                 matching_results,
+            #                 detector,
+            #             )
+            #             == True
+            #         ):
+            #             should_freeze = True
+            #             _cv2_refresh()
 
             if should_freeze:
                 # Count back from time_threshold to 0
@@ -269,19 +269,19 @@ def _cv2_refresh(timeout: int = 1):
 # area is less than 1/2rd of target_size.
 def _process_frame(
     frame: MatLike,
-    target_size: Tuple[int, int],
     faces_count_threshold: int,
     good_captures: List[Tuple[MatLike, List[Dict[str, Any]]]],
     display_window_title: str,
-    detector: Optional[Union[str, Detector]] = None,
+    detector: Detector = None,
 ):
     try:
-        extracted_faces = DeepFace.detect_faces(
-            img_path=frame,
-            target_size=target_size,
-            detector=detector,
-            align=False,  # Do not align the detected face
-        )
+        extracted_faces = detector.process(frame)
+        # extracted_faces = DeepFace.detect_faces(
+        #     img_path=frame,
+        #     target_size=target_size,
+        #     detector=detector,
+        #     align=False,  # Do not align the detected face
+        # )
 
         # Remove too small detected faces
         # for i in range(len(extracted_faces)-1, -1, -1):
@@ -298,7 +298,7 @@ def _process_frame(
             raise OverflowError("Too many faces found")
 
         # Store the good capture and its detection result
-        good_captures.append((frame.copy(), extracted_faces))
+        good_captures.append((frame, extracted_faces))
 
         # Draw boxes around the detected faces
         cv2.imshow(display_window_title, _box_faces(frame, extracted_faces))
