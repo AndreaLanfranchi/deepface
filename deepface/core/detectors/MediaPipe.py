@@ -1,14 +1,15 @@
-from typing import Any, List
-import cv2
+from typing import Any, List, Optional
 
+import math
 import numpy
 
 from deepface.core.detector import Detector as DetectorBase, FacialAreaRegion
+from deepface.core.types import BoxDimensions, InPictureFace, Point, RangeInt
 from deepface.commons.logger import Logger
 from deepface.core.exceptions import MissingOptionalDependency
 
 try:
-    import mediapipe as mp
+    from mediapipe.python.solutions.face_detection import FaceDetection
 except ModuleNotFoundError:
     what: str = f"{__name__} requires `mediapipe` library."
     what += "You can install by 'pip install mediapipe' "
@@ -16,74 +17,108 @@ except ModuleNotFoundError:
 
 logger = Logger.get_instance()
 
+
 # MediaPipe detector (optional)
 # see also: https://google.github.io/mediapipe/solutions/face_detection
 class Detector(DetectorBase):
 
-    _detector: Any
+    _detector: FaceDetection
 
     def __init__(self):
         self._name = str(__name__.rsplit(".", maxsplit=1)[-1])
         self._initialize()
 
     def _initialize(self):
-        mp_face_detection = mp.solutions.face_detection
-        self._detector = mp_face_detection.FaceDetection(
-            min_detection_confidence=0.7
-        )
+        #   min_detection_confidence: Minimum confidence value ([0.0, 1.0]) for face
+        #     detection to be considered successful (default 0.5). See details in
+        #     https://solutions.mediapipe.dev/face_detection#min_detection_confidence.
+        #   model_selection: 0 or 1. 0 to select a short-range model that works
+        #     best for faces within 2 meters from the camera, and 1 for a full-range
+        #     model best for faces within 5 meters. (default 0) See details in
+        #     https://solutions.mediapipe.dev/face_detection#model_selection.
+        self._detector = FaceDetection(min_detection_confidence=0.7)
 
-    def process(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
+    def process(
+        self,
+        img: numpy.ndarray,
+        min_dims: Optional[BoxDimensions] = None,
+        min_confidence: float = 0.0,
+    ) -> List[InPictureFace]:
 
-        results = []
-        if len(img.shape) < 3 or img.shape[2] != 3:
-            logger.debug("Converting image to RGB")
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        # Validation of inputs
+        super().process(img, min_dims, min_confidence)
+        results: List[InPictureFace] = []
 
-        if img.shape[0] == 0 or img.shape[1] == 0:
-            return results
-
-        img_width = img.shape[1]
-        img_height = img.shape[0]
-        outcome = self._detector.process(img)
-
-        # If no face has been detected, return an empty list
-        if outcome.detections is None:
-            return results
+        img_height, img_width = img.shape[:2]
+        detection_result = self._detector.process(img)
 
         # Extract the bounding box, the landmarks and the confidence score
-        for current_detection in outcome.detections:
-            (confidence,) = current_detection.score
+        for detection in detection_result.detections:
+            if detection is None:
+                continue
 
-            bounding_box = current_detection.location_data.relative_bounding_box
-            landmarks = current_detection.location_data.relative_keypoints
+            (confidence,) = round(detection.score, 2)
+            if confidence < min_confidence:
+                continue
 
-            x = int(bounding_box.xmin * img_width)
-            w = int(bounding_box.width * img_width)
-            y = int(bounding_box.ymin * img_height)
-            h = int(bounding_box.height * img_height)
-
-            left_eye = (
-                int(landmarks[0].x * img_width),
-                int(landmarks[0].y * img_height),
+            bounding_box = detection.bounding_box
+            x_range = RangeInt(
+                bounding_box.origin_x, bounding_box.origin_x + bounding_box.width
             )
-            right_eye = (
-                int(landmarks[1].x * img_width),
-                int(landmarks[1].y * img_height),
+            y_range = RangeInt(
+                bounding_box.origin_y, bounding_box.origin_y + bounding_box.height
             )
-            # nose = (int(landmarks[2].x * img_width), int(landmarks[2].y * img_height))
-            # mouth = (int(landmarks[3].x * img_width), int(landmarks[3].y * img_height))
-            # right_ear = (int(landmarks[4].x * img_width), int(landmarks[4].y * img_height))
-            # left_ear = (int(landmarks[5].x * img_width), int(landmarks[5].y * img_height))
+            if x_range.span <= 0 or y_range.span <= 0:
+                continue  # Invalid detection
 
-            facial_area = FacialAreaRegion(
-                x=x,
-                y=y,
-                w=w,
-                h=h,
-                left_eye=left_eye,
-                right_eye=right_eye,
-                confidence=confidence,
+            if min_dims is not None:
+                if min_dims.width > 0 and x_range.span < min_dims.width:
+                    continue
+                if min_dims.height > 0 and y_range.span < min_dims.height:
+                    continue
+
+            le_point = None
+            re_point = None
+            if detection.keypoints is not None and len(detection.keypoints) >= 2:
+                # left eye and right eye 0 and 1
+                # nose 2
+                # mouth 3
+                # right ear 4
+                # left ear 5
+                for i in range(2):
+                    x = min(
+                        math.floor(detection.keypoints[i].x * img_width), img_width - 1
+                    )
+                    y = min(
+                        math.floor(detection.keypoints[i].y * img_height),
+                        img_height - 1,
+                    )
+                    match i:
+                        case 0:
+                            le_point = Point(x, y)
+                        case 1:
+                            re_point = Point(x, y)
+                        case _:
+                            # Should not happen
+                            raise IndexError("Index out of range")
+
+                # Martian positions ?
+                # TODO Decide whether to discard the face or to not include the eyes
+                if not x_range.contains(le_point.x) or not y_range.contains(le_point.y):
+                    le_point = None
+                if not x_range.contains(re_point.x) or not y_range.contains(re_point.y):
+                    re_point = None
+
+            results.append(
+                InPictureFace(
+                    detector=self.name,
+                    source=img,
+                    y_range=y_range,
+                    x_range=x_range,
+                    left_eye=le_point,
+                    right_eye=re_point,
+                    confidence=confidence,
+                )
             )
-            results.append(facial_area)
 
         return results
