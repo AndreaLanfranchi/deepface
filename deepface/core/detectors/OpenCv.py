@@ -1,13 +1,27 @@
-from typing import Any, List
+from typing import Any, List, Sequence
 
 import os
 import cv2
 import numpy
+from pyparsing import Optional
 
-from deepface.core.detector import Detector as DetectorBase, FacialAreaRegion
+from cv2.typing import Rect
+from deepface.core.detector import Detector as DetectorBase
+from deepface.core.exceptions import FaceNotFound
+from deepface.core.types import (
+    BoundingBox,
+    BoxDimensions,
+    DetectedFace,
+    Point,
+    RangeInt,
+)
+
 
 # OpenCV's detector (default)
 class Detector(DetectorBase):
+
+    _detector: cv2.CascadeClassifier
+    _eye_detector: cv2.CascadeClassifier
 
     def __init__(self):
         self._name = str(__name__.rsplit(".", maxsplit=1)[-1])
@@ -17,57 +31,105 @@ class Detector(DetectorBase):
         self._detector = self._build_cascade("haarcascade")
         self._eye_detector = self._build_cascade("haarcascade_eye")
 
-    def process(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
+    def process(
+        self,
+        img: numpy.ndarray,
+        min_dims: Optional[BoxDimensions] = None,
+        min_confidence: float = 0.0,
+        raise_notfound: bool = False,
+    ) -> DetectorBase.Outcome:
 
-        results = []
-        if img.shape[0] == 0 or img.shape[1] == 0:
-            return results
-        faces = []
-        try:
-            # note that, by design, opencv's haarcascade scores are >0 but not capped at 1
-            faces, _, scores = self._detector.detectMultiScale3(
-                img, 1.1, 10, outputRejectLevels=True
+        # Validation of inputs
+        super().process(img, min_dims, min_confidence)
+        img_height, img_width = img.shape[:2]
+
+        gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        detected_faces: List[DetectedFace] = []
+
+        # note that, by design, opencv's haarcascade scores are >0 but not capped at 1
+        # TODO : document values and magic numbers
+        faces, _, weights = self._detector.detectMultiScale3(
+            image=gray_img,
+            scaleFactor=1.1,
+            minNeighbors=10,
+            outputRejectLevels=True,
+        )
+
+        for rect, weight in zip(faces, weights):
+            if min_confidence is not None and weight < min_confidence:
+                continue
+
+            x, y, w, h = rect
+            x_range = RangeInt(
+                x,
+                min(x + w, img_width),
             )
-        except:
-            pass
+            y_range = RangeInt(
+                y,
+                min(y + h, img_height),
+            )
+            if x_range.span <= 0 or y_range.span <= 0:
+                continue  # Invalid detection
 
-        if len(faces) > 0:
-            for (x, y, w, h), confidence in zip(faces, scores):
-                detected_face = img[int(y) : int(y + h), int(x) : int(x + w)]
-                left_eye, right_eye = self.find_eyes(img=detected_face)
-                facial_area = FacialAreaRegion(
-                    x=x,
-                    y=y,
-                    w=w,
-                    h=h,
-                    left_eye=left_eye,
-                    right_eye=right_eye,
-                    confidence=(100 - confidence) / 100,
+            if min_dims is not None:
+                if min_dims.width > 0 and x_range.span < min_dims.width:
+                    continue
+                if min_dims.height > 0 and y_range.span < min_dims.height:
+                    continue
+
+            bounding_box: BoundingBox = BoundingBox(
+                top_left=Point(x=x_range.start, y=y_range.start),
+                bottom_right=Point(x=x_range.end, y=y_range.end),
+            )
+
+            cropped_img = gray_img[
+                bounding_box.top_left.y : bounding_box.bottom_right.y,
+                bounding_box.top_left.x : bounding_box.bottom_right.x,
+            ]
+
+            le_point = None
+            re_point = None
+            eyes: List[Point] = self.find_eyes(cropped_img)
+            if len(eyes) == 2:
+                # Normalize left and right eye coordinates to the whole image
+                le_point = Point(
+                    x=eyes[0].x + bounding_box.top_left.x,
+                    y=eyes[0].y + bounding_box.top_left.y,
                 )
-                results.append(facial_area)
+                re_point = Point(
+                    x=eyes[1].x + bounding_box.top_left.x,
+                    y=eyes[1].y + bounding_box.top_left.y,
+                )
 
-        return results
+            detected_faces.append(
+                DetectedFace(
+                    bounding_box=bounding_box,
+                    left_eye=le_point,
+                    right_eye=re_point,
+                    confidence=float(weight),
+                )
+            )
 
-    def find_eyes(self, img: numpy.ndarray) -> tuple:
-        """
-        Find the left and right eye coordinates of given image
-        Args:
-            img (numpy.ndarray): given image
-        Returns:
-            left and right eye (tuple)
-        """
-        left_eye = None
-        right_eye = None
+        if len(detected_faces) == 0 and raise_notfound == True:
+            raise FaceNotFound("No face detected. Check the input image.")
 
-        # if image has unexpectedly 0 dimension then skip alignment
-        if img.shape[0] == 0 or img.shape[1] == 0:
-            return left_eye, right_eye
+        return DetectorBase.Outcome(
+            detector=self._name,
+            source=img,
+            detected_faces=detected_faces,
+        )
 
-        detected_face_gray = cv2.cvtColor(
-            img, cv2.COLOR_BGR2GRAY
-        )  # eye detector expects gray scale image
+    def find_eyes(self, img: numpy.ndarray) -> List[Point]:
 
-        eyes = self._eye_detector.detectMultiScale(detected_face_gray, 1.1, 10)
+        ret: List[Point] = []
+        rects: Sequence[Rect] = self._eye_detector.detectMultiScale(
+            img=img,
+            scaleFactor=1.1,
+            minNeighbors=10,
+            minSize=(5, 5),
+        )
+        if len(rects) < 2:
+            return ret
 
         # ----------------------------------------------------------------
 
@@ -76,33 +138,29 @@ class Detector(DetectorBase):
         # this is an important issue because opencv is the default detector and ssd also uses this
         # find the largest 2 eye. Thanks to @thelostpeace
 
-        eyes = sorted(eyes, key=lambda v: abs(v[2] * v[3]), reverse=True)
+        rects: Sequence[Rect] = sorted(
+            rects, key=lambda v: abs(v[2] * v[3]), reverse=True
+        )[:2]
 
-        # ----------------------------------------------------------------
-        if len(eyes) >= 2:
-            # decide left and right eye
+        # Eventually, we have 2 eyes which we order left to right by x coordinate
+        rects: Sequence[Rect] = sorted(rects, key=lambda v: v[0])
 
-            eye_1 = eyes[0]
-            eye_2 = eyes[1]
+        x, y, w, h = rects[0]
+        left_box = BoundingBox(
+            top_left=Point(x=x, y=y),
+            bottom_right=Point(x=x + w, y=y + h),
+        )
 
-            if eye_1[0] < eye_2[0]:
-                left_eye = eye_1
-                right_eye = eye_2
-            else:
-                left_eye = eye_2
-                right_eye = eye_1
+        x, y, w, h = rects[1]
+        right_box = BoundingBox(
+            top_left=Point(x=x, y=y),
+            bottom_right=Point(x=x + w, y=y + h),
+        )
 
-            # -----------------------
-            # find center of eyes
-            left_eye = (
-                int(left_eye[0] + (left_eye[2] / 2)),
-                int(left_eye[1] + (left_eye[3] / 2)),
-            )
-            right_eye = (
-                int(right_eye[0] + (right_eye[2] / 2)),
-                int(right_eye[1] + (right_eye[3] / 2)),
-            )
-        return left_eye, right_eye
+        left_eye = left_box.center
+        right_eye = right_box.center
+
+        return list(left_eye, right_eye)
 
     def _build_cascade(self, model_name="haarcascade") -> Any:
 

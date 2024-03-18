@@ -1,12 +1,18 @@
-from typing import Any, List, Optional
+from typing import List, Optional
 
 import math
 import numpy
 
-from deepface.core.detector import Detector as DetectorBase, FacialAreaRegion
-from deepface.core.types import BoxDimensions, InPictureFace, Point, RangeInt
+from deepface.core.detector import Detector as DetectorBase
+from deepface.core.types import (
+    BoundingBox,
+    BoxDimensions,
+    DetectedFace,
+    Point,
+    RangeInt,
+)
 from deepface.commons.logger import Logger
-from deepface.core.exceptions import MissingOptionalDependency
+from deepface.core.exceptions import FaceNotFound, MissingOptionalDependency
 
 try:
     from mediapipe.python.solutions.face_detection import FaceDetection
@@ -43,11 +49,12 @@ class Detector(DetectorBase):
         img: numpy.ndarray,
         min_dims: Optional[BoxDimensions] = None,
         min_confidence: float = 0.0,
-    ) -> List[InPictureFace]:
+        raise_notfound: bool = False,
+    ) -> DetectorBase.Outcome:
 
         # Validation of inputs
         super().process(img, min_dims, min_confidence)
-        results: List[InPictureFace] = []
+        detected_faces: List[DetectedFace] = []
 
         img_height, img_width = img.shape[:2]
         detection_result = self._detector.process(img)
@@ -58,15 +65,17 @@ class Detector(DetectorBase):
                 continue
 
             (confidence,) = round(detection.score, 2)
-            if confidence < min_confidence:
+            if min_confidence is not None and confidence < min_confidence:
                 continue
 
-            bounding_box = detection.bounding_box
+            detection_box = detection.bounding_box
             x_range = RangeInt(
-                bounding_box.origin_x, bounding_box.origin_x + bounding_box.width
+                detection_box.origin_x,
+                min(detection_box.origin_x + detection_box.width, img_width),
             )
             y_range = RangeInt(
-                bounding_box.origin_y, bounding_box.origin_y + bounding_box.height
+                detection_box.origin_y,
+                min(detection_box.origin_y + detection_box.height, img_height),
             )
             if x_range.span <= 0 or y_range.span <= 0:
                 continue  # Invalid detection
@@ -76,6 +85,11 @@ class Detector(DetectorBase):
                     continue
                 if min_dims.height > 0 and y_range.span < min_dims.height:
                     continue
+
+            bounding_box: BoundingBox = BoundingBox(
+                top_left=Point(x=x_range.start, y=y_range.start),
+                bottom_right=Point(x=x_range.end, y=y_range.end),
+            )
 
             le_point = None
             re_point = None
@@ -104,21 +118,24 @@ class Detector(DetectorBase):
 
                 # Martian positions ?
                 # TODO Decide whether to discard the face or to not include the eyes
-                if not x_range.contains(le_point.x) or not y_range.contains(le_point.y):
+                if le_point not in bounding_box or re_point not in bounding_box:
                     le_point = None
-                if not x_range.contains(re_point.x) or not y_range.contains(re_point.y):
                     re_point = None
 
-            results.append(
-                InPictureFace(
-                    detector=self.name,
-                    source=img,
-                    y_range=y_range,
-                    x_range=x_range,
+            detected_faces.append(
+                DetectedFace(
+                    bounding_box=bounding_box,
                     left_eye=le_point,
                     right_eye=re_point,
-                    confidence=confidence,
+                    confidence=float(confidence),
                 )
             )
 
-        return results
+        if len(detected_faces) == 0 and raise_notfound == True:
+            raise FaceNotFound("No face detected. Check the input image.")
+
+        return DetectorBase.Outcome(
+            detector=self._name,
+            source=img,
+            detected_faces=detected_faces,
+        )

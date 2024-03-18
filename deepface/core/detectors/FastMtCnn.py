@@ -3,9 +3,15 @@ from typing import List, Optional
 import cv2
 import numpy
 
-from deepface.core.types import BoxDimensions, InPictureFace, Point, RangeInt
+from deepface.core.types import (
+    BoundingBox,
+    BoxDimensions,
+    DetectedFace,
+    Point,
+    RangeInt,
+)
 from deepface.core.detector import Detector as DetectorBase
-from deepface.core.exceptions import MissingOptionalDependency
+from deepface.core.exceptions import FaceNotFound, MissingOptionalDependency
 
 try:
     from facenet_pytorch import MTCNN as fast_mtcnn
@@ -36,11 +42,12 @@ class Detector(DetectorBase):
         img: numpy.ndarray,
         min_dims: Optional[BoxDimensions] = None,
         min_confidence: float = 0.0,
-    ) -> List[InPictureFace]:
+        raise_notfound: bool = False,
+    ) -> DetectorBase.Outcome:
 
         # Validation of inputs
         super().process(img, min_dims, min_confidence)
-        results: List[InPictureFace] = []
+        detected_faces: List[DetectedFace] = []
 
         # TODO: check image has less than 4 channels
 
@@ -53,15 +60,15 @@ class Detector(DetectorBase):
         for box, prob, point in zip(boxes, probs, points):
 
             if box is None or not isinstance(box, (list, tuple)) or len(box) != 4:
-                continue # No detection or tampered data
+                continue  # No detection or tampered data
 
-            if prob < min_confidence:
-                continue # Confidence too low
+            if min_confidence is not None and prob < min_confidence:
+                continue  # Confidence too low
 
             x_range = RangeInt(start=box[0], end=min(img.shape[1], box[2]))
             y_range = RangeInt(start=box[1], end=min(img.shape[0], box[3]))
-            if(x_range.span <= 0 or y_range.span <= 0):
-                continue # Invalid detection
+            if x_range.span <= 0 or y_range.span <= 0:
+                continue  # Invalid detection
 
             if min_dims is not None:
                 if min_dims.width > 0 and x_range.span < min_dims.width:
@@ -69,29 +76,35 @@ class Detector(DetectorBase):
                 if min_dims.height > 0 and y_range.span < min_dims.height:
                     continue
 
+            bounding_box: BoundingBox = BoundingBox(
+                top_left=Point(x=x_range.start, y=y_range.start),
+                bottom_right=Point(x=x_range.end, y=y_range.end),
+            )
+
             le_point = None
             re_point = None
             if point is not None and len(point) >= 2:
                 le_point = Point(x=point[0][0], y=point[0][1])
                 re_point = Point(x=point[1][0], y=point[1][1])
-
-                # Martian positions ?
                 # TODO Decide whether to discard the face or to not include the eyes
-                if not x_range.contains(le_point.x) or not y_range.contains(le_point.y):
+                if le_point not in bounding_box or re_point not in bounding_box:
                     le_point = None
-                if not x_range.contains(re_point.x) or not y_range.contains(re_point.y):
                     re_point = None
 
-            results.append(
-                InPictureFace(
-                    detector=self.name,
-                    source=img,
-                    y_range=y_range,
-                    x_range=x_range,
+            detected_faces.append(
+                DetectedFace(
+                    bounding_box=bounding_box,
                     left_eye=le_point,
                     right_eye=re_point,
                     confidence=float(prob),
                 )
             )
 
-        return results
+        if len(detected_faces) == 0 and raise_notfound == True:
+            raise FaceNotFound("No face detected. Check the input image.")
+
+        return DetectorBase.Outcome(
+            detector=self._name,
+            source=img,
+            detected_faces=detected_faces,
+        )

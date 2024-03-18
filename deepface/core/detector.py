@@ -1,10 +1,12 @@
-from typing import List, Tuple, Optional
+from dataclasses import dataclass, field
+from typing import List, Optional
 from abc import ABC, abstractmethod
 
 import time
 import numpy
 
-from deepface.core.types import InPictureFace, BoxDimensions
+from cv2.typing import MatLike
+from deepface.core.types import DetectedFace, BoxDimensions
 from deepface.core import reflection, detectors
 from deepface.commons.logger import Logger
 
@@ -16,23 +18,27 @@ logger = Logger.get_instance()
 # returning the region of the image where the face is located.
 class Detector(ABC):
     """
-    Interface in picture face detection.
-
-    Args:
-        img (numpy.ndarray): pre-loaded image as numpy array
-        min_dims: Optional[BoxDimensions]: filter to discard
-        boxes around faces that are smaller than the given dimensions
-        min_confidence (float): minimum confidence level for the detection
-
-    Returns:
-        `List[InPictureFace]`: A list of the regions containing a face in
-        the image provided. The list may be empty if no faces are detected.
-
-    Raises:
-        `ValueError`: If the image is not a valid numpy array
+    Interface for in picture face detection.
     """
 
     _name: Optional[str] = None  # Must be filled by specialized classes
+
+    @dataclass(frozen=True)
+    class Outcome:
+        detector: str = field(default="<undefined>")
+        source: MatLike = field(default_factory=numpy.ndarray)
+        detections: list[DetectedFace] = field(default_factory=list)
+
+    def __post_init__(self):
+        assert isinstance(self.detector, str)
+        assert isinstance(self.source, MatLike)
+        assert isinstance(self.detections, list)
+
+        if self.detector.strip() == "":
+            raise ValueError("Detector name must be non-empty")
+
+    def __len__(self):
+        return len(self.detections)
 
     @abstractmethod
     def process(
@@ -40,7 +46,27 @@ class Detector(ABC):
         img: numpy.ndarray,
         min_dims: Optional[BoxDimensions] = None,
         min_confidence: float = 0.0,
-    ) -> List[InPictureFace]:
+        raise_notfound: bool = False,
+    ) -> Outcome:
+        """
+        Detect faces in the given image.
+
+        Args:
+            img (numpy.ndarray): pre-loaded image as numpy array
+            min_dims: Optional[BoxDimensions]: filter to discard
+            boxes around faces that are smaller than the given dimensions
+            min_confidence (float): minimum confidence level for the detection
+            raise_notfound (bool): if True, raise an exception if no faces are found
+
+        Returns:
+            An instance of `Outcome`
+
+        Raises:
+            `TypeError`: If the image is not a valid numpy array
+            `ValueError`: If the image is empty
+            'RuntimeError': If the detector does not find any face in the image
+                and the `raise_notfound` argument is True
+        """
 
         if not isinstance(img, numpy.ndarray) or len(img.shape) != 3:
             raise TypeError("Image must be a valid numpy array")
@@ -160,40 +186,3 @@ class Detector(ABC):
             raise ex
 
         return instance
-
-
-class FacialAreaRegion:
-    x: int
-    y: int
-    w: int
-    h: int
-    left_eye: Optional[Tuple[int, int]]
-    right_eye: Optional[Tuple[int, int]]
-    confidence: Optional[float]
-
-    def __init__(
-        self,
-        x: int,
-        y: int,
-        w: int,
-        h: int,
-        left_eye: Optional[Tuple[int, int]] = None,
-        right_eye: Optional[Tuple[int, int]] = None,
-        confidence: Optional[float] = None,
-    ):
-        self.x = x
-        self.y = y
-        self.w = w
-        self.h = h
-        self.left_eye = left_eye
-        self.right_eye = right_eye
-        self.confidence = confidence
-
-
-class DetectedFace:
-    img: numpy.ndarray
-    facial_area: FacialAreaRegion
-
-    def __init__(self, img: numpy.ndarray, facial_area: FacialAreaRegion):
-        self.img = img
-        self.facial_area = facial_area

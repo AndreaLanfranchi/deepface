@@ -6,16 +6,21 @@ import shutil
 import gdown
 import numpy
 
-from deepface.core.types import BoxDimensions, InPictureFace, Point, RangeInt
-from deepface.commons import folder_utils
-from deepface.core.detector import Detector as DetectorBase
-from deepface.commons.logger import Logger
+from deepface.core.types import (
+    BoundingBox,
+    BoxDimensions,
+    DetectedFace,
+    Point,
+    RangeInt,
+)
 
-from deepface.core.exceptions import MissingOptionalDependency
+from deepface.core.exceptions import FaceNotFound, MissingOptionalDependency
+from deepface.core.detector import Detector as DetectorBase
+from deepface.commons import folder_utils
+from deepface.commons.logger import Logger
 
 try:
     import dlib
-    from dlib import Detector as DlibDetector
 except ModuleNotFoundError:
     what: str = f"{__name__} requires `dlib` library."
     what += "You can install by 'pip install dlib' "
@@ -27,7 +32,7 @@ logger = Logger.get_instance()
 # Dlib detector (optional)
 class Detector(DetectorBase):
 
-    _detector: DlibDetector
+    _detector: Any
     _predictor: Any
 
     def __init__(self):
@@ -62,11 +67,12 @@ class Detector(DetectorBase):
         img: numpy.ndarray,
         min_dims: Optional[BoxDimensions] = None,
         min_confidence: float = 0.0,
-    ) -> List[InPictureFace]:
+        raise_notfound: bool = False,
+    ) -> DetectorBase.Outcome:
 
         # Validation of inputs
         super().process(img, min_dims, min_confidence)
-        results: List[InPictureFace] = []
+        detected_faces: List[DetectedFace] = []
 
         # note that, by design, dlib's fhog face detector scores are >0 but not capped at 1
         rects, scores, _ = self._detector.run(img, 1)
@@ -78,6 +84,8 @@ class Detector(DetectorBase):
 
             x_range = RangeInt(rect.left(), min(rect.right(), img.shape[1]))
             y_range = RangeInt(rect.top(), min(rect.bottom(), img.shape[0]))
+            if x_range.span <= 0 or y_range.span <= 0:
+                continue  # Invalid detection
 
             if min_dims is not None:
                 if min_dims.width > 0 and x_range.span < min_dims.width:
@@ -85,30 +93,36 @@ class Detector(DetectorBase):
                 if min_dims.height > 0 and y_range.span < min_dims.height:
                     continue
 
+            bounding_box: BoundingBox = BoundingBox(
+                top_left=Point(x=x_range.start, y=y_range.start),
+                bottom_right=Point(x=x_range.end, y=y_range.end),
+            )
+
             le_point = None
             re_point = None
             landmarks = self._predictor(img, rect)
             if len(landmarks) >= 3:
                 le_point = Point(landmarks.part(2).x, landmarks.part(2).y)
                 re_point = Point(landmarks.part(0).x, landmarks.part(0).y)
-
-                # Martian positions ?
                 # TODO Decide whether to discard the face or to not include the eyes
-                if not x_range.contains(le_point.x) or not y_range.contains(le_point.y):
+                if le_point not in bounding_box or re_point not in bounding_box:
                     le_point = None
-                if not x_range.contains(re_point.x) or not y_range.contains(re_point.y):
                     re_point = None
 
-            results.append(
-                InPictureFace(
-                    detector=self.name,
-                    source=img,
-                    y_range=y_range,
-                    x_range=x_range,
+            detected_faces.append(
+                DetectedFace(
+                    bounding_box=bounding_box,
                     left_eye=le_point,
                     right_eye=re_point,
-                    confidence=score,
+                    confidence=float(score),
                 )
             )
 
-        return results
+        if len(detected_faces) == 0 and raise_notfound == True:
+            raise FaceNotFound("No face detected. Check the input image.")
+
+        return DetectorBase.Outcome(
+            detector=self._name,
+            source=img,
+            detected_faces=detected_faces,
+        )

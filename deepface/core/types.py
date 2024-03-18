@@ -1,24 +1,27 @@
-from typing import Optional
-from dataclasses import dataclass
-
-import numpy
-
-from cv2.typing import MatLike
+from typing import Optional, Union
+from dataclasses import dataclass, field
 
 
-@dataclass
 class RangeInt:
     """
     Represents a range of integers as [start, end]
     """
 
-    start: int = 0
-    end: int = 0
+    _start: int = 0
+    _end: int = 0
 
     def __init__(self, start: int, end: int):
-        self.start = max(start, 0)
-        self.end = max(end, 0)
-        self.end = max(self.end, self.start)
+        self._start = max(start, 0)
+        self._end = max(end, 0)
+        self._end = max(self.end, self.start)
+
+    @property
+    def start(self) -> int:
+        return self._start
+
+    @property
+    def end(self) -> int:
+        return self._end
 
     @property
     def span(self) -> int:
@@ -30,14 +33,19 @@ class RangeInt:
 
 @dataclass(frozen=True)
 class Point:
-    x: int = 0
-    y: int = 0
+    """
+    Represents a point in a 2D plane.
+    Negative values are normalized to 0.
+    """
 
-    def __init__(self, x: int, y: int):
-        assert isinstance(x, int)
-        assert isinstance(y, int)
-        self.x = max(x, 0)
-        self.y = max(y, 0)
+    x: int = field(default=0)
+    y: int = field(default=0)
+
+    def __post_init__(self):
+        assert isinstance(self.x, int)
+        assert isinstance(self.y, int)
+        object.__setattr__(self, "x", max(self.x, 0))
+        object.__setattr__(self, "y", max(self.y, 0))
 
     def __iter__(self):
         yield self.x
@@ -53,17 +61,103 @@ class Point:
             return self.y
         raise IndexError("Index out of range")
 
+    def __eq__(self, other: "Point") -> bool:
+        if isinstance(other, Point):
+            return self.x == other.x and self.y == other.y
+        return False
+
+    def __ne__(self, other: "Point") -> bool:
+        return not self.__eq__(other)
+
+    def __gt__(self, other: "Point") -> bool:
+        if isinstance(other, Point):
+            return self.x > other.x and self.y > other.y
+        return False
+
+    def __ge__(self, other: "Point") -> bool:
+        if isinstance(other, Point):
+            return self.x >= other.x and self.y >= other.y
+        return False
+
+    def __lt__(self, other: "Point") -> bool:
+        if isinstance(other, Point):
+            return self.x < other.x and self.y < other.y
+        return False
+
+    def __le__(self, other: "Point") -> bool:
+        if isinstance(other, Point):
+            return self.x <= other.x and self.y <= other.y
+        return False
+
+
+@dataclass(frozen=True)
+class BoundingBox:
+    """
+    Represents a box in a 2D plane enclosed by two points which
+    are the top-left and bottom-right corners of the box.
+    The top-right and bottom-left corners are also provided
+    as derived properties for convenience.
+    Is used to represent the position of a face in an image.
+    """
+
+    top_left: Point = field(default_factory=Point)
+    bottom_right: Point = field(default_factory=Point)
+
+    def __post_init__(self):
+        assert isinstance(self.top_left, Point)
+        assert isinstance(self.bottom_right, Point)
+        if (self.top_left <= self.bottom_right) == False:
+            raise ValueError("Top-left must be less than or equal to bottom-right")
+
+    @property
+    def width(self) -> int:
+        return self.bottom_right.x - self.top_left.x
+
+    @property
+    def height(self) -> int:
+        return self.bottom_right.y - self.top_left.y
+
+    @property
+    def top_right(self) -> Point:
+        return Point(x=self.bottom_right.x, y=self.top_left.y)
+
+    @property
+    def bottom_left(self) -> Point:
+        return Point(x=self.top_left.x, y=self.bottom_right.y)
+
+    @property
+    def area(self) -> int:
+        return self.width * self.height
+
+    @property
+    def empty(self) -> bool:
+        return self.area == 0
+
+    @property
+    def center(self) -> Point:
+        return Point(
+            x=self.top_left.x + self.width // 2,
+            y=self.top_left.y + self.height // 2,
+        )
+
+    def __contains__(self, point: Point) -> bool:
+        return (
+            self.top_left.x <= point.x <= self.bottom_right.x
+            and self.top_left.y <= point.y <= self.bottom_right.y
+        )
+
 
 @dataclass(frozen=True)
 class BoxDimensions:
-    width: int = 0
-    height: int = 0
 
-    def __init__(self, width: int, height: int):
-        assert isinstance(width, int)
-        assert isinstance(height, int)
-        self.width = max(width, 0)
-        self.height = max(height, 0)
+    width: int = field(default=0)
+    height: int = field(default=0)
+
+    def __post_init__(self):
+        assert isinstance(self.width, int)
+        assert isinstance(self.height, int)
+        object.__setattr__(self, "width", max(self.width, 0))
+        object.__setattr__(self, "height", max(self.height, 0))
 
     def __iter__(self):
         yield self.width
@@ -79,71 +173,54 @@ class BoxDimensions:
             return self.height
         raise IndexError("Index out of range")
 
+    def __lt__(self, other: Union[BoundingBox, "BoxDimensions"]) -> bool:
+        if isinstance(other, BoundingBox):
+            return self.width < other.width or self.height < other.height
+        if isinstance(other, BoxDimensions):
+            return self.width < other.width or self.height < other.height
+        return False
+
+
 @dataclass(frozen=True)
-class InPictureFace:
+class DetectedFace:
     """
-    Represents the result of a face detection.
+    Represents the detection of a single face in an image.
+    Note: an image may contain multiple faces.
     """
 
-    def __init__(
-        self,
-        detector: str,  # The name of the detector used
-        source: MatLike,  # The original image being processed
-        y_range: RangeInt,  # The vertical range for the box containing the face
-        x_range: RangeInt,  # The horizontal range for the box containing the face
-        left_eye: Optional[Point] = None,  # The coordinates of the left eye (if any)
-        right_eye: Optional[Point] = None,  # The coordinates of the right eye (if any)
-        confidence: Optional[float] = None,  # The confidence of the detection (if any)
-    ):
-        assert isinstance(detector, str)
-        assert isinstance(source, MatLike)
-        self._detector = detector.strip()
-        self._source = source
-        self._y_range = y_range
-        self._x_range = x_range
-        self._left_eye = left_eye
-        self._right_eye = right_eye
-        self._confidence = confidence
+    bounding_box: BoundingBox = field(default_factory=BoundingBox)
+    left_eye: Optional[Point] = field(default=None)
+    right_eye: Optional[Point] = field(default=None)
+    confidence: Optional[float] = field(default=None)
 
-    @property
-    def detector(self) -> str:
-        return self._detector
+    def __post_init__(self):
+        assert isinstance(self.bounding_box, BoundingBox)
+        assert self.left_eye is None or isinstance(self.left_eye, Point)
+        assert self.right_eye is None or isinstance(self.right_eye, Point)
+        if isinstance(self.confidence, float):
+            object.__setattr__(self, "confidence", max(self.confidence, 0.0))
+        else:
+            object.__setattr__(self, "confidence", float(0.0))
 
-    @property
-    def source(self) -> MatLike:
-        return self._source
+        if self.bounding_box.area == 0:
+            raise ValueError("Bounding box must be non-empty")
 
-    @property
-    def top_left(self) -> Point:
-        return Point(self._x_range.start, self._y_range.start)
-    
-    @property
-    def bottom_right(self) -> Point:
-        return Point(self._x_range.end, self._y_range.end)
-
-    @property
-    def height(self) -> int:
-        return self._y_range.end - self._y_range.start
+        if bool(self.left_eye is None) != bool(self.right_eye is None):
+            raise ValueError("Both eyes must be provided or both must be None")
+        elif self.left_eye is not None and self.right_eye is not None:
+            if self.left_eye == self.right_eye:
+                raise ValueError("Left and right eyes must be different")
+            if self.left_eye > self.right_eye:
+                raise ValueError("Left eye must be to the left of the right eye")
+            if self.left_eye not in self.bounding_box:
+                raise ValueError("Left eye must be inside the bounding box")
+            if self.right_eye not in self.bounding_box:
+                raise ValueError("Right eye must be inside the bounding box")
 
     @property
     def width(self) -> int:
-        return self._x_range.end - self._x_range.start
+        return self.bounding_box.width
 
     @property
-    def area(self) -> int:
-        return self.height * self.width
-
-    @property
-    def empty(self) -> bool:
-        return self.area == 0
-
-    @property
-    def crop_face(self) -> numpy.ndarray:
-        return self._source[
-            self._y_range.start : self._y_range.end,
-            self._x_range.start : self._x_range.end,
-        ]
-
-    @property
-    def confidence(self) -> Optional[float]:
-        return self._confidence
+    def height(self) -> int:
+        return self.bounding_box.height
