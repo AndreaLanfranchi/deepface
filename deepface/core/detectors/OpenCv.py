@@ -60,14 +60,8 @@ class Detector(DetectorBase):
                 continue
 
             x, y, w, h = rect
-            x_range = RangeInt(
-                x,
-                min(x + w, img_width),
-            )
-            y_range = RangeInt(
-                y,
-                min(y + h, img_height),
-            )
+            x_range = RangeInt(x, min(x + w, img_width))
+            y_range = RangeInt(y, min(y + h, img_height))
             if x_range.span <= 0 or y_range.span <= 0:
                 continue  # Invalid detection
 
@@ -100,6 +94,10 @@ class Detector(DetectorBase):
                     x=eyes[1].x + bounding_box.top_left.x,
                     y=eyes[1].y + bounding_box.top_left.y,
                 )
+                if le_point not in bounding_box or re_point not in bounding_box:
+                    le_point = None
+                    re_point = None
+
 
             detected_faces.append(
                 DetectedFace(

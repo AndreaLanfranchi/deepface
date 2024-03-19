@@ -1,9 +1,11 @@
-from typing import List
+from typing import List, Optional
 
 import numpy
 from retinaface import RetinaFace as rf
 
-from deepface.core.detector import Detector as DetectorBase, FacialAreaRegion
+from deepface.core.detector import Detector as DetectorBase
+from deepface.core.exceptions import FaceNotFound
+from deepface.core.types import BoundingBox, BoxDimensions, DetectedFace, Point, RangeInt
 
 # RetinaFace detector
 class Detector(DetectorBase):
@@ -12,45 +14,67 @@ class Detector(DetectorBase):
         self._name = str(__name__.rsplit(".", maxsplit=1)[-1])
         self._detector = rf.build_model()
 
-    def process(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
-        results = []
-        if img.shape[0] == 0 or img.shape[1] == 0:
-            return results
+    def process(
+        self,
+        img: numpy.ndarray,
+        min_dims: Optional[BoxDimensions] = None,
+        min_confidence: float = 0.0,
+        raise_notfound: bool = False,
+    ) -> DetectorBase.Outcome:
 
-        obj = rf.detect_faces(img, model=self._detector, threshold=0.9)
+        # Validation of inputs
+        super().process(img, min_dims, min_confidence)
+        img_height, img_width = img.shape[:2]
+        detected_faces: List[DetectedFace] = []
 
-        if not isinstance(obj, dict):
-            return results
+        faces = rf.detect_faces(img, model=self._detector, threshold=0.9)
+        for face in faces:
 
-        for face_idx in obj.keys():
-            identity = obj[face_idx]
-            detection = identity["facial_area"]
+            score = float(face["score"])
+            if min_confidence is not None and score < min_confidence:
+                continue
 
-            y = detection[1]
-            h = detection[3] - y
-            x = detection[0]
-            w = detection[2] - x
+            x1, y1, x2, y2 = face["facial_area"]
+            x_range = RangeInt(x1, min(x2, img_width))
+            y_range = RangeInt(y1, min(y2, img_height))
+            if x_range.span <= 0 or y_range.span <= 0:
+                continue  # Invalid detection
 
-            # notice that these must be inverse for retinaface
-            left_eye = identity["landmarks"]["right_eye"]
-            right_eye = identity["landmarks"]["left_eye"]
+            if min_dims is not None:
+                if min_dims.width > 0 and x_range.span < min_dims.width:
+                    continue
+                if min_dims.height > 0 and y_range.span < min_dims.height:
+                    continue
 
-            # eyes are list of float, need to cast them tuple of int
-            left_eye = tuple(int(i) for i in left_eye)
-            right_eye = tuple(int(i) for i in right_eye)
-
-            confidence = identity["score"]
-
-            facial_area = FacialAreaRegion(
-                x=x,
-                y=y,
-                w=w,
-                h=h,
-                left_eye=left_eye,
-                right_eye=right_eye,
-                confidence=confidence,
+            bounding_box: BoundingBox = BoundingBox(
+                top_left=Point(x=x_range.start, y=y_range.start),
+                bottom_right=Point(x=x_range.end, y=y_range.end),
             )
 
-            results.append(facial_area)
+            le_point = None
+            re_point = None
+            landmarks = face["landmarks"]
+            if ("left_eye", "right_eye") in landmarks:
+                le_point = Point(landmarks["left_eye"])
+                re_point = Point(landmarks["right_eye"])
+                if le_point not in bounding_box or re_point not in bounding_box:
+                    le_point = None
+                    re_point = None
 
-        return results
+            detected_faces.append(
+                DetectedFace(
+                    bounding_box=bounding_box,
+                    left_eye=le_point,
+                    right_eye=re_point,
+                    confidence=score,
+                )
+            )
+
+        if len(detected_faces) == 0 and raise_notfound == True:
+            raise FaceNotFound("No face detected. Check the input image.")
+
+        return DetectorBase.Outcome(
+            detector=self._name,
+            source=img,
+            detected_faces=detected_faces,
+        )

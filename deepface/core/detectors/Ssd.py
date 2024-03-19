@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 import os
 import gdown
@@ -7,9 +7,10 @@ import pandas
 import numpy
 
 from deepface.commons import folder_utils
-from deepface.core.detector import Detector as DetectorBase, FacialAreaRegion
+from deepface.core.detector import Detector as DetectorBase
 from deepface.commons.logger import Logger
-from deepface.core.exceptions import MissingOptionalDependency
+from deepface.core.exceptions import MissingOptionalDependency, FaceNotFound
+from deepface.core.types import BoxDimensions, DetectedFace
 
 try:
     from cv2 import dnn as cv2_dnn
@@ -22,6 +23,8 @@ logger = Logger.get_instance()
 
 # OpenCV's Ssd detector (optional)
 class Detector(DetectorBase):
+
+    _detector: cv2_dnn.Net
 
     def __init__(self):
         self._name = str(__name__.rsplit(".", maxsplit=1)[-1])
@@ -54,15 +57,19 @@ class Detector(DetectorBase):
         self._detector = cv2_dnn.readNetFromCaffe(output1, output2)
         self._opencv_detector = self.instance("opencv")
 
+    def process(
+        self,
+        img: numpy.ndarray,
+        min_dims: Optional[BoxDimensions] = None,
+        min_confidence: float = 0.0,
+        raise_notfound: bool = False,
+    ) -> DetectorBase.Outcome:
 
-    def process(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
+        # Validation of inputs
+        super().process(img, min_dims, min_confidence)
+        img_height, img_width = img.shape[:2]
+        detected_faces: List[DetectedFace] = []
 
-        results = []
-        (h, w) = img.shape[:2]
-        if h == 0 or w == 0:
-            return results
-
-        detected_face = None
         ssd_labels = [
             "img_id",
             "is_face",
@@ -76,23 +83,22 @@ class Detector(DetectorBase):
         # TODO: resize to a square ?
         target_h = 300
         target_w = 300
-        aspect_ratio_x = w / target_w
-        aspect_ratio_y = h / target_h
+        aspect_ratio_x = img_width / target_w
+        aspect_ratio_y = img_height / target_h
 
-        blob = cv2.dnn.blobFromImage(
+        blob = cv2_dnn.blobFromImage(
             image=cv2.resize(img, (target_h, target_w)),
             scalefactor=1.0,
             size=(target_h, target_w),
             mean=(104.0, 177.0, 123.0),
         )
         self._detector.setInput(blob)
-        detections = self._detector.forward()
+        detections: cv2.Mat = self._detector.forward()
 
         detections_df = pandas.DataFrame(detections[0][0], columns=ssd_labels)
 
-        detections_df = detections_df[
-            detections_df["is_face"] == 1
-        ]  # 0: background, 1: face
+        # 0: background, 1: face
+        detections_df = detections_df[detections_df["is_face"] == 1 and detections_df["confidence"] >= 0.90]
         detections_df = detections_df[detections_df["confidence"] >= 0.90]
 
         detections_df["left"] = (detections_df["left"] * 300).astype(int)
