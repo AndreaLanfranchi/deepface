@@ -57,6 +57,7 @@ class Detector(DetectorBase):
         img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
         boxes, probs, points = self._detector.detect(img_rgb, landmarks=True)
+
         for box, prob, point in zip(boxes, probs, points):
 
             if box is None or not isinstance(box, (list, tuple)) or len(box) != 4:
@@ -104,7 +105,7 @@ class Detector(DetectorBase):
             raise FaceNotFound("No face detected. Check the input image.")
 
         return DetectorBase.Outcome(
-            detector=self._name,
+            detector=self.name,
             source=img,
-            detected_faces=detected_faces,
+            detections=detected_faces,
         )

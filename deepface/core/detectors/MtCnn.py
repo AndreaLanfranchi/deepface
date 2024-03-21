@@ -30,7 +30,7 @@ class Detector(DetectorBase):
 
         # Validation of inputs
         super().process(img, min_dims, min_confidence)
-        detected_faces: List[DetectedFace] = []
+        results: List[DetectedFace] = []
 
         # mtcnn expects RGB but OpenCV read BGR
         # TODO: Verify if the image is in the right BGR format
@@ -83,7 +83,7 @@ class Detector(DetectorBase):
                         le_point = None
                         re_point = None
 
-                detected_faces.append(
+                results.append(
                     DetectedFace(
                         bounding_box=bounding_box,
                         left_eye=le_point,
@@ -92,11 +92,11 @@ class Detector(DetectorBase):
                     )
                 )
 
-        if len(detected_faces) == 0 and raise_notfound == True:
+        if len(results) == 0 and raise_notfound == True:
             raise FaceNotFound("No face detected. Check the input image.")
 
         return DetectorBase.Outcome(
-            detector=self._name,
+            detector=self.name,
             source=img,
-            detected_faces=detected_faces,
+            detections=results,
         )

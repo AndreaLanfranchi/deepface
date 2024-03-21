@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 import numpy
 from retinaface import RetinaFace as rf
@@ -27,16 +27,21 @@ class Detector(DetectorBase):
         img_height, img_width = img.shape[:2]
         detected_faces: List[DetectedFace] = []
 
-        faces = rf.detect_faces(img, model=self._detector, threshold=0.9)
-        for face in faces:
-
-            score = float(face["score"])
+        faces: Dict[str, Any] = rf.detect_faces(img, model=self._detector, threshold=0.9)
+        for key in faces.keys():
+            item: Dict[str, Any] = faces[key]
+            score = float(item["score"])
             if min_confidence is not None and score < min_confidence:
                 continue
 
-            x1, y1, x2, y2 = face["facial_area"]
-            x_range = RangeInt(x1, min(x2, img_width))
-            y_range = RangeInt(y1, min(y2, img_height))
+            x1, y1, x2, y2 = (
+                int(item["facial_area"][0]),
+                int(item["facial_area"][1]),
+                int(item["facial_area"][2]),
+                int(item["facial_area"][3]),
+            )
+            x_range = RangeInt(min(0, x1), min(x2, img_width))
+            y_range = RangeInt(min(0, y1), min(y2, img_height))
             if x_range.span <= 0 or y_range.span <= 0:
                 continue  # Invalid detection
 
@@ -53,10 +58,14 @@ class Detector(DetectorBase):
 
             le_point = None
             re_point = None
-            landmarks = face["landmarks"]
-            if ("left_eye", "right_eye") in landmarks:
-                le_point = Point(landmarks["left_eye"])
-                re_point = Point(landmarks["right_eye"])
+            landmarks: Dict[str, List[float]] = item["landmarks"]
+            if landmarks.get("left_eye") and landmarks.get("right_eye"):
+                le_point = Point(
+                    int(landmarks["left_eye"][0]), int(landmarks["left_eye"][1])
+                )
+                re_point = Point(
+                    int(landmarks["right_eye"][0]), int(landmarks["right_eye"][1])
+                )
                 if le_point not in bounding_box or re_point not in bounding_box:
                     le_point = None
                     re_point = None
@@ -74,7 +83,7 @@ class Detector(DetectorBase):
             raise FaceNotFound("No face detected. Check the input image.")
 
         return DetectorBase.Outcome(
-            detector=self._name,
+            detector=self.name,
             source=img,
-            detected_faces=detected_faces,
+            detections=detected_faces,
         )

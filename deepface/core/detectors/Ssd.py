@@ -8,12 +8,15 @@ import numpy
 
 from deepface.commons import folder_utils
 from deepface.core.detector import Detector as DetectorBase
+from deepface.core.detectors.OpenCv import Detector as OpenCvDetector
 from deepface.commons.logger import Logger
 from deepface.core.exceptions import MissingOptionalDependency, FaceNotFound
-from deepface.core.types import BoxDimensions, DetectedFace
+from deepface.core.types import BoundingBox, BoxDimensions, DetectedFace, Point, RangeInt
 
 try:
     from cv2 import dnn as cv2_dnn
+    from cv2.typing import MatLike
+
 except ModuleNotFoundError:
     what: str = f"{__name__} requires `opencv-contrib-python` library."
     what += "You can install by 'pip install opencv-contrib-python' "
@@ -25,6 +28,7 @@ logger = Logger.get_instance()
 class Detector(DetectorBase):
 
     _detector: cv2_dnn.Net
+    _opencv_detector: OpenCvDetector
 
     def __init__(self):
         self._name = str(__name__.rsplit(".", maxsplit=1)[-1])
@@ -55,7 +59,7 @@ class Detector(DetectorBase):
             gdown.download(url, output2, quiet=False)
 
         self._detector = cv2_dnn.readNetFromCaffe(output1, output2)
-        self._opencv_detector = self.instance("opencv")
+        self._opencv_detector = OpenCvDetector()  # Fix: Assign an instance of OpenCvDetector
 
     def process(
         self,
@@ -70,19 +74,9 @@ class Detector(DetectorBase):
         img_height, img_width = img.shape[:2]
         detected_faces: List[DetectedFace] = []
 
-        ssd_labels = [
-            "img_id",
-            "is_face",
-            "confidence",
-            "left",
-            "top",
-            "right",
-            "bottom",
-        ]
-
         # TODO: resize to a square ?
-        target_h = 300
-        target_w = 300
+        target_h = int(300)
+        target_w = int(300)
         aspect_ratio_x = img_width / target_w
         aspect_ratio_y = img_height / target_h
 
@@ -93,47 +87,83 @@ class Detector(DetectorBase):
             mean=(104.0, 177.0, 123.0),
         )
         self._detector.setInput(blob)
-        detections: cv2.Mat = self._detector.forward()
+        detections: MatLike = self._detector.forward()
 
-        detections_df = pandas.DataFrame(detections[0][0], columns=ssd_labels)
+        detections_df = pandas.DataFrame(
+            detections[0][0],
+            columns=[
+                "img_id",
+                "is_face",
+                "confidence",
+                "left",
+                "top",
+                "right",
+                "bottom",
+            ],
+        )
 
         # 0: background, 1: face
-        detections_df = detections_df[detections_df["is_face"] == 1 and detections_df["confidence"] >= 0.90]
-        detections_df = detections_df[detections_df["confidence"] >= 0.90]
+        detections_df = detections_df[
+            (detections_df["is_face"] == 1) & (detections_df["confidence"] >= 0.90)
+        ]
+        detections_df[["left", "bottom", "right", "top"]] *= int(300)
 
-        detections_df["left"] = (detections_df["left"] * 300).astype(int)
-        detections_df["bottom"] = (detections_df["bottom"] * 300).astype(int)
-        detections_df["right"] = (detections_df["right"] * 300).astype(int)
-        detections_df["top"] = (detections_df["top"] * 300).astype(int)
+        for _, row in detections_df.iterrows():
 
-        if detections_df.shape[0] > 0:
+            confidence = float(row["confidence"])
+            if min_confidence is not None and confidence < min_confidence:
+                continue
 
-            for _, instance in detections_df.iterrows():
+            x1 = int(round(row["left"] * aspect_ratio_x))
+            x2 = int(round(row["right"] * aspect_ratio_x))
+            y1 = int(round(row["top"] * aspect_ratio_y))
+            y2 = int(round(row["bottom"] * aspect_ratio_y))
+            x_range = RangeInt(min(0, x1), min(x2, img_width))
+            y_range = RangeInt(min(0, y1), min(y2, img_height))
+            if x_range.span <= 0 or y_range.span <= 0:
+                continue  # Invalid detection
+            if min_dims is not None:
+                if min_dims.width > 0 and x_range.span < min_dims.width:
+                    continue
+                if min_dims.height > 0 and y_range.span < min_dims.height:
+                    continue
 
-                left = instance["left"]
-                right = instance["right"]
-                bottom = instance["bottom"]
-                top = instance["top"]
-                confidence = instance["confidence"]
+            bounding_box: BoundingBox = BoundingBox(
+                top_left=Point(x=x_range.start, y=y_range.start),
+                bottom_right=Point(x=x_range.end, y=y_range.end),
+            )
 
-                x = int(left * aspect_ratio_x)
-                y = int(top * aspect_ratio_y)
-                w = int(right * aspect_ratio_x) - int(left * aspect_ratio_x)
-                h = int(bottom * aspect_ratio_y) - int(top * aspect_ratio_y)
-
-                detected_face = img[int(y) : int(y + h), int(x) : int(x + w)]
-
-                left_eye, right_eye = self._opencv_detector.find_eyes(detected_face)
-
-                facial_area = FacialAreaRegion(
-                    x=x,
-                    y=y,
-                    w=w,
-                    h=h,
-                    left_eye=left_eye,
-                    right_eye=right_eye,
-                    confidence=confidence,
+            le_point = None
+            re_point = None
+            eyes: List[Point] = self._opencv_detector.find_eyes(img[y1:y2, x1:x2])
+            if len(eyes) == 2:
+                # Normalize left and right eye coordinates to the whole image
+                le_point = Point(
+                    x=eyes[0].x + bounding_box.top_left.x,
+                    y=eyes[0].y + bounding_box.top_left.y,
                 )
-                results.append(facial_area)
+                re_point = Point(
+                    x=eyes[1].x + bounding_box.top_left.x,
+                    y=eyes[1].y + bounding_box.top_left.y,
+                )
+                if le_point not in bounding_box or re_point not in bounding_box:
+                    le_point = None
+                    re_point = None
 
-        return results
+            detected_faces.append(
+                DetectedFace(
+                    bounding_box=bounding_box,
+                    left_eye=le_point,
+                    right_eye=re_point,
+                    confidence=float(confidence),
+                )
+            )
+
+        if len(detected_faces) == 0 and raise_notfound == True:
+            raise FaceNotFound("No face detected. Check the input image.")
+
+        return DetectorBase.Outcome(
+            detector=self.name,
+            source=img,
+            detections=detected_faces,
+        )

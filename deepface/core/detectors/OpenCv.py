@@ -1,11 +1,10 @@
-from typing import Any, List, Sequence
+from typing import Any, List, Optional, Sequence
 
 import os
 import cv2
 import numpy
-from pyparsing import Optional
 
-from cv2.typing import Rect
+from cv2.typing import MatLike, Rect
 from deepface.core.detector import Detector as DetectorBase
 from deepface.core.exceptions import FaceNotFound
 from deepface.core.types import (
@@ -60,12 +59,12 @@ class Detector(DetectorBase):
                 continue
 
             x, y, w, h = rect
-            x_range = RangeInt(x, min(x + w, img_width))
-            y_range = RangeInt(y, min(y + h, img_height))
+            x_range = RangeInt(min(0, x), min(x + w, img_width))
+            y_range = RangeInt(min(0, y), min(y + h, img_height))
             if x_range.span <= 0 or y_range.span <= 0:
                 continue  # Invalid detection
 
-            if min_dims is not None:
+            if isinstance(min_dims, BoxDimensions):
                 if min_dims.width > 0 and x_range.span < min_dims.width:
                     continue
                 if min_dims.height > 0 and y_range.span < min_dims.height:
@@ -98,7 +97,6 @@ class Detector(DetectorBase):
                     le_point = None
                     re_point = None
 
-
             detected_faces.append(
                 DetectedFace(
                     bounding_box=bounding_box,
@@ -112,21 +110,22 @@ class Detector(DetectorBase):
             raise FaceNotFound("No face detected. Check the input image.")
 
         return DetectorBase.Outcome(
-            detector=self._name,
+            detector=str(self._name),
             source=img,
-            detected_faces=detected_faces,
+            detections=detected_faces,
         )
 
-    def find_eyes(self, img: numpy.ndarray) -> List[Point]:
+    def find_eyes(self, img: MatLike) -> List[Point]:
 
         ret: List[Point] = []
         rects: Sequence[Rect] = self._eye_detector.detectMultiScale(
-            img=img,
-            scaleFactor=1.1,
-            minNeighbors=10,
-            minSize=(5, 5),
+            image=img,
+            scaleFactor=float(1.1),
+            minNeighbors=int(10),
+            flags=cv2.CASCADE_SCALE_IMAGE,
+            minSize=[int(5), int(5)],
         )
-        if len(rects) < 2:
+        if len(rects) < int(2):
             return ret
 
         # ----------------------------------------------------------------
@@ -158,7 +157,7 @@ class Detector(DetectorBase):
         left_eye = left_box.center
         right_eye = right_box.center
 
-        return list(left_eye, right_eye)
+        return [left_eye, right_eye]
 
     def _build_cascade(self, model_name="haarcascade") -> Any:
 
