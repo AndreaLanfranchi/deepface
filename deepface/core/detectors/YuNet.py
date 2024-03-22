@@ -73,6 +73,7 @@ class Detector(DetectorBase):
         # Validation of inputs
         super().process(img, min_dims, min_confidence)
         img_height, img_width = img.shape[:2]
+        processed_img = img
         detected_faces: List[DetectedFace] = []
 
         # resize image if it is too large (Yunet fails to detect faces on large input sometimes)
@@ -82,11 +83,11 @@ class Detector(DetectorBase):
             img_height, img_width = tuple(
                 map(int, (img_height * scale_factor, img_width * scale_factor))
             )
-            img = cv2.resize(img, (img_width, img_height))
+            processed_img = cv2.resize(img, (img_width, img_height))
 
         self._detector.setInputSize((img_width, img_height))
         self._detector.setScoreThreshold(min_confidence)
-        _, faces = self._detector.detect(img)
+        _, faces = self._detector.detect(processed_img)
         for face in faces:
 
             # The detection output faces is a two-dimension array of type CV_32F,
