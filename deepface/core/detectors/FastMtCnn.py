@@ -47,6 +47,7 @@ class Detector(DetectorBase):
 
         # Validation of inputs
         super().process(img, min_dims, min_confidence)
+        img_height, img_width = img.shape[:2]
         detected_faces: List[DetectedFace] = []
 
         # TODO: check image has less than 4 channels
@@ -66,12 +67,12 @@ class Detector(DetectorBase):
             if min_confidence is not None and prob < min_confidence:
                 continue  # Confidence too low
 
-            x_range = RangeInt(start=box[0], end=min(img.shape[1], box[2]))
-            y_range = RangeInt(start=box[1], end=min(img.shape[0], box[3]))
+            x_range = RangeInt(start=box[0], end=min(img_width, box[2]))
+            y_range = RangeInt(start=box[1], end=min(img_height, box[3]))
             if x_range.span <= 0 or y_range.span <= 0:
                 continue  # Invalid detection
 
-            if min_dims is not None:
+            if isinstance(min_dims, BoxDimensions):
                 if min_dims.width > 0 and x_range.span < min_dims.width:
                     continue
                 if min_dims.height > 0 and y_range.span < min_dims.height:

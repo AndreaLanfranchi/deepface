@@ -1,27 +1,20 @@
 from typing import Optional, Union
 from dataclasses import dataclass, field
 
-
+@dataclass(frozen=True)
 class RangeInt:
     """
     Represents a range of integers as [start, end]
     """
 
-    _start: int = 0
-    _end: int = 0
+    start: int = field(default=int(0))
+    end: int = field(default=int(0))
 
-    def __init__(self, start: int, end: int):
-        self._start = max(start, 0)
-        self._end = max(end, 0)
-        self._end = max(self.end, self.start)
-
-    @property
-    def start(self) -> int:
-        return self._start
-
-    @property
-    def end(self) -> int:
-        return self._end
+    def __post_init__(self):
+        assert isinstance(self.start, int)
+        assert isinstance(self.end, int)
+        object.__setattr__(self, "start", max(self.start, 0))
+        object.__setattr__(self, "end", max(self.end, 0))
 
     @property
     def span(self) -> int:

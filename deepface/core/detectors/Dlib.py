@@ -72,6 +72,7 @@ class Detector(DetectorBase):
 
         # Validation of inputs
         super().process(img, min_dims, min_confidence)
+        img_height, img_width = img.shape[:2]
         detected_faces: List[DetectedFace] = []
 
         # note that, by design, dlib's fhog face detector scores are >0 but not capped at 1
@@ -82,12 +83,11 @@ class Detector(DetectorBase):
             if min_confidence is not None and score < min_confidence:
                 continue
 
-            x_range = RangeInt(rect.left(), min(rect.right(), img.shape[1]))
-            y_range = RangeInt(rect.top(), min(rect.bottom(), img.shape[0]))
+            x_range = RangeInt(rect.left(), min(rect.right(), img_width))
+            y_range = RangeInt(rect.top(), min(rect.bottom(), img_height))
             if x_range.span <= 0 or y_range.span <= 0:
                 continue  # Invalid detection
-
-            if min_dims is not None:
+            if isinstance(min_dims,BoxDimensions):
                 if min_dims.width > 0 and x_range.span < min_dims.width:
                     continue
                 if min_dims.height > 0 and y_range.span < min_dims.height:

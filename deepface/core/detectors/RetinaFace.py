@@ -34,17 +34,11 @@ class Detector(DetectorBase):
             if min_confidence is not None and score < min_confidence:
                 continue
 
-            x1, y1, x2, y2 = (
-                int(item["facial_area"][0]),
-                int(item["facial_area"][1]),
-                int(item["facial_area"][2]),
-                int(item["facial_area"][3]),
-            )
-            x_range = RangeInt(min(0, x1), min(x2, img_width))
-            y_range = RangeInt(min(0, y1), min(y2, img_height))
+            x1, y1, x2, y2 = (int(val) for val in item["facial_area"][:3])
+            x_range = RangeInt(x1, min(x2, img_width))
+            y_range = RangeInt(y1, min(y2, img_height))
             if x_range.span <= 0 or y_range.span <= 0:
                 continue  # Invalid detection
-
             if min_dims is not None:
                 if min_dims.width > 0 and x_range.span < min_dims.width:
                     continue
@@ -59,13 +53,11 @@ class Detector(DetectorBase):
             le_point = None
             re_point = None
             landmarks: Dict[str, List[float]] = item["landmarks"]
-            if landmarks.get("left_eye") and landmarks.get("right_eye"):
-                le_point = Point(
-                    int(landmarks["left_eye"][0]), int(landmarks["left_eye"][1])
-                )
-                re_point = Point(
-                    int(landmarks["right_eye"][0]), int(landmarks["right_eye"][1])
-                )
+            left_eye: Optional[List[float]] = landmarks.get("left_eye")
+            right_eye: Optional[List[float]] = landmarks.get("right_eye")
+            if left_eye and right_eye:
+                le_point = Point(int(left_eye[0]), int(left_eye[1]))
+                re_point = Point(int(right_eye[0]), int(right_eye[1]))
                 if le_point not in bounding_box or re_point not in bounding_box:
                     le_point = None
                     re_point = None

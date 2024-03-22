@@ -118,8 +118,8 @@ class Detector(DetectorBase):
             x2 = int(round(row["right"] * aspect_ratio_x))
             y1 = int(round(row["top"] * aspect_ratio_y))
             y2 = int(round(row["bottom"] * aspect_ratio_y))
-            x_range = RangeInt(min(0, x1), min(x2, img_width))
-            y_range = RangeInt(min(0, y1), min(y2, img_height))
+            x_range = RangeInt(x1, min(x2, img_width))
+            y_range = RangeInt(y1, min(y2, img_height))
             if x_range.span <= 0 or y_range.span <= 0:
                 continue  # Invalid detection
             if min_dims is not None:

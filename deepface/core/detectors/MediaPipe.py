@@ -1,6 +1,5 @@
 from typing import List, Optional
 
-import math
 import numpy
 
 from deepface.core.detector import Detector as DetectorBase
@@ -54,13 +53,14 @@ class Detector(DetectorBase):
 
         # Validation of inputs
         super().process(img, min_dims, min_confidence)
+        img_height, img_width = img.shape[:2]
         detected_faces: List[DetectedFace] = []
 
-        img_height, img_width = img.shape[:2]
+
         detection_result = self._detector.process(img)
 
         # Extract the bounding box, the landmarks and the confidence score
-        for detection in detection_result.detections:
+        for detection in getattr(detection_result, "detections", []):
             if detection is None:
                 continue
 
@@ -80,7 +80,7 @@ class Detector(DetectorBase):
             if x_range.span <= 0 or y_range.span <= 0:
                 continue  # Invalid detection
 
-            if min_dims is not None:
+            if isinstance(min_dims,BoxDimensions):
                 if min_dims.width > 0 and x_range.span < min_dims.width:
                     continue
                 if min_dims.height > 0 and y_range.span < min_dims.height:
@@ -99,22 +99,12 @@ class Detector(DetectorBase):
                 # mouth 3
                 # right ear 4
                 # left ear 5
-                for i in range(2):
-                    x = min(
-                        math.floor(detection.keypoints[i].x * img_width), img_width - 1
-                    )
-                    y = min(
-                        math.floor(detection.keypoints[i].y * img_height),
-                        img_height - 1,
-                    )
-                    match i:
-                        case 0:
-                            le_point = Point(x, y)
-                        case 1:
-                            re_point = Point(x, y)
-                        case _:
-                            # Should not happen
-                            raise IndexError("Index out of range")
+                x1 = int(min(round(detection.keypoints[0].x * img_width), img_width))
+                y1 = int(min(round(detection.keypoints[0].y * img_height), img_height))
+                x2 = int(min(round(detection.keypoints[1].x * img_width), img_width))
+                y2 = int(min(round(detection.keypoints[1].y * img_height), img_height))
+                le_point = Point(x1, y1)
+                re_point = Point(x2, y2)
 
                 # Martian positions ?
                 # TODO Decide whether to discard the face or to not include the eyes

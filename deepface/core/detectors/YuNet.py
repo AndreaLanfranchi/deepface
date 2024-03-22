@@ -1,4 +1,4 @@
-from typing import Any, List
+from typing import Any, List, Optional
 
 import os
 import cv2
@@ -6,12 +6,14 @@ import numpy
 import gdown
 
 from deepface.commons import folder_utils
-from deepface.core.detector import Detector as DetectorBase, FacialAreaRegion
+from deepface.core.detector import Detector as DetectorBase
 from deepface.commons.logger import Logger
 from deepface.core.exceptions import (
+    FaceNotFound,
     MissingOptionalDependency,
     InsufficentVersionRequirement,
 )
+from deepface.core.types import BoundingBox, BoxDimensions, DetectedFace, Point, RangeInt
 
 opencv_version = cv2.__version__.split(".")
 if not len(opencv_version) >= 2:
@@ -48,7 +50,6 @@ class Detector(DetectorBase):
         self._initialize()
 
     def _initialize(self) -> Any:
-
         file_name = "face_detection_yunet_2023mar.onnx"
         weight_file = os.path.join(folder_utils.get_weights_dir(), file_name)
 
@@ -61,31 +62,31 @@ class Detector(DetectorBase):
 
         self._detector = cv2.FaceDetectorYN_create(weight_file, "", (0, 0))
 
-    def process(self, img: numpy.ndarray) -> List[FacialAreaRegion]:
+    def process(
+        self,
+        img: numpy.ndarray,
+        min_dims: Optional[BoxDimensions] = None,
+        min_confidence: float = 0.9,
+        raise_notfound: bool = False,
+    ) -> DetectorBase.Outcome:
 
-        # TODO: remove ! FaceDetector.detect_faces does not support score_threshold parameter.
-        # We can set it via environment variable.
-        score_threshold = float(os.environ.get("yunet_score_threshold", "0.9"))
-
-        results = []
-
-        height, width = img.shape[0], img.shape[1]
-        if height == 0 or width == 0:
-            return results
+        # Validation of inputs
+        super().process(img, min_dims, min_confidence)
+        img_height, img_width = img.shape[:2]
+        detected_faces: List[DetectedFace] = []
 
         # resize image if it is too large (Yunet fails to detect faces on large input sometimes)
         # I picked 640 as a threshold because it is the default value of max_size in Yunet.
-        scale_factor = 640.0 / max(height, width)
+        scale_factor = min(640.0 / max(img_height, img_width), 1.0)
         if scale_factor < 1.0:
-            img = cv2.resize(img, (int(width * scale_factor), int(height * scale_factor)))
-            height, width = img.shape[0], img.shape[1]
+            img_height, img_width = tuple(
+                map(int, (img_height * scale_factor, img_width * scale_factor))
+            )
+            img = cv2.resize(img, (img_width, img_height))
 
-        self._detector.setInputSize((width, height))
-        self._detector.setScoreThreshold(score_threshold)
+        self._detector.setInputSize((img_width, img_height))
+        self._detector.setScoreThreshold(min_confidence)
         _, faces = self._detector.detect(img)
-        if faces is None:
-            return results
-
         for face in faces:
 
             # The detection output faces is a two-dimension array of type CV_32F,
@@ -98,41 +99,43 @@ class Detector(DetectorBase):
             # the face bounding box,
             # {x, y}_{re, le, nt, rcm, lcm} stands for the coordinates of right eye,
             # left eye, nose tip, the right corner and left corner of the mouth respectively.
+            (x, y, w, h, x_re, y_re, x_le, y_le) = [int(coord / scale_factor) for coord in face[:8]]
+            x_range = RangeInt(x, min(x + w, img_width))
+            y_range = RangeInt(y, min(y + h, img_height))
+            if x_range.span <= 0 or y_range.span <= 0:
+                continue
+            if isinstance(min_dims, BoxDimensions):
+                if min_dims.width > 0 and x_range.span < min_dims.width:
+                    continue
+                if min_dims.height > 0 and y_range.span < min_dims.height:
+                    continue
 
-            (x, y, w, h, x_re, y_re, x_le, y_le) = list(map(int, face[:8]))
-
-            # Yunet returns negative coordinates if it thinks part of
-            # the detected face is outside the frame.
-            # We set the coordinate to 0 if they are negative.
-            x = max(x, 0)
-            y = max(y, 0)
-            if scale_factor < 1.0:
-                x, y, w, h = (
-                    int(x / scale_factor),
-                    int(y / scale_factor),
-                    int(w / scale_factor),
-                    int(h / scale_factor),
-                )
-                x_re, y_re, x_le, y_le = (
-                    int(x_re / scale_factor),
-                    int(y_re / scale_factor),
-                    int(x_le / scale_factor),
-                    int(y_le / scale_factor),
-                )
-
-            left_eye = (x_re, y_re)
-            right_eye = (x_le, y_le)
-            confidence = float(face[-1])
-
-            facial_area = FacialAreaRegion(
-                x=x,
-                y=y,
-                w=w,
-                h=h,
-                confidence=confidence,
-                left_eye=left_eye,
-                right_eye=right_eye,
+            bounding_box: BoundingBox = BoundingBox(
+                top_left=Point(x=x, y=y),
+                bottom_right=Point(x=x + w, y=y + h),
             )
-            results.append(facial_area)
 
-        return results
+            le_point = Point(x=x_le, y=y_le)
+            re_point = Point(x=x_re, y=y_re)
+            if le_point not in bounding_box or re_point not in bounding_box:
+                le_point = None
+                re_point = None
+
+            confidence = float(face[-1])
+            detected_faces.append(
+                DetectedFace(
+                    bounding_box=bounding_box,
+                    left_eye=le_point,
+                    right_eye=re_point,
+                    confidence=confidence,
+                )
+            )
+
+        if len(detected_faces) == 0 and raise_notfound == True:
+            raise FaceNotFound("No face detected. Check the input image.")
+
+        return DetectorBase.Outcome(
+            detector=self.name,
+            source=img,
+            detections=detected_faces,
+        )

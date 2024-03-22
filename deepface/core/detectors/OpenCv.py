@@ -55,12 +55,12 @@ class Detector(DetectorBase):
         )
 
         for rect, weight in zip(faces, weights):
-            if min_confidence is not None and weight < min_confidence:
+            if min_confidence is not None and float(weight) < min_confidence:
                 continue
 
             x, y, w, h = rect
-            x_range = RangeInt(min(0, x), min(x + w, img_width))
-            y_range = RangeInt(min(0, y), min(y + h, img_height))
+            x_range = RangeInt(int(x), int(min(x + w, img_width)))
+            y_range = RangeInt(int(y), int(min(y + h, img_height)))
             if x_range.span <= 0 or y_range.span <= 0:
                 continue  # Invalid detection
 
