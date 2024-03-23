@@ -14,8 +14,10 @@ import pandas
 from deepface import DeepFace
 from deepface.core.analyzer import Analyzer
 from deepface.core.detector import Detector
+from deepface.core.exceptions import FaceNotFound
 from deepface.core.representer import Representer
 from deepface.commons.logger import Logger
+from deepface.core.types import DetectedFace
 
 logger = Logger.get_instance()
 
@@ -73,7 +75,7 @@ class Stream(threading.Thread):
 def analysis(
     db_path: str,
     decomposer: Optional[str] = None,
-    detector: Optional[str] = None,
+    detector: Optional[Union[str, Detector]] = None,
     distance_metric: str = "cosine",
     attributes: Optional[List[str]] = None,
     source: Union[str, int] = int(0),
@@ -89,7 +91,8 @@ def analysis(
     valid_frames_count = max(1, min(valid_frames_count, 5))  # In range [1, 5] positive
     faces_count_threshold = max(1, faces_count_threshold)  # In range [1, inf] positive
 
-    detector = Detector.instance(detector)
+    if not isinstance(detector, Detector):
+        detector = Detector.instance(detector)
 
     # Constants
     capture_window_title: str = "Capture"
@@ -151,7 +154,7 @@ def analysis(
     # the capture source is closed/failed.
 
     # For each good capture, store the image and the analysis result
-    good_captures: List[Tuple[MatLike, List[Dict[str, Any]]]] = []
+    good_captures: List[Detector.Outcome] = []
 
     while True:
         try:
@@ -176,14 +179,14 @@ def analysis(
                 continue
 
             # This also resets the good_captures list
-            best_capture, best_faces = _get_best_capture(good_captures)
-            cv2.imshow(capture_window_title, _box_faces(best_capture, best_faces))
+            best_capture: Detector.Outcome = _get_best_capture(good_captures)
+            cv2.imshow(capture_window_title, _box_faces(best_capture.source, best_capture.detections))
             _cv2_refresh()
 
             # TODO : Perform facial attribute analysis and face recognition
 
             # Display the results
-            should_freeze = False
+            should_freeze = True
             # for item in best_faces:
 
             #     # Detect matches for this face
@@ -212,9 +215,9 @@ def analysis(
                 # Display the best capture for a few seconds
                 # with a counting box
                 for i in range(freeze_time_seconds, 0, -1):
-                    cv2.rectangle(best_capture, (10, 10), (70, 50), (67, 67, 67), -10)
+                    cv2.rectangle(best_capture.source, (10, 10), (70, 50), (67, 67, 67), -10)
                     cv2.putText(
-                        best_capture,
+                        best_capture.source,
                         str(i),
                         (30, 40),
                         cv2.FONT_HERSHEY_SIMPLEX,
@@ -223,8 +226,10 @@ def analysis(
                         2,
                         cv2.LINE_AA,
                     )
-                    cv2.imshow(capture_window_title, best_capture)
+                    cv2.imshow(capture_window_title, best_capture.source)
                     _cv2_refresh(1000)
+
+            good_captures.clear()
 
         except KeyboardInterrupt as ex:
             logger.info(f"{ex.args[0]}")
@@ -270,12 +275,15 @@ def _cv2_refresh(timeout: int = 1):
 def _process_frame(
     frame: MatLike,
     faces_count_threshold: int,
-    good_captures: List[Tuple[MatLike, List[Dict[str, Any]]]],
+    good_captures: List[Detector.Outcome],
     display_window_title: str,
-    detector: Detector = None,
+    detector: Detector,
 ):
     try:
-        extracted_faces = detector.process(frame)
+        detection_outcome: Detector.Outcome = detector.process(
+            img=frame,
+            raise_notfound=True,
+        )
         # extracted_faces = DeepFace.detect_faces(
         #     img_path=frame,
         #     target_size=target_size,
@@ -291,25 +299,28 @@ def _process_frame(
         #     if w * h < (target_size[0] * target_size[1]) / 2:
         #         extracted_faces.pop(i)
 
-        # Treat no-results or too many results as error
-        if len(extracted_faces) == 0:
-            raise ValueError("No face found")
-        if len(extracted_faces) > faces_count_threshold:
+        # Treat too many results as error
+        if len(detection_outcome) > faces_count_threshold:
             raise OverflowError("Too many faces found")
 
         # Store the good capture and its detection result
-        good_captures.append((frame, extracted_faces))
+        good_captures.append(detection_outcome)
 
         # Draw boxes around the detected faces
-        cv2.imshow(display_window_title, _box_faces(frame, extracted_faces))
+        cv2.imshow(display_window_title, _box_faces(frame, detection_outcome.detections))
         _cv2_refresh()
 
     # We only catch the ValueError and OverflowError exceptions here to reset
     # the good_captures list. Other exceptions are not caught here and will be
     # raised to the caller.
-    except ValueError:
+    except FaceNotFound as e:
+        logger.debug(f"{e.args[0]}")
         good_captures.clear()
-    except OverflowError:
+    except ValueError as e:
+        logger.debug(f"{e.args[0]}")
+        good_captures.clear()
+    except OverflowError as e:
+        logger.debug(f"{e.args[0]}")
         good_captures.clear()
 
 
@@ -317,39 +328,39 @@ def _process_frame(
 # The best capture is the one with the largest facial
 # area. The list of good captures is then reset.
 def _get_best_capture(
-    good_captures: List[Tuple[MatLike, List[Dict[str, Any]]]]
-) -> Tuple[MatLike, List[Dict[str, Any]]]:
+    good_captures: List[Detector.Outcome],
+) -> Detector.Outcome:
     best_area: int = 0
     best_index: int = 0
-    for i, (_, faces) in enumerate(good_captures):
+
+    for i, outcome in enumerate(good_captures):
         area: int = 0
-        for face in faces:
-            h: int = face["facial_area"]["h"]
-            w: int = face["facial_area"]["w"]
-            area += h * w
+        for face in outcome.detections:
+            area += face.bounding_box.area
         if area > best_area:
             best_area = area
             best_index = i
-    ret = good_captures[best_index]
-    good_captures.clear()
-    return ret
+        
+    return good_captures[best_index]
+
 
 
 # Draw box(es) around the detected face(s)
 def _box_faces(
-    picture: MatLike, faces: List[Dict[str, Any]], number: Union[int, None] = None
+    picture: MatLike, 
+    faces: List[DetectedFace], 
+    number: Union[int, None] = None
 ) -> MatLike:
     for face in faces:
-        x: int = face["facial_area"]["x"]
-        y: int = face["facial_area"]["y"]
-        w: int = face["facial_area"]["w"]
-        h: int = face["facial_area"]["h"]
-        picture = _box_face(picture, (x, y, w, h))
+        picture = face.plot(picture, (255, 255, 255))
         if number is not None:
             cv2.putText(
                 picture,
                 str(number),
-                (int(x + w / 4), int(y + h / 1.5)),
+                (
+                    face.bounding_box.center.x,
+                    face.bounding_box.center.y,
+                ),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 4,
                 (255, 255, 255),

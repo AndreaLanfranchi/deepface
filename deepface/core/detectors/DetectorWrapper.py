@@ -6,7 +6,7 @@ import numpy
 
 # project dependencies
 from deepface.modules import detection, preprocessing
-from deepface.core.detector import Detector, DetectedFace, FacialAreaRegion
+from deepface.core.detector import Detector, DetectedFace
 from deepface.commons.logger import Logger
 
 logger = Logger.get_instance()
@@ -46,7 +46,7 @@ def detect_faces(
 
     # Validation
     if detector is None:
-        detector = Detector.instance(Detector.get_default())
+        detector = Detector.instance()
     elif isinstance(detector, str):
         detector = Detector.instance(detector)
     elif not isinstance(detector, Detector):
@@ -64,7 +64,7 @@ def detect_faces(
         return []
 
     # find facial areas of given image
-    facial_areas = detector.process(img=source)
+    facial_areas: Detector.Outcome = detector.process(img=source)
 
     results = []
     for facial_area in facial_areas:

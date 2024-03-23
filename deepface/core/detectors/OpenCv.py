@@ -142,13 +142,13 @@ class Detector(DetectorBase):
         # Eventually, we have 2 eyes which we order left to right by x coordinate
         rects: Sequence[Rect] = sorted(rects, key=lambda v: v[0])
 
-        x, y, w, h = rects[0]
+        x, y, w, h = (int(val) for val in rects[0])
         left_box = BoundingBox(
             top_left=Point(x=x, y=y),
             bottom_right=Point(x=x + w, y=y + h),
         )
 
-        x, y, w, h = rects[1]
+        x, y, w, h = (int(val) for val in rects[1])
         right_box = BoundingBox(
             top_left=Point(x=x, y=y),
             bottom_right=Point(x=x + w, y=y + h),

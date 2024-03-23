@@ -1,5 +1,8 @@
-from typing import Optional, Union
+from typing import Optional, Tuple, Union
 from dataclasses import dataclass, field
+
+import numpy
+import cv2
 
 @dataclass(frozen=True)
 class RangeInt:
@@ -15,6 +18,7 @@ class RangeInt:
         assert isinstance(self.end, int)
         object.__setattr__(self, "start", max(self.start, 0))
         object.__setattr__(self, "end", max(self.end, 0))
+        assert self.start <= self.end
 
     @property
     def span(self) -> int:
@@ -81,6 +85,9 @@ class Point:
         if isinstance(other, Point):
             return self.x <= other.x and self.y <= other.y
         return False
+    
+    def tolist(self) -> list:
+        return [self.x, self.y]
 
 
 @dataclass(frozen=True)
@@ -132,6 +139,10 @@ class BoundingBox:
             x=self.top_left.x + self.width // 2,
             y=self.top_left.y + self.height // 2,
         )
+
+    @property
+    def xywh(self) -> Tuple[int, int, int, int]:
+        return (self.top_left.x, self.top_left.y, self.width, self.height)
 
     def __contains__(self, point: Point) -> bool:
         return (
@@ -200,7 +211,8 @@ class DetectedFace:
 
         if bool(self.left_eye is None) != bool(self.right_eye is None):
             raise ValueError("Both eyes must be provided or both must be None")
-        elif self.left_eye is not None and self.right_eye is not None:
+
+        if self.left_eye is not None and self.right_eye is not None:
             if self.left_eye == self.right_eye:
                 raise ValueError("Left and right eyes must be different")
             if self.left_eye > self.right_eye:
@@ -217,3 +229,26 @@ class DetectedFace:
     @property
     def height(self) -> int:
         return self.bounding_box.height
+
+    def plot(self, img: numpy.ndarray, color: Tuple[int, int, int] = (0, 255, 0)) -> numpy.ndarray:
+        """
+        Draw the bounding box and eyes on the image.
+        """
+        if not isinstance(img, numpy.ndarray) or len(img.shape) != 3:
+            raise TypeError("Image must be a valid numpy array")
+        if img.shape[0] == 0 or img.shape[1] == 0:
+            raise ValueError("Image must be non-empty")
+        if self.bounding_box.empty:
+            raise ValueError("Bounding box must be non-empty")
+        if self.left_eye is not None and self.right_eye is not None:
+            img = cv2.circle(img, self.left_eye.tolist(), 5, color, 2)
+            img = cv2.circle(img, self.right_eye.tolist(), 5, color, 2)
+            img = cv2.line(img, self.left_eye.tolist(), self.right_eye.tolist(), color, 2)
+        img = cv2.rectangle(
+            img,
+            (self.bounding_box.top_left.x, self.bounding_box.top_left.y),
+            (self.bounding_box.bottom_right.x, self.bounding_box.bottom_right.y),
+            color,
+            2,
+        )
+        return img

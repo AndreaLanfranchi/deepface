@@ -10,6 +10,7 @@ import tensorflow
 
 # package dependencies
 from deepface.core.analyzer import Analyzer        # Facial Emotions Analyzer
+from deepface.core.detector import Detector
 from deepface.core.representer import Representer  # Abstract class for face represemter
 
 from deepface.commons import package_utils
@@ -220,7 +221,7 @@ def find(
     db_path: str,
     decomposer: Optional[str] = None,
     distance_metric: str = "cosine",
-    detector: Optional[str] = None,
+    detector: Optional[Union[str, Detector]] = None,
     align: bool = True,
     expand_percentage: int = 0,
     threshold: Optional[float] = None,
@@ -346,8 +347,8 @@ def represent(
 
 def stream(
     db_path: str,
-    decomposer: Optional[str] = None,
     detector: Optional[str] = None,
+    decomposer: Optional[str] = None,
     distance_metric: str = "cosine",
     analyzers: List[str] = ["Age", "Emotion", "Gender"],
     source: Union[str, int] = int(0),

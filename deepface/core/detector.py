@@ -1,17 +1,15 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import List, Optional
 from abc import ABC, abstractmethod
 
 import time
 import numpy
 
-from cv2.typing import MatLike
 from deepface.core.types import DetectedFace, BoxDimensions
 from deepface.core import reflection, detectors
 from deepface.commons.logger import Logger
 
 logger = Logger.get_instance()
-
 
 # Abstract class all specialized face detectors must inherit from.
 # A face detection consists in finding [0,inf) faces in an image and
@@ -25,20 +23,23 @@ class Detector(ABC):
 
     @dataclass(frozen=True)
     class Outcome:
-        detector: str = field(default="<undefined>")
-        source: MatLike = field(default_factory=numpy.ndarray)
-        detections: list[DetectedFace] = field(default_factory=list)
+        detector: str
+        source: numpy.ndarray
+        detections: list[DetectedFace]
 
-    def __post_init__(self):
-        assert isinstance(self.detector, str)
-        assert isinstance(self.source, MatLike)
-        assert isinstance(self.detections, list)
+        def __post_init__(self):
+            assert isinstance(self.detector, str)
+            assert isinstance(self.source, numpy.ndarray)
+            assert isinstance(self.detections, list)
 
-        if self.detector.strip() == "":
-            raise ValueError("Detector name must be non-empty")
+            if self.detector.strip() == "":
+                raise ValueError("Detector name must be non-empty")
 
-    def __len__(self):
-        return len(self.detections)
+        def __bool__(self):
+            return bool(self.detections)
+
+        def __len__(self):
+            return len(self.detections)
 
     @abstractmethod
     def process(
@@ -120,7 +121,7 @@ class Detector(ABC):
         return "opencv"
 
     @staticmethod
-    def instance(name: Optional[str], singleton: bool = True) -> "Detector":
+    def instance(name: Optional[str] = None, singleton: bool = True) -> "Detector":
         """
         `Detector` factory method.
 
