@@ -271,7 +271,7 @@ def _cv2_refresh(timeout: int = 1):
 #   face is detected
 # Note ! Faces validly detected but too small are
 # discarded. A face is considered too small when its
-# area is less than 1/2rd of target_size.
+# area is less than 1/10rd of original image size.
 def _process_frame(
     frame: MatLike,
     faces_count_threshold: int,
@@ -284,22 +284,19 @@ def _process_frame(
             img=frame,
             raise_notfound=True,
         )
-        # extracted_faces = DeepFace.detect_faces(
-        #     img_path=frame,
-        #     target_size=target_size,
-        #     detector=detector,
-        #     align=False,  # Do not align the detected face
-        # )
+
+        img_height, img_width = tuple(int(val) for val in frame.shape[:2])
+        min_area = (img_height * img_width) / 10 #TODO: This is a magic number
 
         # Remove too small detected faces
-        # for i in range(len(extracted_faces)-1, -1, -1):
-        #     item = extracted_faces[i]
-        #     w: int = item["facial_area"]["w"]
-        #     h: int = item["facial_area"]["h"]
-        #     if w * h < (target_size[0] * target_size[1]) / 2:
-        #         extracted_faces.pop(i)
+        for i in range(len(detection_outcome.detections)-1, -1, -1):
+            box = detection_outcome.detections[i].bounding_box
+            if box.area < min_area:
+                detection_outcome.detections.pop(i)
 
-        # Treat too many results as error
+        # Treat no or too many results as error
+        if len(detection_outcome) == 0:
+            raise FaceNotFound("No face found")
         if len(detection_outcome) > faces_count_threshold:
             raise OverflowError("Too many faces found")
 
@@ -344,7 +341,6 @@ def _get_best_capture(
     return good_captures[best_index]
 
 
-
 # Draw box(es) around the detected face(s)
 def _box_faces(
     picture: MatLike, 
@@ -352,7 +348,7 @@ def _box_faces(
     number: Union[int, None] = None
 ) -> MatLike:
     for face in faces:
-        picture = face.plot(picture, (255, 255, 255))
+        picture = face.plot(img=picture, thickness=2, eyes=True)
         if number is not None:
             cv2.putText(
                 picture,
@@ -368,28 +364,6 @@ def _box_faces(
                 cv2.LINE_AA,
             )
     return picture
-
-
-# Draws a box around the provided region
-def _box_face(
-    picture: MatLike, region: Tuple[int, int, int, int]  # (x, y, w, h)
-) -> MatLike:
-    x: int = region[0]
-    y: int = region[1]
-    w: int = region[2]
-    h: int = region[3]
-    cv2.rectangle(picture, (x, y), (x + w, y + h), (67, 67, 67), 1)
-    return picture
-
-
-# Crop the face from the picture
-def __crop_face(picture: MatLike, region: Dict[str, int]) -> MatLike:
-    x: int = region["x"]
-    y: int = region["y"]
-    w: int = region["w"]
-    h: int = region["h"]
-    return picture[y : y + h, x : x + w]
-
 
 # Get the matches from the dataset
 # which are the closest to the detected face

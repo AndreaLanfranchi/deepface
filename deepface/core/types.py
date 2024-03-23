@@ -230,7 +230,13 @@ class DetectedFace:
     def height(self) -> int:
         return self.bounding_box.height
 
-    def plot(self, img: numpy.ndarray, color: Tuple[int, int, int] = (0, 255, 0)) -> numpy.ndarray:
+    def plot(
+        self,
+        img: numpy.ndarray,
+        color: Tuple[int, int, int] = (255, 255, 224), # BGR light cyan
+        thickness: int = 2,
+        eyes: bool = False,
+    ) -> numpy.ndarray:
         """
         Draw the bounding box and eyes on the image.
         """
@@ -240,15 +246,32 @@ class DetectedFace:
             raise ValueError("Image must be non-empty")
         if self.bounding_box.empty:
             raise ValueError("Bounding box must be non-empty")
-        if self.left_eye is not None and self.right_eye is not None:
-            img = cv2.circle(img, self.left_eye.tolist(), 5, color, 2)
-            img = cv2.circle(img, self.right_eye.tolist(), 5, color, 2)
-            img = cv2.line(img, self.left_eye.tolist(), self.right_eye.tolist(), color, 2)
+        if eyes == True and (self.left_eye is not None and self.right_eye is not None):
+            img = cv2.circle(img, self.left_eye.tolist(), 5, color, thickness)
+            img = cv2.circle(img, self.right_eye.tolist(), 5, color, thickness)
+            img = cv2.line(
+                img, self.left_eye.tolist(), self.right_eye.tolist(), color, thickness
+            )
         img = cv2.rectangle(
             img,
             (self.bounding_box.top_left.x, self.bounding_box.top_left.y),
             (self.bounding_box.bottom_right.x, self.bounding_box.bottom_right.y),
             color,
-            2,
+            thickness,
         )
         return img
+
+    def crop(self, img: numpy.ndarray) -> numpy.ndarray:
+        """
+        Crop the face from the image.
+        """
+        if not isinstance(img, numpy.ndarray) or len(img.shape) != 3:
+            raise TypeError("Image must be a valid numpy array")
+        if img.shape[0] == 0 or img.shape[1] == 0:
+            raise ValueError("Image must be non-empty")
+        if self.bounding_box.empty:
+            raise ValueError("Bounding box must be non-empty")
+        return img[
+            self.bounding_box.top_left.y : self.bounding_box.bottom_right.y,
+            self.bounding_box.top_left.x : self.bounding_box.bottom_right.x,
+        ]
