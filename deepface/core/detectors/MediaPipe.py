@@ -56,7 +56,6 @@ class Detector(DetectorBase):
         img_height, img_width = img.shape[:2]
         detected_faces: List[DetectedFace] = []
 
-
         detection_result = self._detector.process(img)
 
         # Extract the bounding box, the landmarks and the confidence score
@@ -64,18 +63,19 @@ class Detector(DetectorBase):
             if detection is None:
                 continue
 
-            (confidence,) = round(detection.score, 2)
+            assert(len(detection.score) == 1)
+            confidence = float(round(detection.score[0], 2))
             if min_confidence is not None and confidence < min_confidence:
                 continue
 
-            detection_box = detection.bounding_box
+            rbb = detection.location_data.relative_bounding_box
             x_range = RangeInt(
-                detection_box.origin_x,
-                min(detection_box.origin_x + detection_box.width, img_width),
+                int(round(rbb.xmin * img_width)),
+                int(round(rbb.xmin * img_width)) + int(round(rbb.width * img_width)),
             )
             y_range = RangeInt(
-                detection_box.origin_y,
-                min(detection_box.origin_y + detection_box.height, img_height),
+                int(round(rbb.ymin * img_height)),
+                int(round(rbb.ymin * img_height)) + int(round(rbb.height * img_height)),
             )
             if x_range.span <= 0 or y_range.span <= 0:
                 continue  # Invalid detection
@@ -91,18 +91,26 @@ class Detector(DetectorBase):
                 bottom_right=Point(x=x_range.end, y=y_range.end),
             )
 
+            # See also: https://storage.googleapis.com/mediapipe-assets/MediaPipe%20BlazeFace%20Model%20Card%20(Short%20Range).pdf
+            # 6 [0,5] approximate facial keypoint coordinates:
+            # 0 Left eye (from the observer’s point of view)
+            # 1 Right eye
+            # 2 Nose tip
+            # 3 Mouth
+            # 4 Left eye tragion
+            # 5 Right eye tragion
+
             le_point = None
             re_point = None
-            if detection.keypoints is not None and len(detection.keypoints) >= 2:
-                # left eye and right eye 0 and 1
-                # nose 2
-                # mouth 3
-                # right ear 4
-                # left ear 5
-                x1 = int(min(round(detection.keypoints[0].x * img_width), img_width))
-                y1 = int(min(round(detection.keypoints[0].y * img_height), img_height))
-                x2 = int(min(round(detection.keypoints[1].x * img_width), img_width))
-                y2 = int(min(round(detection.keypoints[1].y * img_height), img_height))
+
+            keypoints = detection.location_data.relative_keypoints
+            if keypoints is not None and len(keypoints) == 6:
+                
+                # We swap the left and right eyes: from observer's point of view to the image's point of view
+                x1 = int(min(round(keypoints[1].x * img_width), img_width))
+                y1 = int(min(round(keypoints[1].y * img_height), img_height))
+                x2 = int(min(round(keypoints[0].x * img_width), img_width))
+                y2 = int(min(round(keypoints[0].y * img_height), img_height))
                 le_point = Point(x1, y1)
                 re_point = Point(x2, y2)
 
