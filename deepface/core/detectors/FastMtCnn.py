@@ -12,6 +12,7 @@ from deepface.core.types import (
 )
 from deepface.core.detector import Detector as DetectorBase
 from deepface.core.exceptions import FaceNotFound, MissingOptionalDependency
+from deepface.commons.logger import Logger
 
 try:
     from facenet_pytorch import MTCNN as fast_mtcnn
@@ -20,6 +21,7 @@ except ModuleNotFoundError:
     what += "You can install by 'pip install facenet-pytorch' "
     raise MissingOptionalDependency(what) from None
 
+logger = Logger.get_instance()
 
 # FastMtCnn detector (optional)
 # see also:
@@ -57,18 +59,20 @@ class Detector(DetectorBase):
         # before converting it to RGB
         img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
-        boxes, probs, points = self._detector.detect(img_rgb, landmarks=True)
+        boxes, probs, keypoints_list = self._detector.detect(img_rgb, landmarks=True)
 
-        for box, prob, point in zip(boxes, probs, points):
-
-            if box is None or not isinstance(box, (list, tuple)) or len(box) != 4:
-                continue  # No detection or tampered data
+        for box, prob, keypoints in zip(boxes, probs, keypoints_list):
 
             if min_confidence is not None and prob < min_confidence:
                 continue  # Confidence too low
 
-            x_range = RangeInt(start=box[0], end=min(img_width, box[2]))
-            y_range = RangeInt(start=box[1], end=min(img_height, box[3]))
+            if box is None or not isinstance(box, numpy.ndarray) or box.shape[0] != 4:
+                continue  # No detection or tampered data
+
+            x1, y1, x2, y2 = (int(round(val)) for val in box[:4])
+            x_range = RangeInt(start=x1, end=min(x2, img_width))
+            y_range = RangeInt(start=y1, end=min(y2, img_height))
+
             if x_range.span <= 0 or y_range.span <= 0:
                 continue  # Invalid detection
 
@@ -85,9 +89,21 @@ class Detector(DetectorBase):
 
             le_point = None
             re_point = None
-            if point is not None and len(point) >= 2:
-                le_point = Point(x=point[0][0], y=point[0][1])
-                re_point = Point(x=point[1][0], y=point[1][1])
+
+            if (
+                isinstance(keypoints, numpy.ndarray)
+                and keypoints.shape[0] == 5 # left eye, right eye, nose, left mouth, right mouth
+                and keypoints.shape[1] == 2 # 2D coordinates
+            ):
+                # Left and right are swapped in the keypoints list
+                le_point = Point(
+                    x=int(round(keypoints[1][0])),
+                    y=int(round(keypoints[1][1])),
+                )
+                re_point = Point(
+                    x=int(round(keypoints[0][0])),
+                    y=int(round(keypoints[0][1])),
+                )
                 # TODO Decide whether to discard the face or to not include the eyes
                 if le_point not in bounding_box or re_point not in bounding_box:
                     le_point = None

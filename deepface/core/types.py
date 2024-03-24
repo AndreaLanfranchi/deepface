@@ -217,7 +217,7 @@ class DetectedFace:
         if self.left_eye is not None and self.right_eye is not None:
             if self.left_eye == self.right_eye:
                 raise ValueError("Left and right eyes must be different")
-            if self.left_eye > self.right_eye:
+            if self.left_eye < self.right_eye:
                 raise ValueError("Left eye must be to the left of the right eye")
             if self.left_eye not in self.bounding_box:
                 raise ValueError("Left eye must be inside the bounding box")

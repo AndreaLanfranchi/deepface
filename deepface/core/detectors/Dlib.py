@@ -3,8 +3,11 @@ from typing import Any, List, Optional
 import os
 import bz2
 import shutil
+import cv2
 import gdown
 import numpy
+
+from imutils import face_utils
 
 from deepface.core.types import (
     BoundingBox,
@@ -73,10 +76,11 @@ class Detector(DetectorBase):
         # Validation of inputs
         super().process(img, min_dims, min_confidence)
         img_height, img_width = img.shape[:2]
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         detected_faces: List[DetectedFace] = []
 
         # note that, by design, dlib's fhog face detector scores are >0 but not capped at 1
-        rects, scores, _ = self._detector.run(img, 1)
+        rects, scores, _ = self._detector.run(gray, 1)
         assert len(rects) == len(scores)
 
         for rect, score in zip(rects, scores):
@@ -100,11 +104,22 @@ class Detector(DetectorBase):
 
             le_point = None
             re_point = None
-            landmarks = self._predictor(img, rect)
-            if len(landmarks) >= 3:
-                le_point = Point(landmarks.part(2).x, landmarks.part(2).y)
-                re_point = Point(landmarks.part(0).x, landmarks.part(0).y)
-                # TODO Decide whether to discard the face or to not include the eyes
+            shape = self._predictor(gray, rect)
+            if shape.num_parts == 5:
+                # For dlib’s 5-point facial landmark detector
+                # Left eye: parts 0, 1
+                # Right eye: parts 2, 3
+                # Nose: part 4 (actually not used)
+
+                # For each eye, we will use the average of the two points
+                le_point = Point(
+                    x=(shape.part(0).x + shape.part(1).x) // 2,
+                    y=(shape.part(0).y + shape.part(1).y) // 2,
+                )
+                re_point = Point(
+                    x=(shape.part(2).x + shape.part(3).x) // 2,
+                    y=(shape.part(2).y + shape.part(3).y) // 2,
+                )
                 if le_point not in bounding_box or re_point not in bounding_box:
                     le_point = None
                     re_point = None
