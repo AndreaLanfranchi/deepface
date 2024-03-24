@@ -21,7 +21,7 @@ class Detector(DetectorBase):
         min_dims: Optional[BoxDimensions] = None,
         min_confidence: float = 0.0,
         raise_notfound: bool = False,
-    ) -> DetectorBase.Outcome:
+    ) -> DetectorBase.Results:
 
         # Validation of inputs
         super().process(img, min_dims, min_confidence)
@@ -40,7 +40,7 @@ class Detector(DetectorBase):
             )
         )
 
-        return DetectorBase.Outcome(
+        return DetectorBase.Results(
             detector=self.name,
             source=img,
             detections=detected_faces,

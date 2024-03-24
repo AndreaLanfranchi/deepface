@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 import numpy
 import cv2
 
+
 @dataclass(frozen=True)
 class RangeInt:
     """
@@ -85,7 +86,7 @@ class Point:
         if isinstance(other, Point):
             return self.x <= other.x and self.y <= other.y
         return False
-    
+
     def tolist(self) -> list:
         return [self.x, self.y]
 
@@ -233,7 +234,7 @@ class DetectedFace:
     def plot(
         self,
         img: numpy.ndarray,
-        color: Tuple[int, int, int] = (255, 255, 224), # BGR light cyan
+        color: Tuple[int, int, int] = (255, 255, 224),  # BGR light cyan
         thickness: int = 2,
         eyes: bool = False,
     ) -> numpy.ndarray:

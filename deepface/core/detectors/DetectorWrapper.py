@@ -64,7 +64,7 @@ def detect_faces(
         return []
 
     # find facial areas of given image
-    facial_areas: Detector.Outcome = detector.process(img=source)
+    facial_areas: Detector.Results = detector.process(img=source)
 
     results = []
     for facial_area in facial_areas:

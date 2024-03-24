@@ -22,7 +22,7 @@ class Detector(ABC):
     _name: Optional[str] = None  # Must be filled by specialized classes
 
     @dataclass(frozen=True)
-    class Outcome:
+    class Results:
         detector: str
         source: numpy.ndarray
         detections: list[DetectedFace]
@@ -48,7 +48,7 @@ class Detector(ABC):
         min_dims: Optional[BoxDimensions] = None,
         min_confidence: float = 0.0,
         raise_notfound: bool = False,
-    ) -> Outcome:
+    ) -> Results:
         """
         Detect faces in the given image.
 
