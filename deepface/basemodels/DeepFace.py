@@ -9,7 +9,7 @@ import numpy
 from deepface.commons import folder_utils
 from deepface.commons.logger import Logger
 from deepface.core.exceptions import InsufficentVersionRequirement
-from deepface.core.representer import Representer as RepresenterBase
+from deepface.core.extractor import Extractor as ExtractorBase
 from deepface.core.types import BoxDimensions
 
 tensorflow_version_major = int(tensorflow.__version__.split(".", maxsplit=1)[0])
@@ -38,7 +38,9 @@ logger = Logger.get_instance()
 
 # -------------------------------------
 # pylint: disable=too-few-public-methods
-class Representer(RepresenterBase):
+class Extractor(ExtractorBase):
+
+    _model: Model
 
     def __init__(self):
         self._name = str(__name__.rsplit(".", maxsplit=1)[-1])
@@ -48,6 +50,7 @@ class Representer(RepresenterBase):
 
     def process(self, img: numpy.ndarray) -> List[float]:
         # TODO: shouldn't we ensure image is resized to fit in the input_shape?
+        super().process(img)
         return self._model(img, training=False).numpy()[0].tolist()
 
     def _initialize(self):

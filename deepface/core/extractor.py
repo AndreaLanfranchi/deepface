@@ -1,38 +1,40 @@
 from abc import ABC, abstractmethod
-from typing import List, Optional, Union
+from typing import List, Optional
 
 import time
 import cv2
 import numpy
 
 from deepface import basemodels
-from deepface.commons import package_utils
 from deepface.core import reflection
 from deepface.core.types import BoxDimensions
 from deepface.commons.logger import Logger
 
 logger = Logger.get_instance()
 
-tf_version = package_utils.get_tf_major_version()
-if tf_version == 2:
-    from tensorflow.keras.models import Model, Sequential
-else:
-    from keras.models import Model, Sequential
 
-
-# Abstract class all specialized face representers must inherit from.
+# Abstract class all specialized face extractors must inherit from.
 # Creates the synthetic digital representation of a face.
 # It is assumed the input picture is already a face previously detected.
-class Representer(ABC):
+class Extractor(ABC):
+    """
+    Interface for digital face(s) representation.
+    """
 
-    _model: Union[Model, Sequential]
     _name: str
     _input_shape: BoxDimensions
     _output_shape: int
 
     @abstractmethod
     def process(self, img: numpy.ndarray) -> List[float]:
-        pass
+        """
+        Extracts the digital representation of a face from an image.
+        Note: It is strongly assumed that the input image is already a face
+        previously detected and cropped.
+        """
+        if not isinstance(img, numpy.ndarray) or len(img.shape) != 3:
+            raise TypeError("Image must be a valid numpy array")
+
 
     def _scale_pad(self, img: numpy.ndarray) -> numpy.ndarray:
         """
@@ -92,27 +94,22 @@ class Representer(ABC):
         assert isinstance(self._output_shape, int)
         return self._output_shape
 
-    @property
-    def model(self) -> Union[Model, Sequential]:
-        assert isinstance(self._model, (Model, Sequential))
-        return self._model
-
     @staticmethod
-    def get_available_representers() -> List[str]:
+    def get_available_extractors() -> List[str]:
 
-        global available_representers
-        if not "available_representers" in globals():
-            available_representers = reflection.get_derived_classes(
-                package=basemodels, base_class=Representer
+        global available_extractors
+        if not "available_extractors" in globals():
+            available_extractors = reflection.get_derived_classes(
+                package=basemodels, base_class=ExtractorBase
             )
-        return list(available_representers.keys())
+        return list(available_extractors.keys())
 
     @staticmethod
     def get_default() -> str:
         return "VGGFace"
 
     @staticmethod
-    def instance(name: Optional[str] = None, singleton: bool = True) -> "Representer":
+    def instance(name: Optional[str] = None, singleton: bool = True) -> "ExtractorBase":
         """
         `Representer` factory method.
 
@@ -121,7 +118,7 @@ class Representer(ABC):
             `singleton (bool)`: If True, the same instance will be returned
 
         Return:
-            An instance of the `Representer` subclass matching the given name
+            An instance of the `Extractor` subclass matching the given name
 
         Raises:
             `TypeError`: If the name or singleton arguments are not of the expected type
@@ -130,7 +127,7 @@ class Representer(ABC):
             'ImportError': If the detector instance cannot be instantiated
         """
         if name is None:
-            name = Representer.get_default()
+            name = ExtractorBase.get_default()
         elif not isinstance(name, str):
             raise TypeError(
                 f"Invalid 'name' argument type [{type(name).__name__}] : expected str"
@@ -142,38 +139,38 @@ class Representer(ABC):
 
         name = name.lower().strip()
         if len(name) == 0:
-            name = Representer.get_default()
+            name = ExtractorBase.get_default()
 
-        global representers_instances  # singleton design pattern
-        if not "representers_instances" in globals():
-            representers_instances = {}
+        global extractors_instances  # singleton design pattern
+        if not "extractors_instances" in globals():
+            extractors_instances = {}
 
-        global available_representers
-        if not "available_representers" in globals():
-            available_representers = reflection.get_derived_classes(
-                package=basemodels, base_class=Representer
+        global available_extractors
+        if not "available_extractors" in globals():
+            available_extractors = reflection.get_derived_classes(
+                package=basemodels, base_class=ExtractorBase
             )
 
-        if name not in available_representers.keys():
-            raise NotImplementedError(f"Unknown respresenter [{name}]")
+        if name not in available_extractors.keys():
+            raise NotImplementedError(f"Unknown extractor [{name}]")
 
         tic = time.time()
         try:
             if not singleton:
-                instance = available_representers[name]()
+                instance = available_extractors[name]()
                 logger.debug(
-                    f"Instantiated representer [{name}] ({time.time() - tic:.3f} seconds)"
+                    f"Instantiated extractor [{name}] ({time.time() - tic:.3f} seconds)"
                 )
             else:
-                if name not in representers_instances.keys():
-                    representers_instances[name] = available_representers[name]()
+                if name not in extractors_instances.keys():
+                    extractors_instances[name] = available_extractors[name]()
                     logger.debug(
-                        f"Instantiated representer [{name}] ({time.time() - tic:.3f} seconds)"
+                        f"Instantiated extractor [{name}] ({time.time() - tic:.3f} seconds)"
                     )
-                instance = representers_instances[name]
+                instance = extractors_instances[name]
         except Exception as ex:
             logger.critical(
-                f"{type(ex).__name__} on representer [{name}] Error: {ex.args}"
+                f"{type(ex).__name__} on extractor [{name}] Error: {ex.args}"
             )
             raise ex
 

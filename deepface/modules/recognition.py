@@ -13,7 +13,7 @@ from tqdm import tqdm
 # project dependencies
 from deepface.commons.logger import Logger
 from deepface.modules import representation, detection, verification
-from deepface.core.representer import Representer
+from deepface.core.extractor import ExtractorBase
 
 logger = Logger.get_instance()
 
@@ -87,7 +87,7 @@ def find(
     if os.path.isdir(db_path) is not True:
         raise ValueError(f"{db_path} does not exist or is not a directory.")
 
-    model: Representer = Representer.instance(decomposer)
+    model: ExtractorBase = ExtractorBase.instance(decomposer)
     # target_size = model.input_shape
     target_size = None
 

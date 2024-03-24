@@ -57,9 +57,10 @@ class Detector(ABC):
 
             Args:
                 index (Optional[int]): Index of the face detection to plot.
-                    Omitting the index will plot all detections (default: None)
+                  Omitting the index will plot all detections (default: None)
                 copy (bool): Whether to return the drawings on a copy of the image (default: False)
-                color (Tuple[int, int, int]): BGR color code for drawing the bounding box (default: KCOLOR_BGR_CYAN)
+                color (Tuple[int, int, int]): BGR color code for drawing the bounding box
+                  (default: KCOLOR_BGR_CYAN)
                 thickness (int): Thickness of the bounding box (default: 2)
                 eyes (bool): Whether to draw eye landmarks (default: False)
 

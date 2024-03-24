@@ -2,13 +2,14 @@ from typing import List
 
 import os
 import bz2
+import cv2
 import shutil
 import gdown
 import numpy
 
 from deepface.commons import folder_utils
 from deepface.commons.logger import Logger
-from deepface.core.representer import Representer as RepresenterBase
+from deepface.core.extractor import Extractor as ExtractorBase
 from deepface.core.types import BoxDimensions
 from deepface.core.exceptions import MissingOptionalDependency
 
@@ -23,7 +24,7 @@ logger = Logger.get_instance()
 
 
 # Dlib respresenter model (optional)
-class Representer(RepresenterBase):
+class Extractor(ExtractorBase):
 
     def __init__(self):
         self._name = str(__name__.rsplit(".", maxsplit=1)[-1])
@@ -33,18 +34,8 @@ class Representer(RepresenterBase):
 
     def process(self, img: numpy.ndarray) -> List[float]:
 
-        # TODO: shouldn't we ensure image is resized to fit in the input_shape?
-        if len(img.shape) == 4:
-            img = img[0]
-
-        # bgr to rgb
-        img = img[:, :, ::-1]  # bgr to rgb
-
-        # img is in scale of [0, 1] but expected [0, 255]
-        if img.max() <= 1:
-            img = img * 255
-
-        img = img.astype(numpy.uint8)
+        super().process(img)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
         img_representation = self._model.compute_face_descriptor(img)
         img_representation = numpy.array(img_representation)

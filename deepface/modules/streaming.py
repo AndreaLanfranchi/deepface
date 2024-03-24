@@ -15,7 +15,7 @@ from deepface import DeepFace
 from deepface.core.analyzer import Analyzer
 from deepface.core.detector import Detector
 from deepface.core.exceptions import FaceNotFound
-from deepface.core.representer import Representer
+from deepface.core.extractor import ExtractorBase
 from deepface.commons.logger import Logger
 from deepface.core.types import DetectedFace
 
@@ -101,7 +101,7 @@ def analysis(
     # ------------------------
     # build models once to store them in the memory
     # otherwise, they will be built after cam started and this will cause delays
-    model: Representer = Representer.instance(name=decomposer)
+    model: ExtractorBase = ExtractorBase.instance(name=decomposer)
 
     # Lazy load the attributes analyzers
     if attributes is not None:

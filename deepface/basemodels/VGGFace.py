@@ -8,7 +8,7 @@ import numpy
 from deepface.commons import folder_utils
 from deepface.core.types import BoxDimensions
 from deepface.modules import verification
-from deepface.core.representer import Representer
+from deepface.core.extractor import ExtractorBase
 from deepface.commons.logger import Logger
 from deepface.core.exceptions import InsufficentVersionRequirement
 
@@ -34,7 +34,7 @@ from tensorflow.keras.layers import (
 logger = Logger.get_instance()
 
 
-class VggFaceClient(Representer):
+class VggFaceClient(ExtractorBase):
 
     def __init__(self):
         self._name = str(__name__.rsplit(".", maxsplit=1)[-1])

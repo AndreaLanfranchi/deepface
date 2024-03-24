@@ -8,7 +8,7 @@ import numpy
 from deepface.core.exceptions import InsufficentVersionRequirement
 from deepface.commons import folder_utils
 from deepface.commons.logger import Logger
-from deepface.core.representer import Representer as RepresenterBase
+from deepface.core.extractor import ExtractorBase as ExtractorBase
 
 tensorflow_version_major = int(tensorflow.__version__.split(".", maxsplit=1)[0])
 if tensorflow_version_major < 2:
@@ -38,7 +38,7 @@ from tensorflow.keras import backend as K
 logger = Logger.get_instance()
 
 # FaceNet-128d model
-class FaceNet128dClient(RepresenterBase):
+class FaceNet128dClient(ExtractorBase):
     """
     FaceNet-128d model class
     """
