@@ -1,8 +1,7 @@
 import os
-from typing import Any, List
+from typing import List
 
 import numpy
-import cv2
 import gdown
 
 from deepface.commons import folder_utils

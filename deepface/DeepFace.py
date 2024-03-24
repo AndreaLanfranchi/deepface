@@ -11,7 +11,7 @@ import tensorflow
 # package dependencies
 from deepface.core.analyzer import Analyzer        # Facial Emotions Analyzer
 from deepface.core.detector import Detector
-from deepface.core.extractor import ExtractorBase  # Abstract class for face represemter
+from deepface.core.extractor import Extractor      # Abstract class for face represemter
 
 from deepface.commons import package_utils
 from deepface.commons.logger import Logger

@@ -5,7 +5,7 @@ import tensorflow
 import numpy
 from deepface.commons import package_utils, folder_utils
 from deepface.commons.logger import Logger
-from deepface.core.extractor import ExtractorBase
+from deepface.core.extractor import Extractor
 
 logger = Logger.get_instance()
 

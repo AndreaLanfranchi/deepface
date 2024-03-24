@@ -7,7 +7,7 @@ import numpy
 from deepface.commons import package_utils, folder_utils
 from deepface.commons.logger import Logger
 from deepface.core.analyzer import Analyzer as AnalyzerBase
-from deepface.core.extractor import ExtractorBase
+from deepface.core.extractor import Extractor
 
 logger = Logger.get_instance()
 
@@ -61,7 +61,7 @@ class Analyzer(AnalyzerBase):
         classes = 101  # TDOO: What is this magic number?
         self._output_indexes = numpy.array(list(range(0, classes)))
 
-        base_model = ExtractorBase.instance().base_model()
+        base_model: Sequential = Extractor.instance().base_model()
         base_model_output = Sequential()
         base_model_output = Convolution2D(classes, (1, 1), name="predictions")(
             base_model.layers[-4].output

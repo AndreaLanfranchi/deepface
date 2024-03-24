@@ -8,7 +8,7 @@ import numpy
 from deepface.core.exceptions import InsufficentVersionRequirement
 from deepface.commons import folder_utils
 from deepface.commons.logger import Logger
-from deepface.core.extractor import ExtractorBase as ExtractorBase
+from deepface.core.extractor import Extractor as ExtractorBase
 
 tensorflow_version_major = int(tensorflow.__version__.split(".", maxsplit=1)[0])
 if tensorflow_version_major < 2:

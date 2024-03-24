@@ -32,6 +32,7 @@ class Detector(DetectorBase):
 
     def __init__(self):
         self._name = str(__name__.rsplit(".", maxsplit=1)[-1])
+        self._input_shape = BoxDimensions(width=300, height=300)
         self._initialize()
 
     def _initialize(self):
@@ -76,10 +77,9 @@ class Detector(DetectorBase):
         detected_faces: List[DetectedFace] = []
 
         # TODO: resize to a square ?
-        target_h = int(300)
-        target_w = int(300)
-        aspect_ratio_x = img_width / target_w
-        aspect_ratio_y = img_height / target_h
+        aspect_ratio_x = img_width / self._input_shape.width
+        aspect_ratio_y = img_height / self._input_shape.height
+        target_w, target_h = self._input_shape.width, self._input_shape.height
 
         blob = cv2_dnn.blobFromImage(
             image=cv2.resize(img, (target_h, target_w)),

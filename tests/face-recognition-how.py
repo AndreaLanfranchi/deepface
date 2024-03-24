@@ -2,7 +2,7 @@ import matplotlib.pyplot as pyplot
 import numpy
 from deepface import DeepFace
 from deepface.modules import verification
-from deepface.core.extractor import ExtractorBase
+from deepface.core.extractor import Extractor
 from deepface.commons.logger import Logger
 
 logger = Logger.get_instance()
@@ -10,7 +10,7 @@ logger = Logger.get_instance()
 # ----------------------------------------------
 # build face recognition model
 
-model: ExtractorBase = ExtractorBase.instance() # Default is VGGFace
+model: Extractor = Extractor.instance() # Default is VGGFace
 
 target_size = model.input_shape
 

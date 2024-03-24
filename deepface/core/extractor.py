@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import Any, List, Optional
 
 import time
 import cv2
@@ -35,6 +35,9 @@ class Extractor(ABC):
         if not isinstance(img, numpy.ndarray) or len(img.shape) != 3:
             raise TypeError("Image must be a valid numpy array")
 
+    @abstractmethod
+    def base_model(self) -> Any:
+        pass
 
     def _scale_pad(self, img: numpy.ndarray) -> numpy.ndarray:
         """

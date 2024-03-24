@@ -7,7 +7,7 @@ import numpy
 
 # project dependencies
 from deepface.modules import representation, detection
-from deepface.core.extractor import ExtractorBase
+from deepface.core.extractor import Extractor
 
 
 def verify(
@@ -78,7 +78,7 @@ def verify(
     tic = time.time()
 
     # --------------------------------
-    model: ExtractorBase = ExtractorBase.instance(decomposer)
+    model: Extractor = Extractor.instance(decomposer)
     target_size = model.input_shape
 
     # img pairs might have many faces
