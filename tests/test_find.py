@@ -12,7 +12,7 @@ threshold = verification.find_threshold(model_name="VGG-Face", distance_metric="
 
 def test_find_with_exact_path():
     img_path = os.path.join("dataset","img1.jpg")
-    dfs = DeepFace.find(img_path=img_path, db_path="dataset")
+    dfs = DeepFace.find(img=img_path, db_path="dataset")
     assert len(dfs) > 0
     for df in dfs:
         assert isinstance(df, pandas.DataFrame)

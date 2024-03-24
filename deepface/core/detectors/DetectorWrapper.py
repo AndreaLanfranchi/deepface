@@ -16,7 +16,6 @@ def detect_faces(
     source: Union[str, numpy.ndarray],
     detector: Optional[Union[str, Detector]] = None,
     align: bool = True,
-    expand_percentage: int = 0,
 ) -> List[DetectedFace]:
     """
 
@@ -31,9 +30,6 @@ def detect_faces(
         instance have to be lazily initialized.
 
         align (bool): wether to perform alignment after detection. Default is True.
-
-        expand_percentage (int): expand detected facial area with a percentage. Default is 0.
-        Negative values are clamped to 0.
 
     Returns:
         results (List[DetectedFace]): A list of DetectedFace objects
@@ -55,8 +51,6 @@ def detect_faces(
     if isinstance(source, str):
         source, _ = preprocessing.load_image(source)
 
-    expand_percentage = max(0, expand_percentage)  # clamp to 0
-
     # If the image is too small, return an empty list
     # TODO: Add a warning message here ?
     # TODO: Maybe set a minimum size for the image globally ?
@@ -75,17 +69,6 @@ def detect_faces(
         left_eye = facial_area.left_eye
         right_eye = facial_area.right_eye
         confidence = facial_area.confidence
-
-        if expand_percentage > 0:
-            # Expand the facial region height and width by the provided percentage
-            # ensuring that the expanded region stays within img.shape limits
-            expanded_w = w + int(w * expand_percentage / 100)
-            expanded_h = h + int(h * expand_percentage / 100)
-
-            x = max(0, x - int((expanded_w - w) / 2))
-            y = max(0, y - int((expanded_h - h) / 2))
-            w = min(source.shape[1] - x, expanded_w)
-            h = min(source.shape[0] - y, expanded_h)
 
         # extract detected face unaligned
         detected_face = source[int(y) : int(y + h), int(x) : int(x + w)]

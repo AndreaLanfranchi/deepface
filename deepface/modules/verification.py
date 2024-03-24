@@ -17,7 +17,6 @@ def verify(
     detector: Optional[str] = None,
     distance_metric: str = "cosine",
     align: bool = True,
-    expand_percentage: int = 0,
     normalization: str = "base",
 ) -> Dict[str, Any]:
     """
@@ -44,8 +43,6 @@ def verify(
             'euclidean', 'euclidean_l2' (default is cosine).
 
         align (bool): Flag to enable face alignment (default is True).
-
-        expand_percentage (int): expand detected facial area with a percentage (default is 0).
 
         normalization (string): Normalize the input image before feeding it to the model.
             Options: base, raw, Facenet, Facenet2018, VGGFace, VGGFace2, ArcFace (default is base)
@@ -88,7 +85,6 @@ def verify(
         detector=detector,
         grayscale=False,
         align=align,
-        expand_percentage=expand_percentage,
     )
 
     img2_objs = detection.detect_faces(
@@ -97,7 +93,6 @@ def verify(
         detector=detector,
         grayscale=False,
         align=align,
-        expand_percentage=expand_percentage,
     )
     # --------------------------------
     distances = []

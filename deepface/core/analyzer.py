@@ -59,10 +59,10 @@ class Analyzer(ABC):
         if (
             self._name is None
             or not isinstance(self._name, str)
-            or len(self._name) == 0
+            or len(self._name.strip()) == 0
         ):
             return "<undefined>"
-        return self._name
+        return self._name.strip()
 
     @staticmethod
     def get_available_attributes() -> List[str]:

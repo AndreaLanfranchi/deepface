@@ -43,7 +43,6 @@ def verify(
     detector: Optional[str] = None,
     distance_metric: str = "cosine",
     align: bool = True,
-    expand_percentage: int = 0,
     normalization: str = "base",
 ) -> Dict[str, Any]:
     """
@@ -65,8 +64,6 @@ def verify(
             'euclidean', 'euclidean_l2' (default is cosine).
 
         align (bool): Flag to enable face alignment (default is True).
-
-        expand_percentage (int): expand detected facial area with a percentage (default is 0).
 
         normalization (string): Normalize the input image before feeding it to the model.
             Options: base, raw, Facenet, Facenet2018, VGGFace, VGGFace2, ArcFace (default is base)
@@ -103,7 +100,6 @@ def verify(
         detector=detector,
         distance_metric=distance_metric,
         align=align,
-        expand_percentage=expand_percentage,
         normalization=normalization,
     )
 
@@ -114,7 +110,6 @@ def analyze(
     attributes_details: bool = False,
     detector: Optional[str] = None,
     align: bool = True,
-    expand_percentage: int = 0,
 ) -> List[Dict[str, Any]]:
     """
     Analyze facial attributes such as age, gender, emotion, and race from the faces detected
@@ -140,8 +135,6 @@ def analyze(
             'euclidean', 'euclidean_l2' (default is cosine).
 
         align (boolean): Perform alignment based on the eye positions (default is True).
-
-        expand_percentage (int): expand detected facial area with a percentage (default is 0).
 
     Returns:
         results (List[Dict[str, Any]]): A list of dictionaries, where each dictionary represents
@@ -171,18 +164,16 @@ def analyze(
         attributes_details=attributes_details,
         detector=detector,
         align=align,
-        expand_percentage=expand_percentage,
     )
 
 
 def find(
-    img_path: Union[str, numpy.ndarray],
+    img: Union[str, numpy.ndarray],
     db_path: str,
-    decomposer: Optional[str] = None,
+    extractor: Optional[str] = None,
     distance_metric: str = "cosine",
     detector: Optional[Union[str, Detector]] = None,
     align: bool = True,
-    expand_percentage: int = 0,
     threshold: Optional[float] = None,
     normalization: str = "base",
 ) -> List[pandas.DataFrame]:
@@ -236,9 +227,9 @@ def find(
                 specified model and distance metric
     """
     return recognition.find(
-        img_path=img_path,
+        img=img,
         db_path=db_path,
-        decomposer=decomposer,
+        decomposer=extractor,
         distance_metric=distance_metric,
         detector=detector,
         align=align,
@@ -359,7 +350,7 @@ def stream(
 
     streaming.analysis(
         db_path=db_path,
-        decomposer=decomposer,
+        extractor=decomposer,
         detector=detector,
         distance_metric=distance_metric,
         attributes=analyzers,

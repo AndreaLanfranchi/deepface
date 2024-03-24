@@ -19,13 +19,12 @@ logger = Logger.get_instance()
 
 
 def find(
-    img_path: Union[str, numpy.ndarray],
+    img: Union[str, numpy.ndarray],
     db_path: str,
     decomposer: Optional[str] = None,
     distance_metric: str = "cosine",
     detector: Optional[str] = None,
     align: bool = True,
-    expand_percentage: int = 0,
     threshold: Optional[float] = None,
     normalization: str = "base",
 ) -> List[pandas.DataFrame]:
@@ -51,8 +50,6 @@ def find(
             'mtcnn', 'ssd', 'dlib', 'mediapipe', 'yolov8'.
 
         align (boolean): Perform alignment based on the eye positions.
-
-        expand_percentage (int): expand detected facial area with a percentage (default is 0).
 
         threshold (float): Specify a threshold to determine whether a pair represents the same
             person or different individuals. This threshold is used for comparing distances.
@@ -85,7 +82,7 @@ def find(
 
     # -------------------------------
     if os.path.isdir(db_path) is not True:
-        raise ValueError(f"{db_path} does not exist or is not a directory.")
+        raise NotADirectoryError(f"{db_path} does not exist or is not a directory.")
 
     model: Extractor = Extractor.instance(decomposer)
     # target_size = model.input_shape
@@ -174,12 +171,11 @@ def find(
     try:
         # img path might have more than once face
         source_objs = detection.detect_faces(
-            source=img_path,
+            source=img,
             target_size=target_size,
             detector=detector,
             grayscale=False,
             align=align,
-            expand_percentage=expand_percentage,
         )
     except ValueError:
         source_objs = []
@@ -279,7 +275,6 @@ def _find_bulk_embeddings(
     target_size: tuple = (224, 224),
     detector: Optional[str] = None,
     align: bool = True,
-    expand_percentage: int = 0,
     normalization: str = "base",
 ):
     """
@@ -296,9 +291,6 @@ def _find_bulk_embeddings(
 
         align (bool): enable or disable alignment of image
             before feeding to facial recognition model
-
-        expand_percentage (int): expand detected facial area with a
-            percentage (default is 0).
 
         normalization (bool): normalization technique
 
@@ -318,7 +310,6 @@ def _find_bulk_embeddings(
                 detector=detector,
                 grayscale=False,
                 align=align,
-                expand_percentage=expand_percentage,
             )
         except ValueError as err:
             logger.error(

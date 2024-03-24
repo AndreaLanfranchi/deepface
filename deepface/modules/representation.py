@@ -15,7 +15,6 @@ def represent(
     decomposer: Optional[str] = None,
     detector: Optional[str] = None,
     align: bool = True,
-    expand_percentage: int = 0,
     normalization: str = "base",
 ) -> List[Dict[str, Any]]:
     """
@@ -33,8 +32,6 @@ def represent(
             'mtcnn', 'ssd', 'dlib', 'mediapipe', 'yolov8'.
 
         align (boolean): Perform alignment based on the eye positions.
-
-        expand_percentage (int): expand detected facial area with a percentage (default is 0).
 
         normalization (string): Normalize the input image before feeding it to the model.
             Default is base. Options: base, raw, Facenet, Facenet2018, VGGFace, VGGFace2, ArcFace
@@ -67,7 +64,6 @@ def represent(
             detector=detector,
             grayscale=False,
             align=align,
-            expand_percentage=expand_percentage,
         )
     else:  # skip
         # Try load. If load error, will raise exception internal

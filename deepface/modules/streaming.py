@@ -1,23 +1,23 @@
+from typing import Any, Dict, List, Tuple, Union, Optional
+
 import sys
 import os
 import time
 import threading
 import traceback
-from typing import Any, Dict, List, Tuple, Union, Optional
 
 import numpy
 import cv2
 from cv2.typing import MatLike
-
 import pandas
 
 from deepface import DeepFace
 from deepface.core.analyzer import Analyzer
 from deepface.core.detector import Detector
-from deepface.core.exceptions import FaceNotFound
 from deepface.core.extractor import Extractor
-from deepface.commons.logger import Logger
+from deepface.core.exceptions import FaceNotFound
 from deepface.core.types import DetectedFace
+from deepface.commons.logger import Logger
 
 logger = Logger.get_instance()
 
@@ -74,8 +74,8 @@ class Stream(threading.Thread):
 
 def analysis(
     db_path: str,
-    decomposer: Optional[str] = None,
     detector: Optional[Union[str, Detector]] = None,
+    extractor: Optional[Union[str, Extractor]] = None,
     distance_metric: str = "cosine",
     attributes: Optional[List[str]] = None,
     source: Union[str, int] = int(0),
@@ -93,6 +93,8 @@ def analysis(
 
     if not isinstance(detector, Detector):
         detector = Detector.instance(detector)
+    if not isinstance(extractor, Extractor):
+        extractor = Extractor.instance(extractor)
 
     # Constants
     capture_window_title: str = "Capture"
@@ -101,7 +103,6 @@ def analysis(
     # ------------------------
     # build models once to store them in the memory
     # otherwise, they will be built after cam started and this will cause delays
-    model: Extractor = Extractor.instance(name=decomposer)
 
     # Lazy load the attributes analyzers
     if attributes is not None:
@@ -115,10 +116,10 @@ def analysis(
     # -----------------------
     # call a dummy find function for db_path once to create embeddings in the initialization
     _ = DeepFace.find(
-        img_path=numpy.zeros((10, 10), dtype=numpy.uint8),
+        img=numpy.zeros((10, 10), dtype=numpy.uint8),
         db_path=db_path,
-        decomposer=decomposer,
         detector=detector,
+        extractor=extractor,
         distance_metric=distance_metric,
     )
     # -----------------------
@@ -173,7 +174,9 @@ def analysis(
                 continue
 
             best_frame, best_detection = _get_best_detection(good_captures)
-            boxed_frame = best_detection.plot(img=best_frame, copy=True, thickness=2, eyes=True)
+            boxed_frame = best_detection.plot(
+                img=best_frame, copy=True, thickness=2, eyes=True
+            )
             cv2.imshow(
                 capture_window_title,
                 boxed_frame,
@@ -370,9 +373,9 @@ def _get_face_matches(
 ) -> List[pandas.DataFrame]:
 
     matching_results = DeepFace.find(
-        img_path=face,
+        img=face,
         db_path=db_path,
-        decomposer=model_name,
+        extractor=model_name,
         detector="donotdetect",  # Skip detection, we already have the face
         distance_metric=distance_metric,
     )

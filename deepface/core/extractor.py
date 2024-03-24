@@ -35,7 +35,7 @@ class Extractor(ABC):
         if not isinstance(img, numpy.ndarray) or len(img.shape) != 3:
             raise TypeError("Image must be a valid numpy array")
 
-    @abstractmethod
+    #@abstractmethod
     def base_model(self) -> Any:
         pass
 
