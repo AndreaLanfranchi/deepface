@@ -49,6 +49,7 @@ class Detector(DetectorBase):
         min_dims: Optional[BoxDimensions] = None,
         min_confidence: float = 0.0,
         raise_notfound: bool = False,
+        detect_eyes: bool = True,
     ) -> DetectorBase.Results:
 
         # Validation of inputs
@@ -106,7 +107,7 @@ class Detector(DetectorBase):
             re_point = None
 
             keypoints = detection.location_data.relative_keypoints
-            if keypoints is not None and len(keypoints) == 6:
+            if detect_eyes and keypoints is not None and len(keypoints) == 6:
 
                 # We swap the left and right eyes: from observer's point of view
                 # to the image's point of view

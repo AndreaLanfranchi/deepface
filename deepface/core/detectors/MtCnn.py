@@ -27,6 +27,7 @@ class Detector(DetectorBase):
         min_dims: Optional[BoxDimensions] = None,
         min_confidence: float = 0.0,
         raise_notfound: bool = False,
+        detect_eyes: bool = True,
     ) -> DetectorBase.Results:
 
         # Validation of inputs
@@ -67,7 +68,7 @@ class Detector(DetectorBase):
                 le_point = None
                 re_point = None
                 keypoints = current_detection.get("keypoints", None)
-                if(keypoints is not None):
+                if detect_eyes and keypoints is not None:
                     left_eye = keypoints["left_eye"]
                     right_eye = keypoints["right_eye"]
                     le_point = Point(x=int(left_eye[0]), y=int(left_eye[1]))

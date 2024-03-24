@@ -63,6 +63,7 @@ class Detector(DetectorBase):
         min_dims: Optional[BoxDimensions] = None,
         min_confidence: float = 0.0,
         raise_notfound: bool = False,
+        detect_eyes: bool = True,
     ) -> DetectorBase.Results:
 
         # Validation of inputs
@@ -116,18 +117,20 @@ class Detector(DetectorBase):
                 bottom_right=Point(x=x_range.end, y=y_range.end),
             )
 
-            left_eye = tuple(int(i) for i in item.keypoints.xy[0][0].tolist())
-            right_eye = tuple(int(i) for i in item.keypoints.xy[0][1].tolist())
-            le_point = Point(x=left_eye[0], y=left_eye[1])
-            re_point = Point(x=right_eye[0], y=right_eye[1])
-
-            if le_point not in bounding_box or re_point not in bounding_box:
-                le_point = None
-                re_point = None
-            else:
-                # Is not granted the order in which the eyes are returned
-                if le_point.x < re_point.x:
-                    le_point, re_point = re_point, le_point
+            le_point = None
+            re_point = None
+            if detect_eyes:
+                left_eye = tuple(int(i) for i in item.keypoints.xy[0][0].tolist())
+                right_eye = tuple(int(i) for i in item.keypoints.xy[0][1].tolist())
+                le_point = Point(x=left_eye[0], y=left_eye[1])
+                re_point = Point(x=right_eye[0], y=right_eye[1])
+                if le_point not in bounding_box or re_point not in bounding_box:
+                    le_point = None
+                    re_point = None
+                else:
+                    # Is not granted the order in which the eyes are returned
+                    if le_point.x < re_point.x:
+                        le_point, re_point = re_point, le_point
 
             detected_faces.append(
                 DetectedFace(

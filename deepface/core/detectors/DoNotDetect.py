@@ -21,6 +21,7 @@ class Detector(DetectorBase):
         min_dims: Optional[BoxDimensions] = None,
         min_confidence: float = 0.0,
         raise_notfound: bool = False,
+        detect_eyes: bool = True,
     ) -> DetectorBase.Results:
 
         # Validation of inputs

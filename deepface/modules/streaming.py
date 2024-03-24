@@ -172,10 +172,11 @@ def analysis(
             if len(good_captures) < valid_frames_count:
                 continue
 
-            source_img, best_detection = _get_best_detection(good_captures)
+            best_frame, best_detection = _get_best_detection(good_captures)
+            boxed_frame = best_detection.plot(img=best_frame, copy=True, thickness=2, eyes=True)
             cv2.imshow(
                 capture_window_title,
-                best_detection.plot(img=source_img, thickness=2, eyes=True),
+                boxed_frame,
             )
             _cv2_refresh()
 
@@ -211,9 +212,9 @@ def analysis(
                 # Display the best capture for a few seconds
                 # with a counting box
                 for i in range(freeze_time_seconds, 0, -1):
-                    cv2.rectangle(source_img, (10, 10), (70, 50), (67, 67, 67), -10)
+                    cv2.rectangle(boxed_frame, (10, 10), (70, 50), (67, 67, 67), -10)
                     cv2.putText(
-                        source_img,
+                        boxed_frame,
                         str(i),
                         (30, 40),
                         cv2.FONT_HERSHEY_SIMPLEX,
@@ -222,7 +223,7 @@ def analysis(
                         2,
                         cv2.LINE_AA,
                     )
-                    cv2.imshow(capture_window_title, source_img)
+                    cv2.imshow(capture_window_title, boxed_frame)
                     _cv2_refresh(1000)
 
             good_captures.clear()

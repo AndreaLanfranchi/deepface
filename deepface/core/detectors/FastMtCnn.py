@@ -45,6 +45,7 @@ class Detector(DetectorBase):
         min_dims: Optional[BoxDimensions] = None,
         min_confidence: float = 0.0,
         raise_notfound: bool = False,
+        detect_eyes: bool = True,
     ) -> DetectorBase.Results:
 
         # Validation of inputs
@@ -91,6 +92,7 @@ class Detector(DetectorBase):
             re_point = None
 
             if (
+                detect_eyes and
                 isinstance(keypoints, numpy.ndarray)
                 and keypoints.shape[0] == 5 # left eye, right eye, nose, left mouth, right mouth
                 and keypoints.shape[1] == 2 # 2D coordinates

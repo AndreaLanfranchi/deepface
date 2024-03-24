@@ -7,8 +7,6 @@ import cv2
 import gdown
 import numpy
 
-from imutils import face_utils
-
 from deepface.core.types import (
     BoundingBox,
     BoxDimensions,
@@ -71,6 +69,7 @@ class Detector(DetectorBase):
         min_dims: Optional[BoxDimensions] = None,
         min_confidence: float = 0.0,
         raise_notfound: bool = False,
+        detect_eyes: bool = True,
     ) -> DetectorBase.Results:
 
         # Validation of inputs
@@ -91,7 +90,7 @@ class Detector(DetectorBase):
             y_range = RangeInt(rect.top(), min(rect.bottom(), img_height))
             if x_range.span <= 0 or y_range.span <= 0:
                 continue  # Invalid detection
-            if isinstance(min_dims,BoxDimensions):
+            if isinstance(min_dims, BoxDimensions):
                 if min_dims.width > 0 and x_range.span < min_dims.width:
                     continue
                 if min_dims.height > 0 and y_range.span < min_dims.height:
@@ -104,25 +103,27 @@ class Detector(DetectorBase):
 
             le_point = None
             re_point = None
-            shape = self._predictor(gray, rect)
-            if shape.num_parts == 5:
-                # For dlib’s 5-point facial landmark detector
-                # Left eye: parts 0, 1
-                # Right eye: parts 2, 3
-                # Nose: part 4 (actually not used)
 
-                # For each eye, we will use the average of the two points
-                le_point = Point(
-                    x=(shape.part(0).x + shape.part(1).x) // 2,
-                    y=(shape.part(0).y + shape.part(1).y) // 2,
-                )
-                re_point = Point(
-                    x=(shape.part(2).x + shape.part(3).x) // 2,
-                    y=(shape.part(2).y + shape.part(3).y) // 2,
-                )
-                if le_point not in bounding_box or re_point not in bounding_box:
-                    le_point = None
-                    re_point = None
+            if detect_eyes:
+                shape = self._predictor(gray, rect)
+                if shape.num_parts == 5:
+                    # For dlib’s 5-point facial landmark detector
+                    # Left eye: parts 0, 1
+                    # Right eye: parts 2, 3
+                    # Nose: part 4 (actually not used)
+
+                    # For each eye, we will use the average of the two points
+                    le_point = Point(
+                        x=(shape.part(0).x + shape.part(1).x) // 2,
+                        y=(shape.part(0).y + shape.part(1).y) // 2,
+                    )
+                    re_point = Point(
+                        x=(shape.part(2).x + shape.part(3).x) // 2,
+                        y=(shape.part(2).y + shape.part(3).y) // 2,
+                    )
+                    if le_point not in bounding_box or re_point not in bounding_box:
+                        le_point = None
+                        re_point = None
 
             detected_faces.append(
                 DetectedFace(

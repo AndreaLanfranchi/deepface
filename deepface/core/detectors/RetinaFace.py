@@ -20,6 +20,7 @@ class Detector(DetectorBase):
         min_dims: Optional[BoxDimensions] = None,
         min_confidence: float = 0.0,
         raise_notfound: bool = False,
+        detect_eyes: bool = True,
     ) -> DetectorBase.Results:
 
         # Validation of inputs
@@ -52,15 +53,16 @@ class Detector(DetectorBase):
 
             le_point = None
             re_point = None
-            landmarks: Dict[str, List[float]] = item["landmarks"]
-            left_eye: Optional[List[float]] = landmarks.get("left_eye")
-            right_eye: Optional[List[float]] = landmarks.get("right_eye")
-            if left_eye and right_eye:
-                le_point = Point(int(left_eye[0]), int(left_eye[1]))
-                re_point = Point(int(right_eye[0]), int(right_eye[1]))
-                if le_point not in bounding_box or re_point not in bounding_box:
-                    le_point = None
-                    re_point = None
+            if detect_eyes:
+                landmarks: Dict[str, List[float]] = item["landmarks"]
+                left_eye: Optional[List[float]] = landmarks.get("left_eye")
+                right_eye: Optional[List[float]] = landmarks.get("right_eye")
+                if left_eye and right_eye:
+                    le_point = Point(int(left_eye[0]), int(left_eye[1]))
+                    re_point = Point(int(right_eye[0]), int(right_eye[1]))
+                    if le_point not in bounding_box or re_point not in bounding_box:
+                        le_point = None
+                        re_point = None
 
             detected_faces.append(
                 DetectedFace(

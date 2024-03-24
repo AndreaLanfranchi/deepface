@@ -68,6 +68,7 @@ class Detector(DetectorBase):
         min_dims: Optional[BoxDimensions] = None,
         min_confidence: float = 0.9,
         raise_notfound: bool = False,
+        detect_eyes: bool = True,
     ) -> DetectorBase.Results:
 
         # Validation of inputs
@@ -116,11 +117,14 @@ class Detector(DetectorBase):
                 bottom_right=Point(x=x + w, y=y + h),
             )
 
-            le_point = Point(x=x_le, y=y_le)
-            re_point = Point(x=x_re, y=y_re)
-            if le_point not in bounding_box or re_point not in bounding_box:
-                le_point = None
-                re_point = None
+            le_point = None
+            re_point = None
+            if detect_eyes:
+                le_point = Point(x=x_le, y=y_le)
+                re_point = Point(x=x_re, y=y_re)
+                if le_point not in bounding_box or re_point not in bounding_box:
+                    le_point = None
+                    re_point = None
 
             confidence = float(face[-1])
             detected_faces.append(

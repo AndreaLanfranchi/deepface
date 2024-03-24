@@ -67,6 +67,7 @@ class Detector(DetectorBase):
         min_dims: Optional[BoxDimensions] = None,
         min_confidence: float = 0.0,
         raise_notfound: bool = False,
+        detect_eyes: bool = True,
     ) -> DetectorBase.Results:
 
         # Validation of inputs
@@ -135,21 +136,22 @@ class Detector(DetectorBase):
 
             le_point = None
             re_point = None
-            eyes: List[Point] = self._opencv_detector.find_eyes(img[y1:y2, x1:x2])
-            if len(eyes) == 2:
-                # Normalize left and right eye coordinates to the whole image
-                # We swap the eyes because the first eye is the right one
-                re_point = Point(
-                    x=eyes[0].x + bounding_box.top_left.x,
-                    y=eyes[0].y + bounding_box.top_left.y,
-                )
-                le_point = Point(
-                    x=eyes[1].x + bounding_box.top_left.x,
-                    y=eyes[1].y + bounding_box.top_left.y,
-                )
-                if le_point not in bounding_box or re_point not in bounding_box:
-                    le_point = None
-                    re_point = None
+            if detect_eyes:
+                eyes: List[Point] = self._opencv_detector.find_eyes(img[y1:y2, x1:x2])
+                if len(eyes) == 2:
+                    # Normalize left and right eye coordinates to the whole image
+                    # We swap the eyes because the first eye is the right one
+                    re_point = Point(
+                        x=eyes[0].x + bounding_box.top_left.x,
+                        y=eyes[0].y + bounding_box.top_left.y,
+                    )
+                    le_point = Point(
+                        x=eyes[1].x + bounding_box.top_left.x,
+                        y=eyes[1].y + bounding_box.top_left.y,
+                    )
+                    if le_point not in bounding_box or re_point not in bounding_box:
+                        le_point = None
+                        re_point = None
 
             detected_faces.append(
                 DetectedFace(

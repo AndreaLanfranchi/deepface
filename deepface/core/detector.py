@@ -12,12 +12,14 @@ from deepface.commons.logger import Logger
 
 logger = Logger.get_instance()
 
+
 # Abstract class all specialized face detectors must inherit from.
 # A face detection consists in finding [0,inf) faces in an image and
 # returning the region of the image where the face is located.
 class Detector(ABC):
     """
     Interface for in picture face detection.
+    Detects face(s) in an image and returns the bounding box(es) and landmarks.
     """
 
     _name: Optional[str] = None  # Must be filled by specialized classes
@@ -76,10 +78,14 @@ class Detector(ABC):
                 if index < 0 or index >= len(self.detections):
                     raise IndexError("Invalid index")
                 detection = self.detections[index]
-                img = detection.plot(img=img, color=color, thickness=thickness, eyes=eyes)
+                img = detection.plot(
+                    img=img, color=color, thickness=thickness, eyes=eyes
+                )
             else:
                 for detection in self.detections:
-                    img = detection.plot(img=img, color=color, thickness=thickness, eyes=eyes)
+                    img = detection.plot(
+                        img=img, color=color, thickness=thickness, eyes=eyes
+                    )
             return img
 
         def crop_faces(self, index: Optional[int] = None) -> List[numpy.ndarray]:
@@ -100,7 +106,7 @@ class Detector(ABC):
                 if index < 0 or index >= len(self.detections):
                     raise IndexError("Invalid index")
                 return [self.detections[index].crop(self.source)]
-            
+
             return [detection.crop(self.source) for detection in self.detections]
 
     @property
@@ -120,6 +126,7 @@ class Detector(ABC):
         min_dims: Optional[BoxDimensions] = None,
         min_confidence: float = 0.0,
         raise_notfound: bool = False,
+        detect_eyes: bool = True,
     ) -> Results:
         """
         Detect faces in the given image.
@@ -130,9 +137,10 @@ class Detector(ABC):
             boxes around faces that are smaller than the given dimensions
             min_confidence (float): minimum confidence level for the detection
             raise_notfound (bool): if True, raise an exception if no faces are found
+            detect_eyes (bool): if True, detect eye landmarks
 
         Returns:
-            An instance of `Outcome`
+            An instance of `Results`
 
         Raises:
             `TypeError`: If the image is not a valid numpy array
@@ -154,8 +162,6 @@ class Detector(ABC):
                 raise ValueError(
                     "At least one dimension from min_dims must be non-zero"
                 )
-
-        min_confidence = abs(float(min_confidence))
 
     @staticmethod
     def get_available_detectors() -> List[str]:

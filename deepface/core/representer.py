@@ -51,7 +51,7 @@ class Representer(ABC):
 
         if len(img.shape) == 4:
             img = img[0]  # e.g. (1, 224, 224, 3) to (224, 224, 3)
-        
+
         if len(img.shape) != 3:
             raise ValueError("Invalid image shape")
 
@@ -65,7 +65,10 @@ class Representer(ABC):
         if img.max() > 1:
             img = (img.astype(numpy.float32) / 255.0).astype(numpy.float32)
 
-        if img.shape[0] != self.input_shape.height or img.shape[1] != self.input_shape.width:
+        if (
+            img.shape[0] != self.input_shape.height
+            or img.shape[1] != self.input_shape.width
+        ):
             img = cv2.resize(img, (self.input_shape.width, self.input_shape.height))
         return img
 

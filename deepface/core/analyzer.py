@@ -20,7 +20,7 @@ class Analyzer(ABC):
         self, img: numpy.ndarray, detail: bool = False
     ) -> Dict[str, Union[str, Dict[str, float]]]:
         """
-        Process the given image analyzing the face attribute.
+        Process the given image analyzing the face attribute it was built for.
 
         Returns:
             The result of the analysis is returned in the form of
