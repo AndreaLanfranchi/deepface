@@ -1,38 +1,35 @@
 from typing import Dict, Union
 
 import os
+import tensorflow
 import gdown
 import numpy
 import cv2
 
-from deepface.commons import package_utils, folder_utils
+from deepface.commons import folder_utils
 from deepface.commons.logger import Logger
 from deepface.core.analyzer import Analyzer as AnalyzerBase
+from deepface.core.exceptions import InsufficentVersionRequirement
+
+tensorflow_version_major = int(tensorflow.__version__.split(".", maxsplit=1)[0])
+if tensorflow_version_major < 2:
+    raise InsufficentVersionRequirement("Tensorflow reequires version >=2.0.0")
+
+# pylint: disable=wrong-import-order
+# pylint: disable=wrong-import-position
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import (
+    Conv2D,
+    MaxPooling2D,
+    AveragePooling2D,
+    Flatten,
+    Dense,
+    Dropout,
+)
+# pylint: enable=wrong-import-position
+# pylint: enable=wrong-import-order
 
 logger = Logger.get_instance()
-
-tf_version = package_utils.get_tf_major_version()
-if tf_version == 1:
-    from keras.models import Sequential
-    from keras.layers import (
-        Conv2D,
-        MaxPooling2D,
-        AveragePooling2D,
-        Flatten,
-        Dense,
-        Dropout,
-    )
-else:
-    from tensorflow.keras.models import Sequential
-    from tensorflow.keras.layers import (
-        Conv2D,
-        MaxPooling2D,
-        AveragePooling2D,
-        Flatten,
-        Dense,
-        Dropout,
-    )
-# -------------------------------------------
 
 
 # pylint: disable=too-few-public-methods

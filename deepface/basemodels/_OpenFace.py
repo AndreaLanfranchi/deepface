@@ -1,75 +1,77 @@
 from typing import List
+
 import os
 import gdown
 import tensorflow
 import numpy
-from deepface.commons import package_utils, folder_utils
+
+from deepface.commons import folder_utils
 from deepface.commons.logger import Logger
-from deepface.core.extractor import Extractor
+from deepface.core.exceptions import InsufficentVersionRequirement
+from deepface.core.extractor import Extractor as ExtractorBase
+from deepface.core.types import BoxDimensions
+
+
+tensorflow_version_major = int(tensorflow.__version__.split(".", maxsplit=1)[0])
+if tensorflow_version_major < 2:
+    raise InsufficentVersionRequirement("Tensorflow reequires version >=2.0.0")
+
+# pylint: disable=wrong-import-order
+# pylint: disable=wrong-import-position
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import (
+    Conv2D,
+    ZeroPadding2D,
+    Input,
+    concatenate,
+    Dense,
+    Activation,
+    Lambda,
+    Flatten,
+    BatchNormalization,
+    MaxPooling2D,
+    AveragePooling2D,
+)
+from tensorflow.keras import backend as K
+# pylint: enable=wrong-import-position
+# pylint: enable=wrong-import-order
 
 logger = Logger.get_instance()
 
-tf_version = package_utils.get_tf_major_version()
-if tf_version == 1:
-    from keras.models import Model
-    from keras.layers import (
-        Conv2D,
-        ZeroPadding2D,
-        Input,
-        concatenate,
-        Dense,
-        Activation,
-        Lambda,
-        Flatten,
-        BatchNormalization,
-        MaxPooling2D,
-        AveragePooling2D,
-    )
-    from keras import backend as K
-else:
-    from tensorflow.keras.models import Model
-    from tensorflow.keras.layers import (
-        Conv2D,
-        ZeroPadding2D,
-        Input,
-        concatenate,
-        Dense,
-        Activation,
-        Lambda,
-        Flatten,
-        BatchNormalization,
-        MaxPooling2D,
-        AveragePooling2D,
-    )
-    from tensorflow.keras import backend as K
-
-
 # pylint: disable=too-few-public-methods
-class OpenFaceClient(ExtractorBase):
-    """
-    OpenFace model class
-    """
+class Extractor(ExtractorBase):
+
+    _model: Model
 
     def __init__(self):
         self._name = str(__name__.rsplit(".", maxsplit=1)[-1])
-        self.model = load_model()
-        self.input_shape = (96, 96)
-        self.output_shape = 128
+        self._input_shape = BoxDimensions(width=96, height=96)
+        self._output_shape = 128
+        self._initialize()
+
+    def _initialize(self):
+
+        file_name = "openface_weights.h5"
+        output = os.path.join(folder_utils.get_weights_dir(), file_name)
+        if os.path.isfile(output) != True:
+            logger.info(f"Download : {file_name}")
+            url = "https://github.com/serengil/deepface_models/"
+            url += f"releases/download/v1.0/{file_name}"
+            gdown.download(url, output, quiet=False)
+
+
 
     def process(self, img: numpy.ndarray) -> List[float]:
-        
+
+        super().process(img)
         # TODO: shouldn't we ensure image is resized to fit in the input_shape?
-        return self.model(img, training=False).numpy()[0].tolist()
+        return self._model(img, training=False).numpy()[0].tolist()
 
 
 def load_model(
     url="https://github.com/serengil/deepface_models/releases/download/v1.0/openface_weights.h5",
 ) -> Model:
-    """
-    Consturct OpenFace model, download its weights and load
-    Returns:
-        model (Model)
-    """
+    
     myInput = Input(shape=(96, 96, 3))
 
     x = ZeroPadding2D(padding=(3, 3), input_shape=(96, 96, 3))(myInput)

@@ -9,11 +9,11 @@ import pandas
 import tensorflow
 
 # package dependencies
-from deepface.core.analyzer import Analyzer        # Facial Emotions Analyzer
+from deepface.core.analyzer import Analyzer
 from deepface.core.detector import Detector
-from deepface.core.extractor import Extractor      # Abstract class for face represemter
+from deepface.core.extractor import Extractor
 
-from deepface.commons import package_utils
+
 from deepface.commons.logger import Logger
 from deepface.modules import (
     representation,
@@ -25,6 +25,7 @@ from deepface.modules import (
 )
 from deepface import __version__
 
+tensorflow.get_logger().setLevel(logging.ERROR)
 logger = Logger.get_instance()
 
 # -----------------------------------
@@ -32,49 +33,7 @@ logger = Logger.get_instance()
 
 warnings.filterwarnings("ignore")
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
-tf_version = package_utils.get_tf_major_version()
-if tf_version == 2:
-    tensorflow.get_logger().setLevel(logging.ERROR)
 # -----------------------------------
-
-
-def get_recognition_model(name: str) -> Any:
-    """
-    This function retturns a face recognition model.
-    Eventually the model instance is lazily initialized.
-
-    Params:
-        name (string): The name of the face recognition model to be returned
-            Valid values are any of the following:\n
-            "VGG-Face", "Facenet", "OpenFace", "DeepFace", "DeepID", "Dlib", "ArcFace", "SFace"
-
-    Exception:
-        KeyError: when name is not known
-
-    Returns:
-        reference to built model class instance
-    """
-
-    return ExtractorBase.instance(name=name)
-
-
-def get_analysis_model(name: str) -> Any:
-    """
-    This function retturns a face analisys model.
-    Eventually the model instance is lazily initialized.
-
-    Params:
-        name (string): The name of the face analisys model to be returned
-            Valid values are any of the following:\n
-            "Age", "Gender", "Emotion", "Race"
-
-    Exception:
-        KeyError: when name is not known
-
-    Returns:
-        reference to built model class instance
-    """
-    return Analyzer.instance(name=name)
 
 
 def verify(

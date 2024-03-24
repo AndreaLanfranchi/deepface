@@ -3,24 +3,28 @@ from typing import Any, Dict, List, Tuple, Union, Optional
 
 # 3rd part dependencies
 import numpy
+import tensorflow
 import cv2
 from PIL import Image
 
 # project dependencies
+from deepface.core.exceptions import InsufficentVersionRequirement
 from deepface.modules import preprocessing
 from deepface.core.detector import Detector
 from deepface.core.detectors import DetectorWrapper
-from deepface.commons import package_utils
 from deepface.commons.logger import Logger
 
+tensorflow_version_major = int(tensorflow.__version__.split(".", maxsplit=1)[0])
+if tensorflow_version_major < 2:
+    raise InsufficentVersionRequirement("Tensorflow reequires version >=2.0.0")
+
+# pylint: disable=wrong-import-order
+# pylint: disable=wrong-import-position
+from tensorflow.keras.preprocessing import image
+# pylint: enable=wrong-import-position
+# pylint: enable=wrong-import-order
+
 logger = Logger.get_instance()
-
-tf_major_version = package_utils.get_tf_major_version()
-if tf_major_version == 1:
-    from keras.preprocessing import image
-elif tf_major_version == 2:
-    from tensorflow.keras.preprocessing import image
-
 
 def detect_faces(
     source: Union[str, numpy.ndarray],

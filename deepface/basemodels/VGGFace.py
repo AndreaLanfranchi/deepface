@@ -27,7 +27,6 @@ from tensorflow.keras.layers import (
     Dropout,
     Activation,
 )
-
 # pylint: enable=wrong-import-position
 # pylint: enable=wrong-import-order
 

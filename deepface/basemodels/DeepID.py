@@ -28,7 +28,6 @@ from tensorflow.keras.layers import (
     Dense,
     Dropout,
 )
-
 # pylint: enable=wrong-import-position
 # pylint: enable=wrong-import-order
 
