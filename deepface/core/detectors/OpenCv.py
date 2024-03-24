@@ -85,11 +85,12 @@ class Detector(DetectorBase):
             eyes: List[Point] = self.find_eyes(cropped_img)
             if len(eyes) == 2:
                 # Normalize left and right eye coordinates to the whole image
-                le_point = Point(
+                # We swap the eyes because the first eye is the right one
+                re_point = Point(
                     x=eyes[0].x + bounding_box.top_left.x,
                     y=eyes[0].y + bounding_box.top_left.y,
                 )
-                re_point = Point(
+                le_point = Point(
                     x=eyes[1].x + bounding_box.top_left.x,
                     y=eyes[1].y + bounding_box.top_left.y,
                 )
@@ -120,10 +121,8 @@ class Detector(DetectorBase):
         ret: List[Point] = []
         rects: Sequence[Rect] = self._eye_detector.detectMultiScale(
             image=img,
-            scaleFactor=float(1.1),
             minNeighbors=int(10),
             flags=cv2.CASCADE_SCALE_IMAGE,
-            minSize=[int(5), int(5)],
         )
         if len(rects) < int(2):
             return ret

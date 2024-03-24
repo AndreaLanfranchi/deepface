@@ -11,7 +11,7 @@ from deepface import DeepFace
 
 # Sample code to run the stream function using onboard camera
 DeepFace.stream(db_path="dataset",
-                detector="mediapipe",
+                detector="retinaface",
                 decomposer="vggface",
                 faces_count_threshold = 2,
                 freeze_time_seconds = 2,

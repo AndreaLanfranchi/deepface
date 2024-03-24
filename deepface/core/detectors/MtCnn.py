@@ -1,5 +1,6 @@
 from typing import List, Optional
 
+import cv2
 import numpy
 from mtcnn import MTCNN
 
@@ -35,8 +36,8 @@ class Detector(DetectorBase):
         # mtcnn expects RGB but OpenCV read BGR
         # TODO: Verify if the image is in the right BGR format
         # before converting it to RGB
-        img_rgb = img[:, :, ::-1]
-        img_height, img_width = img.shape[:2]
+        img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        img_height, img_width = img_rgb.shape[:2]
 
         detections = self._detector.detect_faces(img_rgb)
 
@@ -65,9 +66,10 @@ class Detector(DetectorBase):
 
                 le_point = None
                 re_point = None
-                if "keypoints" in current_detection.keys():
-                    left_eye = current_detection["keypoints"]["left_eye"]
-                    right_eye = current_detection["keypoints"]["right_eye"]
+                keypoints = current_detection.get("keypoints", None)
+                if(keypoints is not None):
+                    left_eye = keypoints["left_eye"]
+                    right_eye = keypoints["right_eye"]
                     le_point = Point(x=int(left_eye[0]), y=int(left_eye[1]))
                     re_point = Point(x=int(right_eye[0]), y=int(right_eye[1]))
                     # Martian positions ?

@@ -63,7 +63,7 @@ class Detector(DetectorBase):
             if detection is None:
                 continue
 
-            assert(len(detection.score) == 1)
+            assert len(detection.score) == 1
             confidence = float(round(detection.score[0], 2))
             if min_confidence is not None and confidence < min_confidence:
                 continue
@@ -80,7 +80,7 @@ class Detector(DetectorBase):
             if x_range.span <= 0 or y_range.span <= 0:
                 continue  # Invalid detection
 
-            if isinstance(min_dims,BoxDimensions):
+            if isinstance(min_dims, BoxDimensions):
                 if min_dims.width > 0 and x_range.span < min_dims.width:
                     continue
                 if min_dims.height > 0 and y_range.span < min_dims.height:
@@ -91,6 +91,7 @@ class Detector(DetectorBase):
                 bottom_right=Point(x=x_range.end, y=y_range.end),
             )
 
+            # pylint: disable=line-too-long
             # See also: https://storage.googleapis.com/mediapipe-assets/MediaPipe%20BlazeFace%20Model%20Card%20(Short%20Range).pdf
             # 6 [0,5] approximate facial keypoint coordinates:
             # 0 Left eye (from the observer’s point of view)
@@ -99,14 +100,16 @@ class Detector(DetectorBase):
             # 3 Mouth
             # 4 Left eye tragion
             # 5 Right eye tragion
+            # pylint: enable=line-too-long
 
             le_point = None
             re_point = None
 
             keypoints = detection.location_data.relative_keypoints
             if keypoints is not None and len(keypoints) == 6:
-                
-                # We swap the left and right eyes: from observer's point of view to the image's point of view
+
+                # We swap the left and right eyes: from observer's point of view
+                # to the image's point of view
                 x1 = int(min(round(keypoints[1].x * img_width), img_width))
                 y1 = int(min(round(keypoints[1].y * img_height), img_height))
                 x2 = int(min(round(keypoints[0].x * img_width), img_width))

@@ -34,7 +34,7 @@ class Detector(DetectorBase):
             if min_confidence is not None and score < min_confidence:
                 continue
 
-            x1, y1, x2, y2 = (int(val) for val in item["facial_area"][:3])
+            x1, y1, x2, y2 = (int(val) for val in item["facial_area"][:4])
             x_range = RangeInt(x1, min(x2, img_width))
             y_range = RangeInt(y1, min(y2, img_height))
             if x_range.span <= 0 or y_range.span <= 0:
