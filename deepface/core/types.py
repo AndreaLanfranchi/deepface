@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 import numpy
 import cv2
 
+from deepface.core.colors import *
 
 @dataclass(frozen=True)
 class RangeInt:
@@ -234,19 +235,51 @@ class DetectedFace:
     def plot(
         self,
         img: numpy.ndarray,
-        color: Tuple[int, int, int] = (255, 255, 224),  # BGR light cyan
+        copy: bool = False,
+        color: Tuple[int, int, int] = KBGR_COLOR_CYAN,
         thickness: int = 2,
         eyes: bool = False,
     ) -> numpy.ndarray:
         """
-        Draw the bounding box and eyes on the image.
+        Draw the detected face boundaries and landmarks on the image.
+
+        Args:
+            img (numpy.ndarray): The image to draw on.
+            copy (bool): Whether to return the drawings on a copy of the image (default: False)
+            color (Tuple[int, int, int]): BGR color code for drawing the bounding box 
+                (default: KCOLOR_BGR_CYAN)
+            thickness (int): Thickness of the bounding box (default: 2)
+            eyes (bool): Whether to draw eye landmarks (default: False)
+
+        Returns:
+            numpy.ndarray: The image with the detected faces plotted.
+
+        Raises:
+            TypeError: If the image is not a valid numpy array.
+            ValueError: If the image is empty or the bounding box is empty.
+            OverflowError: If the bounding box is out of bounds of the image.
         """
+
+        # TODO: Maybe introduce an option for rounded corners ?
         if not isinstance(img, numpy.ndarray) or len(img.shape) != 3:
-            raise TypeError("Image must be a valid numpy array")
-        if img.shape[0] == 0 or img.shape[1] == 0:
+            raise TypeError("Image must be a valid numpy array for an RGB image")
+
+        img_h, img_w = img.shape[:2]
+        if img_h == 0 or img_w == 0:
             raise ValueError("Image must be non-empty")
+
         if self.bounding_box.empty:
             raise ValueError("Bounding box must be non-empty")
+
+        if (
+            self.bounding_box.top_right.x > img_w
+            or self.bounding_box.bottom_right.y > img_h
+        ):
+            raise OverflowError("Bounding box is out of bounds of the image")
+
+        if copy:
+            img = img.copy()
+
         if eyes == True and (self.left_eye is not None and self.right_eye is not None):
             img = cv2.circle(img, self.left_eye.tolist(), 5, color, thickness)
             img = cv2.circle(img, self.right_eye.tolist(), 5, color, thickness)
@@ -264,14 +297,30 @@ class DetectedFace:
 
     def crop(self, img: numpy.ndarray) -> numpy.ndarray:
         """
-        Crop the face from the image.
+        Returns the cropping of the detected face from the image
+
+        Args:
+            img (numpy.ndarray): The image to crop from.
+
+        Returns:
+            numpy.ndarray: The detected face as a new NumPy array.
+
+        Raises:
+            TypeError: If the image is not a valid numpy array.
+            ValueError: If the image is empty or the bounding box is empty.
+            OverflowError: If the bounding box is out of bounds of the image.
         """
+
         if not isinstance(img, numpy.ndarray) or len(img.shape) != 3:
             raise TypeError("Image must be a valid numpy array")
-        if img.shape[0] == 0 or img.shape[1] == 0:
+
+        img_h, img_w = img.shape[:2]
+        if img_h == 0 or img_w == 0:
             raise ValueError("Image must be non-empty")
         if self.bounding_box.empty:
             raise ValueError("Bounding box must be non-empty")
+        if self.bounding_box.top_right.x > img_w or self.bounding_box.bottom_right.y > img_h:
+            raise OverflowError("Bounding box is out of bounds of the image")
         return img[
             self.bounding_box.top_left.y : self.bounding_box.bottom_right.y,
             self.bounding_box.top_left.x : self.bounding_box.bottom_right.x,

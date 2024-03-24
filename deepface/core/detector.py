@@ -1,11 +1,12 @@
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import List, Optional, Tuple
 from abc import ABC, abstractmethod
 
 import time
 import numpy
 
 from deepface.core.types import DetectedFace, BoxDimensions
+from deepface.core.colors import KBGR_COLOR_CYAN
 from deepface.core import reflection, detectors
 from deepface.commons.logger import Logger
 
@@ -36,10 +37,81 @@ class Detector(ABC):
                 raise ValueError("Detector name must be non-empty")
 
         def __bool__(self):
-            return bool(self.detections)
+            return len(self.detections) > 0
 
         def __len__(self):
             return len(self.detections)
+
+        def plot(
+            self,
+            index: Optional[int] = None,
+            copy: bool = False,
+            color: Tuple[int, int, int] = KBGR_COLOR_CYAN,
+            thickness: int = 2,
+            eyes: bool = False,
+        ) -> numpy.ndarray:
+            """
+            Draw the detected face(s) boundaries and landmarks on the image.
+
+            Args:
+                index (Optional[int]): Index of the face detection to plot.
+                    Omitting the index will plot all detections (default: None)
+                copy (bool): Whether to return the drawings on a copy of the image (default: False)
+                color (Tuple[int, int, int]): BGR color code for drawing the bounding box (default: KCOLOR_BGR_CYAN)
+                thickness (int): Thickness of the bounding box (default: 2)
+                eyes (bool): Whether to draw eye landmarks (default: False)
+
+            Returns:
+                numpy.ndarray: The image with the detected faces plotted.
+
+            Raises:
+                IndexError: If the index is out of bounds
+            """
+            if copy:
+                img = self.source.copy()
+            else:
+                img = self.source
+
+            if index is not None:
+                if index < 0 or index >= len(self.detections):
+                    raise IndexError("Invalid index")
+                detection = self.detections[index]
+                img = detection.plot(img=img, color=color, thickness=thickness, eyes=eyes)
+            else:
+                for detection in self.detections:
+                    img = detection.plot(img=img, color=color, thickness=thickness, eyes=eyes)
+            return img
+
+        def crop_faces(self, index: Optional[int] = None) -> List[numpy.ndarray]:
+            """
+            Crop the detected face(s) from the original image.
+
+            Args:
+                results (Results): The face detection results.
+
+            Returns:
+                List[numpy.ndarray]: A list of cropped face images.
+
+            Raises:
+                IndexError: If the provided index is out of bounds
+                Any exceptions raised by the `crop` method of the `DetectedFace` class.
+            """
+            if index is not None:
+                if index < 0 or index >= len(self.detections):
+                    raise IndexError("Invalid index")
+                return [self.detections[index].crop(self.source)]
+            
+            return [detection.crop(self.source) for detection in self.detections]
+
+    @property
+    def name(self) -> str:
+        if (
+            self._name is None
+            or not isinstance(self._name, str)
+            or len(self._name) == 0
+        ):
+            return "<undefined>"
+        return self._name
 
     @abstractmethod
     def process(
@@ -84,16 +156,6 @@ class Detector(ABC):
                 )
 
         min_confidence = abs(float(min_confidence))
-
-    @property
-    def name(self) -> str:
-        if (
-            self._name is None
-            or not isinstance(self._name, str)
-            or len(self._name) == 0
-        ):
-            return "<undefined>"
-        return self._name
 
     @staticmethod
     def get_available_detectors() -> List[str]:
