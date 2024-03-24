@@ -19,7 +19,6 @@ def analyze(
     attributes_details: bool = False,
     detector: Optional[str] = None,
     align: bool = True,
-    expand_percentage: int = 0,
 ) -> List[Dict[str, Any]]:
     """
     Analyze facial attributes such as age, gender, emotion, and race from the faces detected
@@ -45,8 +44,6 @@ def analyze(
             'euclidean', 'euclidean_l2' (default is cosine).
 
         align (boolean): Perform alignment based on the eye positions (default is True).
-
-        expand_percentage (int): expand detected facial area with a percentage (default is 0).
 
     Returns:
         results (List[Dict[str, Any]]): A list of dictionaries, where each dictionary represents
@@ -100,7 +97,6 @@ def analyze(
         detector=detector,
         grayscale=False,
         align=align,
-        expand_percentage=expand_percentage,
     )
 
     for img_obj in detected_faces:

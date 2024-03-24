@@ -198,8 +198,6 @@ def find(
 
         align (boolean): Perform alignment based on the eye positions (default is True).
 
-        expand_percentage (int): expand detected facial area with a percentage (default is 0).
-
         threshold (float): Specify a threshold to determine whether a pair represents the same
             person or different individuals. This threshold is used for comparing distances.
             If left unset, default pre-tuned threshold values will be applied based on the specified
@@ -233,7 +231,6 @@ def find(
         distance_metric=distance_metric,
         detector=detector,
         align=align,
-        expand_percentage=expand_percentage,
         threshold=threshold,
         normalization=normalization,
     )
@@ -244,7 +241,6 @@ def represent(
     decomposer: Optional[str] = None,
     detector: Optional[str] = None,
     align: bool = True,
-    expand_percentage: int = 0,
     normalization: str = "base",
 ) -> List[Dict[str, Any]]:
     """
@@ -262,8 +258,6 @@ def represent(
             'mtcnn', 'ssd', 'dlib', 'mediapipe', 'yolov8' (default is opencv).
 
         align (boolean): Perform alignment based on the eye positions (default is True).
-
-        expand_percentage (int): expand detected facial area with a percentage (default is 0).
 
         normalization (string): Normalize the input image before feeding it to the model.
             Default is base. Options: base, raw, Facenet, Facenet2018, VGGFace, VGGFace2, ArcFace
@@ -290,7 +284,6 @@ def represent(
         decomposer=decomposer,
         detector=detector,
         align=align,
-        expand_percentage=expand_percentage,
         normalization=normalization,
     )
 
@@ -366,7 +359,6 @@ def detect_faces(
     target_size: Optional[Tuple[int, int]] = None,
     detector: Optional[str] = None,
     align: bool = True,
-    expand_percentage: int = 0,
     grayscale: bool = False,
 ) -> List[Dict[str, Any]]:
     """
@@ -383,8 +375,6 @@ def detect_faces(
             'mtcnn', 'ssd', 'dlib', 'mediapipe', 'yolov8' (default is opencv).
 
         align (bool): Flag to enable face alignment (default is True).
-
-        expand_percentage (int): expand detected facial area with a percentage (default is 0).
 
         grayscale (boolean): Flag to convert the image to grayscale before
             processing (default is False).
@@ -406,7 +396,6 @@ def detect_faces(
         target_size=target_size,
         detector=detector,
         align=align,
-        expand_percentage=expand_percentage,
         grayscale=grayscale,
         human_readable=True,
     )
