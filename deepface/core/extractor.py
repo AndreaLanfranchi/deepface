@@ -100,7 +100,7 @@ class Extractor(ABC):
         global available_extractors
         if not "available_extractors" in globals():
             available_extractors = reflection.get_derived_classes(
-                package=basemodels, base_class=ExtractorBase
+                package=basemodels, base_class=Extractor
             )
         return list(available_extractors.keys())
 
@@ -109,7 +109,7 @@ class Extractor(ABC):
         return "VGGFace"
 
     @staticmethod
-    def instance(name: Optional[str] = None, singleton: bool = True) -> "ExtractorBase":
+    def instance(name: Optional[str] = None, singleton: bool = True) -> "Extractor":
         """
         `Representer` factory method.
 
@@ -127,7 +127,7 @@ class Extractor(ABC):
             'ImportError': If the detector instance cannot be instantiated
         """
         if name is None:
-            name = ExtractorBase.get_default()
+            name = Extractor.get_default()
         elif not isinstance(name, str):
             raise TypeError(
                 f"Invalid 'name' argument type [{type(name).__name__}] : expected str"
@@ -139,7 +139,7 @@ class Extractor(ABC):
 
         name = name.lower().strip()
         if len(name) == 0:
-            name = ExtractorBase.get_default()
+            name = Extractor.get_default()
 
         global extractors_instances  # singleton design pattern
         if not "extractors_instances" in globals():
@@ -148,7 +148,7 @@ class Extractor(ABC):
         global available_extractors
         if not "available_extractors" in globals():
             available_extractors = reflection.get_derived_classes(
-                package=basemodels, base_class=ExtractorBase
+                package=basemodels, base_class=Extractor
             )
 
         if name not in available_extractors.keys():
