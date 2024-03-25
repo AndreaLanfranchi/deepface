@@ -80,12 +80,12 @@ class Detector(ABC):
                     raise IndexError("Invalid index")
                 detection = self.detections[index]
                 img = detection.plot(
-                    img=img, color=color, thickness=thickness, eyes=eyes
+                    img=img, copy = False, color=color, thickness=thickness, eyes=eyes
                 )
             else:
                 for detection in self.detections:
                     img = detection.plot(
-                        img=img, color=color, thickness=thickness, eyes=eyes
+                        img=img, copy=False, color=color, thickness=thickness, eyes=eyes
                     )
             return img
 
@@ -187,7 +187,7 @@ class Detector(ABC):
         Returns:
             The name of the default face detector.
         """
-        return "opencv"
+        return "yunet"
 
     @staticmethod
     def instance(name: Optional[str] = None, singleton: bool = True) -> "Detector":

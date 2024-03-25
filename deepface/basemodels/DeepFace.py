@@ -34,6 +34,7 @@ from keras.layers import (
 
 logger = Logger.get_instance()
 
+
 # -------------------------------------
 # pylint: disable=too-few-public-methods
 class Extractor(ExtractorBase):
@@ -161,7 +162,8 @@ class Extractor(ExtractorBase):
 
         # drop F8 and D0. F7 is the representation layer.
         self._model = Model(
-            inputs=base_model.layers[0].input, outputs=base_model.layers[-3].output
+            inputs=base_model.layers[0].input,
+            outputs=base_model.layers[-3].output,
         )
 
         # return deepface_model

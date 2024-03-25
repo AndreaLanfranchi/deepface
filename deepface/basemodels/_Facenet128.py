@@ -16,8 +16,8 @@ if tensorflow_version_major < 2:
 
 # pylint: disable=wrong-import-order
 # pylint: disable=wrong-import-position
-from tensorflow.keras.models import Model
-from tensorflow.keras.layers import (
+from keras.models import Model
+from keras.layers import (
     Activation,
     BatchNormalization,
     Concatenate,
@@ -30,7 +30,7 @@ from tensorflow.keras.layers import (
     MaxPooling2D,
     add,
 )
-from tensorflow.keras import backend as K
+from keras import backend as K
 # pylint: enable=wrong-import-position
 # pylint: enable=wrong-import-order
 
@@ -58,7 +58,7 @@ class FaceNet128dClient(ExtractorBase):
         return self._model(img, training=False).numpy()[0].tolist()
 
 
-class FaceNet512dClient(Representer):
+class FaceNet512dClient(ExtractorBase):
     """
     FaceNet-1512d model class
     """
