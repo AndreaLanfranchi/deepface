@@ -115,13 +115,13 @@ def analysis(
 
     # -----------------------
     # call a dummy find function for db_path once to create embeddings in the initialization
-    _ = DeepFace.find(
-        img=numpy.zeros((10, 10), dtype=numpy.uint8),
-        db_path=db_path,
-        detector=detector,
-        extractor=extractor,
-        distance_metric=distance_metric,
-    )
+    # _ = DeepFace.find(
+    #     img=numpy.zeros((10, 10), dtype=numpy.uint8),
+    #     db_path=db_path,
+    #     detector=detector,
+    #     extractor=extractor,
+    #     distance_metric=distance_metric,
+    # )
     # -----------------------
     # visualization
 
@@ -175,7 +175,7 @@ def analysis(
 
             best_frame, best_detection = _get_best_detection(good_captures)
             boxed_frame = best_detection.plot(
-                img=best_frame, copy=True, thickness=2, eyes=True
+                img=best_frame, copy=True, thickness=2, eyes=False
             )
             cv2.imshow(
                 capture_window_title,
@@ -287,7 +287,7 @@ def _process_frame(
         logger.debug(f"Frame detection time: {(time.time() - start_time):.5f} seconds")
 
         img_height, img_width = tuple(int(val) for val in frame.shape[:2])
-        min_area = (img_height * img_width) / 10  # TODO: This is a magic number
+        min_area = (img_height * img_width) / 20  # TODO: This is a magic number
 
         # Remove too small detected faces
         for i in range(len(detection_outcome.detections) - 1, -1, -1):

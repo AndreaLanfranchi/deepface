@@ -13,7 +13,13 @@ from deepface.core.exceptions import (
     MissingOptionalDependency,
     InsufficentVersionRequirement,
 )
-from deepface.core.types import BoundingBox, BoxDimensions, DetectedFace, Point, RangeInt
+from deepface.core.types import (
+    BoundingBox,
+    BoxDimensions,
+    DetectedFace,
+    Point,
+    RangeInt,
+)
 
 opencv_version = cv2.__version__.split(".")
 if not len(opencv_version) >= 2:
@@ -39,6 +45,7 @@ except ModuleNotFoundError:
     raise MissingOptionalDependency(what) from None
 
 logger = Logger.get_instance()
+
 
 # YuNet detector (optional)
 class Detector(DetectorBase):
@@ -89,52 +96,55 @@ class Detector(DetectorBase):
         self._detector.setInputSize((img_width, img_height))
         self._detector.setScoreThreshold(min_confidence)
         _, faces = self._detector.detect(processed_img)
-        for face in faces:
+        if faces is not None:
+            for face in faces:
 
-            # The detection output faces is a two-dimension array of type CV_32F,
-            # whose rows are the detected face instances, columns are the location
-            # of a face and 5 facial landmarks.
-            # The format of each row is as follows:
-            # x1, y1, w, h, x_re, y_re, x_le, y_le, x_nt, y_nt,
-            # x_rcm, y_rcm, x_lcm, y_lcm,
-            # where x1, y1, w, h are the top-left coordinates, width and height of
-            # the face bounding box,
-            # {x, y}_{re, le, nt, rcm, lcm} stands for the coordinates of right eye,
-            # left eye, nose tip, the right corner and left corner of the mouth respectively.
-            (x, y, w, h, x_re, y_re, x_le, y_le) = [int(coord / scale_factor) for coord in face[:8]]
-            x_range = RangeInt(x, min(x + w, img_width))
-            y_range = RangeInt(y, min(y + h, img_height))
-            if x_range.span <= 0 or y_range.span <= 0:
-                continue
-            if isinstance(min_dims, BoxDimensions):
-                if min_dims.width > 0 and x_range.span < min_dims.width:
+                # The detection output faces is a two-dimension array of type CV_32F,
+                # whose rows are the detected face instances, columns are the location
+                # of a face and 5 facial landmarks.
+                # The format of each row is as follows:
+                # x1, y1, w, h, x_re, y_re, x_le, y_le, x_nt, y_nt,
+                # x_rcm, y_rcm, x_lcm, y_lcm,
+                # where x1, y1, w, h are the top-left coordinates, width and height of
+                # the face bounding box,
+                # {x, y}_{re, le, nt, rcm, lcm} stands for the coordinates of right eye,
+                # left eye, nose tip, the right corner and left corner of the mouth respectively.
+                (x, y, w, h, x_re, y_re, x_le, y_le) = [
+                    int(coord / scale_factor) for coord in face[:8]
+                ]
+                x_range = RangeInt(x, min(x + w, img_width))
+                y_range = RangeInt(y, min(y + h, img_height))
+                if x_range.span <= 0 or y_range.span <= 0:
                     continue
-                if min_dims.height > 0 and y_range.span < min_dims.height:
-                    continue
+                if isinstance(min_dims, BoxDimensions):
+                    if min_dims.width > 0 and x_range.span < min_dims.width:
+                        continue
+                    if min_dims.height > 0 and y_range.span < min_dims.height:
+                        continue
 
-            bounding_box: BoundingBox = BoundingBox(
-                top_left=Point(x=x, y=y),
-                bottom_right=Point(x=x + w, y=y + h),
-            )
-
-            le_point = None
-            re_point = None
-            if detect_eyes:
-                le_point = Point(x=x_le, y=y_le)
-                re_point = Point(x=x_re, y=y_re)
-                if le_point not in bounding_box or re_point not in bounding_box:
-                    le_point = None
-                    re_point = None
-
-            confidence = float(face[-1])
-            detected_faces.append(
-                DetectedFace(
-                    bounding_box=bounding_box,
-                    left_eye=le_point,
-                    right_eye=re_point,
-                    confidence=confidence,
+                bounding_box: BoundingBox = BoundingBox(
+                    top_left=Point(x=x, y=y),
+                    bottom_right=Point(x=x + w, y=y + h),
                 )
-            )
+
+                le_point = None
+                re_point = None
+                if detect_eyes:
+                    le_point = Point(x=x_le, y=y_le)
+                    re_point = Point(x=x_re, y=y_re)
+                    if le_point not in bounding_box or re_point not in bounding_box:
+                        le_point = None
+                        re_point = None
+
+                confidence = float(face[-1])
+                detected_faces.append(
+                    DetectedFace(
+                        bounding_box=bounding_box,
+                        left_eye=le_point,
+                        right_eye=re_point,
+                        confidence=confidence,
+                    )
+                )
 
         if len(detected_faces) == 0 and raise_notfound == True:
             raise FaceNotFound("No face detected. Check the input image.")
