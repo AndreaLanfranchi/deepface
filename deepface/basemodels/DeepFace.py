@@ -18,12 +18,10 @@ if tensorflow_version_major < 2:
 
 # pylint: disable=wrong-import-order
 # pylint: disable=wrong-import-position
-from tensorflow import keras
 from keras.activations import relu
 from keras.models import Model, Sequential
 from keras.layers import (
     Convolution2D,
-    InputLayer,
     LocallyConnected2D,
     MaxPooling2D,
     Flatten,

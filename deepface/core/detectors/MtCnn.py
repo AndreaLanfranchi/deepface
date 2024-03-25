@@ -78,6 +78,9 @@ class Detector(DetectorBase):
                     if le_point not in bounding_box or re_point not in bounding_box:
                         le_point = None
                         re_point = None
+                    else:
+                        if le_point < re_point:
+                            le_point, re_point = re_point, le_point
 
                 results.append(
                     DetectedFace(
