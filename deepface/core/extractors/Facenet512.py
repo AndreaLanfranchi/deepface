@@ -5,24 +5,26 @@ import tensorflow
 import gdown
 import numpy
 
-from deepface.basemodels.Facenet128 import InceptionResNetV1
 from deepface.commons import folder_utils
 from deepface.commons.logger import Logger
-from deepface.core.exceptions import InsufficentVersionRequirement
+from deepface.core.exceptions import InsufficentVersionRequirementError
 from deepface.core.types import BoxDimensions
 from deepface.core.extractor import Extractor as ExtractorBase
+from deepface.core.extractors.Facenet128 import InceptionResNetV1
 
 tensorflow_version_major = int(tensorflow.__version__.split(".", maxsplit=1)[0])
 if tensorflow_version_major < 2:
-    raise InsufficentVersionRequirement("Tensorflow reequires version >=2.0.0")
+    raise InsufficentVersionRequirementError("Tensorflow reequires version >=2.0.0")
 
 # pylint: disable=wrong-import-order
 # pylint: disable=wrong-import-position
 from tensorflow.keras.models import Model
+
 # pylint: enable=wrong-import-position
 # pylint: enable=wrong-import-order
 
 logger = Logger.get_instance()
+
 
 class Extractor(ExtractorBase):
 

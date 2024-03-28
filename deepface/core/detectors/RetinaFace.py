@@ -4,7 +4,7 @@ import numpy
 from retinaface import RetinaFace as rf
 
 from deepface.core.detector import Detector as DetectorBase
-from deepface.core.exceptions import FaceNotFound
+from deepface.core.exceptions import FaceNotFoundError
 from deepface.core.types import BoundingBox, BoxDimensions, DetectedFace, Point, RangeInt
 
 # RetinaFace detector
@@ -74,7 +74,7 @@ class Detector(DetectorBase):
             )
 
         if len(detected_faces) == 0 and raise_notfound == True:
-            raise FaceNotFound("No face detected. Check the input image.")
+            raise FaceNotFoundError("No face detected. Check the input image.")
 
         return DetectorBase.Results(
             detector=self.name,

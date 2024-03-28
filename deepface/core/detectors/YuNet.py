@@ -9,9 +9,9 @@ from deepface.commons import folder_utils
 from deepface.core.detector import Detector as DetectorBase
 from deepface.commons.logger import Logger
 from deepface.core.exceptions import (
-    FaceNotFound,
-    MissingOptionalDependency,
-    InsufficentVersionRequirement,
+    FaceNotFoundError,
+    MissingOptionalDependencyError,
+    InsufficentVersionRequirementError,
 )
 from deepface.core.types import (
     BoundingBox,
@@ -23,14 +23,14 @@ from deepface.core.types import (
 
 opencv_version = cv2.__version__.split(".")
 if not len(opencv_version) >= 2:
-    raise InsufficentVersionRequirement(
+    raise InsufficentVersionRequirementError(
         f"{__name__} requires opencv-python >= 4.8 but you have {cv2.__version__}"
     )
 
 opencv_version_major = int(opencv_version[0])
 opencv_version_minor = int(opencv_version[1])
 if opencv_version_major < 4 or (opencv_version_major == 4 and opencv_version_minor < 8):
-    raise InsufficentVersionRequirement(
+    raise InsufficentVersionRequirementError(
         f"{__name__} requires opencv-python >= 4.8 but you have {cv2.__version__}"
     )
 
@@ -42,7 +42,7 @@ try:
 except ModuleNotFoundError:
     what: str = f"{__name__} requires `opencv-contrib-python` library."
     what += "You can install by 'pip install opencv-contrib-python' "
-    raise MissingOptionalDependency(what) from None
+    raise MissingOptionalDependencyError(what) from None
 
 logger = Logger.get_instance()
 
@@ -147,7 +147,7 @@ class Detector(DetectorBase):
                 )
 
         if len(detected_faces) == 0 and raise_notfound == True:
-            raise FaceNotFound("No face detected. Check the input image.")
+            raise FaceNotFoundError("No face detected. Check the input image.")
 
         return DetectorBase.Results(
             detector=self.name,

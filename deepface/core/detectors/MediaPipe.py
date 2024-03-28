@@ -11,14 +11,14 @@ from deepface.core.types import (
     RangeInt,
 )
 from deepface.commons.logger import Logger
-from deepface.core.exceptions import FaceNotFound, MissingOptionalDependency
+from deepface.core.exceptions import FaceNotFoundError, MissingOptionalDependencyError
 
 try:
     from mediapipe.python.solutions.face_detection import FaceDetection
 except ModuleNotFoundError:
     what: str = f"{__name__} requires `mediapipe` library."
     what += "You can install by 'pip install mediapipe' "
-    raise MissingOptionalDependency(what) from None
+    raise MissingOptionalDependencyError(what) from None
 
 logger = Logger.get_instance()
 
@@ -136,7 +136,7 @@ class Detector(DetectorBase):
                 )
 
         if len(detected_faces) == 0 and raise_notfound == True:
-            raise FaceNotFound("No face detected. Check the input image.")
+            raise FaceNotFoundError("No face detected. Check the input image.")
 
         return DetectorBase.Results(
             detector=self.name,

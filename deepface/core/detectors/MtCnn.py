@@ -4,7 +4,7 @@ import cv2
 import numpy
 from mtcnn import MTCNN
 
-from deepface.core.exceptions import FaceNotFound
+from deepface.core.exceptions import FaceNotFoundError
 from deepface.core.types import (
     BoundingBox,
     BoxDimensions,
@@ -92,7 +92,7 @@ class Detector(DetectorBase):
                 )
 
         if len(results) == 0 and raise_notfound == True:
-            raise FaceNotFound("No face detected. Check the input image.")
+            raise FaceNotFoundError("No face detected. Check the input image.")
 
         return DetectorBase.Results(
             detector=self.name,

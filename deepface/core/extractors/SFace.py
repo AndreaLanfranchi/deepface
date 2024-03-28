@@ -6,7 +6,7 @@ import gdown
 
 from deepface.commons import folder_utils
 from deepface.commons.logger import Logger
-from deepface.core.exceptions import MissingOptionalDependency
+from deepface.core.exceptions import MissingOptionalDependencyError
 from deepface.core.extractor import Extractor as ExtractorBase
 from deepface.core.types import BoxDimensions
 
@@ -15,7 +15,7 @@ try:
 except ModuleNotFoundError:
     what: str = f"{__name__} requires `opencv-contrib-python` library."
     what += "You can install by 'pip install opencv-contrib-python' "
-    raise MissingOptionalDependency(what) from None
+    raise MissingOptionalDependencyError(what) from None
 
 
 logger = Logger.get_instance()

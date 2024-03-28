@@ -8,14 +8,14 @@ import numpy
 from deepface.core.types import BoxDimensions
 from deepface.modules import verification
 from deepface.core.extractor import Extractor as ExtractorBase
-from deepface.core.exceptions import InsufficentVersionRequirement
+from deepface.core.exceptions import InsufficentVersionRequirementError
 from deepface.commons import folder_utils
 from deepface.commons.logger import Logger
 
 
 tensorflow_version_major = int(tensorflow.__version__.split(".", maxsplit=1)[0])
 if tensorflow_version_major < 2:
-    raise InsufficentVersionRequirement("Tensorflow reequires version >=2.0.0")
+    raise InsufficentVersionRequirementError("Tensorflow reequires version >=2.0.0")
 
 # pylint: disable=wrong-import-order
 # pylint: disable=wrong-import-position

@@ -6,7 +6,7 @@ import numpy
 
 from cv2.typing import MatLike, Rect
 from deepface.core.detector import Detector as DetectorBase
-from deepface.core.exceptions import FaceNotFound
+from deepface.core.exceptions import FaceNotFoundError
 from deepface.core.types import (
     BoundingBox,
     BoxDimensions,
@@ -110,7 +110,7 @@ class Detector(DetectorBase):
             )
 
         if len(detected_faces) == 0 and raise_notfound == True:
-            raise FaceNotFound("No face detected. Check the input image.")
+            raise FaceNotFoundError("No face detected. Check the input image.")
 
         return DetectorBase.Results(
             detector=str(self._name),

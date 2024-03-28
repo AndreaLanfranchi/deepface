@@ -8,19 +8,19 @@ import numpy
 
 from deepface.commons import folder_utils
 from deepface.commons.logger import Logger
-from deepface.core.exceptions import InsufficentVersionRequirement
+from deepface.core.exceptions import InsufficentVersionRequirementError
 from deepface.core.extractor import Extractor as ExtractorBase
 from deepface.core.types import BoxDimensions
 
 tensorflow_version_major = int(tensorflow.__version__.split(".", maxsplit=1)[0])
 if tensorflow_version_major < 2:
-    raise InsufficentVersionRequirement("Tensorflow reequires version >=2.0.0")
+    raise InsufficentVersionRequirementError("Tensorflow reequires version >=2.0.0")
 
 # pylint: disable=wrong-import-order
 # pylint: disable=wrong-import-position
-from keras.activations import relu
-from keras.models import Model, Sequential
-from keras.layers import (
+from tensorflow.keras.activations import relu
+from tensorflow.keras.models import Model, Sequential
+from tensorflow.keras.layers import (
     Convolution2D,
     LocallyConnected2D,
     MaxPooling2D,

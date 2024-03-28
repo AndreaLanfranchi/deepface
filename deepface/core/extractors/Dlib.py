@@ -11,14 +11,14 @@ from deepface.commons import folder_utils
 from deepface.commons.logger import Logger
 from deepface.core.extractor import Extractor as ExtractorBase
 from deepface.core.types import BoxDimensions
-from deepface.core.exceptions import MissingOptionalDependency
+from deepface.core.exceptions import MissingOptionalDependencyError
 
 try:
     import dlib
 except ModuleNotFoundError:
     what: str = "`Dlib` is an optional dependency, ensure the library is installed. "
     what += "You can install by 'pip install dlib' "
-    raise MissingOptionalDependency(what) from None
+    raise MissingOptionalDependencyError(what) from None
 
 logger = Logger.get_instance()
 

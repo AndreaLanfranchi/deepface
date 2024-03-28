@@ -15,7 +15,7 @@ from deepface import DeepFace
 from deepface.core.analyzer import Analyzer
 from deepface.core.detector import Detector
 from deepface.core.extractor import Extractor
-from deepface.core.exceptions import FaceNotFound
+from deepface.core.exceptions import FaceNotFoundError
 from deepface.core.types import DetectedFace
 from deepface.commons.logger import Logger
 
@@ -297,7 +297,7 @@ def _process_frame(
 
         # Treat no or too many results as error
         if len(detection_outcome) == 0:
-            raise FaceNotFound("No face detected")
+            raise FaceNotFoundError("No face detected")
         if len(detection_outcome) > faces_count_threshold:
             raise OverflowError("Too many faces found")
 
@@ -307,7 +307,7 @@ def _process_frame(
     # We only catch the ValueError and OverflowError exceptions here to reset
     # the good_captures list. Other exceptions are not caught here and will be
     # raised to the caller.
-    except FaceNotFound as e:
+    except FaceNotFoundError as e:
         logger.debug(f"{e.args[0]}")
         good_captures.clear()
     except ValueError as e:
