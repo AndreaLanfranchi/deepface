@@ -5,7 +5,7 @@ import tensorflow
 import gdown
 import numpy
 
-from deepface.core.exceptions import InsufficentVersionRequirementError
+from deepface.core.exceptions import InsufficentVersionError
 from deepface.commons import folder_utils
 from deepface.commons.logger import Logger
 from deepface.core.extractor import Extractor as ExtractorBase
@@ -13,7 +13,7 @@ from deepface.core.types import BoxDimensions
 
 tensorflow_version_major = int(tensorflow.__version__.split(".", maxsplit=1)[0])
 if tensorflow_version_major < 2:
-    raise InsufficentVersionRequirementError("Tensorflow reequires version >=2.0.0")
+    raise InsufficentVersionError("Tensorflow reequires version >=2.0.0")
 
 # pylint: disable=wrong-import-order
 # pylint: disable=wrong-import-position

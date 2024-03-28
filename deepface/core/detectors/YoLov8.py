@@ -7,7 +7,7 @@ import gdown
 from deepface.core.detector import Detector as DetectorBase
 from deepface.commons import folder_utils
 from deepface.commons.logger import Logger
-from deepface.core.exceptions import FaceNotFoundError, MissingOptionalDependencyError
+from deepface.core.exceptions import FaceNotFoundError, MissingDependencyError
 from deepface.core.types import (
     BoundingBox,
     BoxDimensions,
@@ -22,7 +22,7 @@ try:
 except ModuleNotFoundError:
     what: str = f"{__name__} requires `ultralytics` library."
     what += "You can install by 'pip install ultralytics' "
-    raise MissingOptionalDependencyError(what) from None
+    raise MissingDependencyError(what) from None
 
 logger = Logger.get_instance()
 

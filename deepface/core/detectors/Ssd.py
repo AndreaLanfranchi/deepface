@@ -10,7 +10,7 @@ from deepface.commons import folder_utils
 from deepface.core.detector import Detector as DetectorBase
 from deepface.core.detectors.OpenCv import Detector as OpenCvDetector
 from deepface.commons.logger import Logger
-from deepface.core.exceptions import MissingOptionalDependencyError, FaceNotFoundError
+from deepface.core.exceptions import MissingDependencyError, FaceNotFoundError
 from deepface.core.types import BoundingBox, BoxDimensions, DetectedFace, Point, RangeInt
 
 try:
@@ -20,7 +20,7 @@ try:
 except ModuleNotFoundError:
     what: str = f"{__name__} requires `opencv-contrib-python` library."
     what += "You can install by 'pip install opencv-contrib-python' "
-    raise MissingOptionalDependencyError(what) from None
+    raise MissingDependencyError(what) from None
 
 logger = Logger.get_instance()
 

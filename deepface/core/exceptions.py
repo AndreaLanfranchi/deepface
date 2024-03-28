@@ -1,10 +1,10 @@
 
-class MissingOptionalDependencyError(Exception):
+class MissingDependencyError(Exception):
     def __init__(self, message: str):
         self.message = message
         super().__init__(self.message)
 
-class InsufficentVersionRequirementError(Exception):
+class InsufficentVersionError(Exception):
     def __init__(self, message: str):
         self.message = message
         super().__init__(self.message)

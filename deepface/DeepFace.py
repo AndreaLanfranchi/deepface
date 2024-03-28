@@ -392,7 +392,7 @@ def detect_faces(
     """
 
     return detection.detect_faces(
-        source=img_path,
+        img=img_path,
         target_size=target_size,
         detector=detector,
         align=align,
