@@ -19,8 +19,8 @@ if tensorflow_version_major < 2:
 # pylint: disable=wrong-import-order
 # pylint: disable=wrong-import-position
 import keras
-from keras.models import Model
-from keras.layers import (
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import (
     Conv2D,
     ZeroPadding2D,
     Input,
@@ -78,7 +78,7 @@ class Extractor(ExtractorBase):
 # def load_model(
 #     url="https://github.com/serengil/deepface_models/releases/download/v1.0/openface_weights.h5",
 # ) -> Model:
-    
+
 #     myInput = Input(shape=(96, 96, 3))
 
 #     x = ZeroPadding2D(padding=(3, 3), input_shape=(96, 96, 3))(myInput)

@@ -5,12 +5,13 @@ import tensorflow
 import gdown
 import numpy
 
-from deepface.commons import folder_utils
 from deepface.core.types import BoxDimensions
 from deepface.modules import verification
 from deepface.core.extractor import Extractor as ExtractorBase
-from deepface.commons.logger import Logger
 from deepface.core.exceptions import InsufficentVersionRequirement
+from deepface.commons import folder_utils
+from deepface.commons.logger import Logger
+
 
 tensorflow_version_major = int(tensorflow.__version__.split(".", maxsplit=1)[0])
 if tensorflow_version_major < 2:
@@ -18,8 +19,8 @@ if tensorflow_version_major < 2:
 
 # pylint: disable=wrong-import-order
 # pylint: disable=wrong-import-position
-from tensorflow.keras.models import Model, Sequential
-from tensorflow.keras.layers import (
+from keras.models import Model, Sequential
+from keras.layers import (
     Convolution2D,
     ZeroPadding2D,
     MaxPooling2D,
