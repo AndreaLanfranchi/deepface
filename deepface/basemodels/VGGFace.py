@@ -43,12 +43,8 @@ class Extractor(ExtractorBase):
         self._initialize()
 
     def process(self, img: numpy.ndarray) -> List[float]:
-        # TODO: shouldn't we ensure image is resized to fit in the input_shape?
-
-        # model.predict causes memory issue when it is called in a for loop
-        # embedding = model.predict(img, verbose=0)[0].tolist()
-        # having normalization layer in descriptor troubles for some gpu users (e.g. issue 957, 966)
-        # instead we are now calculating it with traditional way not with keras backend
+        super().process(img)
+        img = self.to_required_shape(img)
         embedding = self._model(img, training=False).numpy()[0].tolist()
         embedding = verification.l2_normalize(embedding)
         return embedding.tolist()

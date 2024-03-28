@@ -48,8 +48,8 @@ class Extractor(ExtractorBase):
         self._initialize()
 
     def process(self, img: numpy.ndarray) -> List[float]:
-        # TODO: shouldn't we ensure image is resized to fit in the input_shape?
         super().process(img)
+        img = self.to_required_shape(img)
         return self._model(img, training=False).numpy()[0].tolist()
 
     def _initialize(self):

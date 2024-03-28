@@ -19,20 +19,6 @@ if tensorflow_version_major < 2:
 # pylint: disable=wrong-import-order
 # pylint: disable=wrong-import-position
 from tensorflow.keras.models import Model
-from tensorflow.keras.layers import (
-    Activation,
-    BatchNormalization,
-    Concatenate,
-    Conv2D,
-    Dense,
-    Dropout,
-    GlobalAveragePooling2D,
-    Input,
-    Lambda,
-    MaxPooling2D,
-    add,
-)
-from tensorflow.keras import backend as K
 # pylint: enable=wrong-import-position
 # pylint: enable=wrong-import-order
 
@@ -62,9 +48,6 @@ class Extractor(ExtractorBase):
         self._model.load_weights(output)
 
     def process(self, img: numpy.ndarray) -> List[float]:
-
         super().process(img)
-        # TODO: shouldn't we ensure image is resized to fit in the input_shape?
-        # model.predict causes memory issue when it is called in a for loop
-        # embedding = model.predict(img, verbose=0)[0].tolist()
+        img = self.to_required_shape(img)
         return self._model(img, training=False).numpy()[0].tolist()

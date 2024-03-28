@@ -35,11 +35,10 @@ class Extractor(ABC):
         if not isinstance(img, numpy.ndarray) or len(img.shape) != 3:
             raise TypeError("Image must be a valid numpy array")
 
-    #@abstractmethod
-    def base_model(self) -> Any:
-        pass
+        if img.shape[0] * img.shape[1] == 0:
+            raise ValueError("Invalid image dimensions")
 
-    def _scale_pad(self, img: numpy.ndarray) -> numpy.ndarray:
+    def to_required_shape(self, img: numpy.ndarray) -> numpy.ndarray:
         """
         Scales and pads the image to fit the input shape of the model.
         Also validates the image shape.
@@ -53,29 +52,27 @@ class Extractor(ABC):
         Raises:
             ValueError: If the image shape is invalid
         """
+        height, width = img.shape[:2]
+        ret = numpy.zeros(
+            shape=(self._input_shape.height, self._input_shape.width, 3),
+            dtype=numpy.uint8,
+        )
 
-        if len(img.shape) == 4:
-            img = img[0]  # e.g. (1, 224, 224, 3) to (224, 224, 3)
+        scaling_factor: float = min(
+            self._input_shape.height / height, self._input_shape.width / width
+        )
+        if scaling_factor < 1:
+            img = cv2.resize(img, None, fx=scaling_factor, fy=scaling_factor)
+            height, width = img.shape[:2]
 
-        if len(img.shape) != 3:
-            raise ValueError("Invalid image shape")
+        start_x = (self._input_shape.width - width) // 2
+        start_y = (self._input_shape.height - height) // 2
+        ret[start_y : start_y + height, start_x : start_x + width] = img
+        return ret
 
-        (height, width) = img.shape[:2]
-        if height * width == 0:
-            raise ValueError("Invalid image dimensions")
-
-        img = cv2.resize(img, (self._input_shape.width, self._input_shape.height))
-        img = numpy.expand_dims(img, axis=0)
-        # when called from verify, this is already normalized. But needed when user given.
-        if img.max() > 1:
-            img = (img.astype(numpy.float32) / 255.0).astype(numpy.float32)
-
-        if (
-            img.shape[0] != self.input_shape.height
-            or img.shape[1] != self.input_shape.width
-        ):
-            img = cv2.resize(img, (self.input_shape.width, self.input_shape.height))
-        return img
+    # @abstractmethod
+    def base_model(self) -> Any:
+        pass
 
     @property
     def name(self) -> str:

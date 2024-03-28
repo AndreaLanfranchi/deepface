@@ -50,9 +50,7 @@ class Extractor(ExtractorBase):
     def process(self, img: numpy.ndarray) -> List[float]:
 
         super().process(img)
-        # TODO: shouldn't we ensure image is resized to fit in the input_shape?
-
-        # revert the image to original format and preprocess using the model
+        img = self.to_required_shape(img)
         input_blob = (img[0] * 255).astype(numpy.uint8)
         embeddings = self._model.feature(input_blob)
         return embeddings[0].tolist()

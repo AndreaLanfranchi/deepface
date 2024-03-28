@@ -64,11 +64,8 @@ class Extractor(ExtractorBase):
         self._model.load_weights(output)
 
     def process(self, img: numpy.ndarray) -> List[float]:
-
         super().process(img)
-        # TODO: shouldn't we ensure image is resized to fit in the input_shape?
-        # model.predict causes memory issue when it is called in a for loop
-        # embedding = model.predict(img, verbose=0)[0].tolist()
+        img = self.to_required_shape(img)
         return self._model(img, training=False).numpy()[0].tolist()
 
 

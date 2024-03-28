@@ -35,8 +35,8 @@ class Extractor(ExtractorBase):
     def process(self, img: numpy.ndarray) -> List[float]:
 
         super().process(img)
+        img = self.to_required_shape(img)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-
         img_representation = self._model.compute_face_descriptor(img)
         img_representation = numpy.array(img_representation)
         img_representation = numpy.expand_dims(img_representation, axis=0)

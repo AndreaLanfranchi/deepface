@@ -50,7 +50,7 @@ class Extractor(ExtractorBase):
 
     def process(self, img: numpy.ndarray) -> List[float]:
         super().process(img)
-        img = self._scale_pad(img)
+        img = self.to_required_shape(img)
         return self._model(img, training=False).numpy()[0].tolist()
 
     def _initialize(self):

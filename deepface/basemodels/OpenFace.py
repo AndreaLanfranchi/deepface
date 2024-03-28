@@ -68,7 +68,7 @@ class Extractor(ExtractorBase):
     def process(self, img: numpy.ndarray) -> List[float]:
 
         super().process(img)
-        # TODO: shouldn't we ensure image is resized to fit in the input_shape?
+        img = self.to_required_shape(img)
         x = keras.utils.img_to_array(img)
         x = numpy.expand_dims(x, axis=0)
         x = inception_resnet_v2.preprocess_input(x)
