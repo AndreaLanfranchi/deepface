@@ -57,8 +57,8 @@ class Extractor(ExtractorBase):
         output = os.path.join(folder_utils.get_weights_dir(), file_name)
         if os.path.isfile(output) != True:
             logger.info(f"Download : {file_name}")
-            url = "https://github.com/serengil/deepface_models/"
-            url += f"releases/download/v1.0/{file_name}"
+            url = "https://github.com/serengil/deepface_models/releases/"
+            url += f"download/v1.0/{file_name}"
             gdown.download(url, output, quiet=False)
 
         self._model = InceptionResNetV2(
