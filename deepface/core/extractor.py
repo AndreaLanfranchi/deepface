@@ -5,7 +5,7 @@ import time
 import cv2
 import numpy
 
-from deepface import basemodels
+from deepface.core import extractors
 from deepface.core import reflection
 from deepface.core.types import BoxDimensions
 from deepface.commons.logger import Logger
@@ -100,7 +100,7 @@ class Extractor(ABC):
         global available_extractors
         if not "available_extractors" in globals():
             available_extractors = reflection.get_derived_classes(
-                package=basemodels, base_class=Extractor
+                package=extractors, base_class=Extractor
             )
         return list(available_extractors.keys())
 
@@ -148,7 +148,7 @@ class Extractor(ABC):
         global available_extractors
         if not "available_extractors" in globals():
             available_extractors = reflection.get_derived_classes(
-                package=basemodels, base_class=Extractor
+                package=extractors, base_class=Extractor
             )
 
         if name not in available_extractors.keys():
