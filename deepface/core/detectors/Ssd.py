@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 import os
 import gdown
@@ -65,16 +65,17 @@ class Detector(DetectorBase):
     def process(
         self,
         img: numpy.ndarray,
-        min_dims: Optional[BoxDimensions] = None,
-        min_confidence: float = 0.0,
+        tag: Optional[str] = None,
+        min_dims: BoxDimensions = BoxDimensions(0, 0),
+        min_confidence: float = float(0.0),
+        key_points: bool = True,
         raise_notfound: bool = False,
-        detect_eyes: bool = True,
     ) -> DetectorBase.Results:
 
         # Validation of inputs
-        super().process(img, min_dims, min_confidence)
-        img_height, img_width = img.shape[:2]
+        super().process(img, tag, min_dims, min_confidence, key_points, raise_notfound)
         detected_faces: List[DetectedFace] = []
+        img_height, img_width = img.shape[:2]
 
         # TODO: resize to a square ?
         aspect_ratio_x = img_width / self._input_shape.width
@@ -121,22 +122,17 @@ class Detector(DetectorBase):
             y2 = int(round(row["bottom"] * aspect_ratio_y))
             x_range = RangeInt(x1, min(x2, img_width))
             y_range = RangeInt(y1, min(y2, img_height))
-            if x_range.span <= 0 or y_range.span <= 0:
-                continue  # Invalid detection
-            if min_dims is not None:
-                if min_dims.width > 0 and x_range.span < min_dims.width:
-                    continue
-                if min_dims.height > 0 and y_range.span < min_dims.height:
-                    continue
+            if x_range.span <= min_dims.width or y_range.span <= min_dims.height:
+                continue  # Invalid or empty detection
 
             bounding_box: BoundingBox = BoundingBox(
                 top_left=Point(x=x_range.start, y=y_range.start),
                 bottom_right=Point(x=x_range.end, y=y_range.end),
             )
 
-            le_point = None
-            re_point = None
-            if detect_eyes:
+            points: Optional[Dict[str, Optional[Point]]] = None
+            if key_points:
+
                 eyes: List[Point] = self._opencv_detector.find_eyes(img[y1:y2, x1:x2])
                 if len(eyes) == 2:
                     # Normalize left and right eye coordinates to the whole image
@@ -149,24 +145,22 @@ class Detector(DetectorBase):
                         x=eyes[1].x + bounding_box.top_left.x,
                         y=eyes[1].y + bounding_box.top_left.y,
                     )
-                    if le_point not in bounding_box or re_point not in bounding_box:
-                        le_point = None
-                        re_point = None
+                    points = {"le": le_point, "re": re_point}
 
             detected_faces.append(
                 DetectedFace(
-                    bounding_box=bounding_box,
-                    left_eye=le_point,
-                    right_eye=re_point,
                     confidence=float(confidence),
+                    bounding_box=bounding_box,
+                    key_points=points,
                 )
             )
 
-        if len(detected_faces) == 0 and raise_notfound == True:
+        if 0 == len(detected_faces) and raise_notfound:
             raise FaceNotFoundError("No face detected. Check the input image.")
 
         return DetectorBase.Results(
             detector=self.name,
             img=img,
+            tag=tag,
             detections=detected_faces,
         )

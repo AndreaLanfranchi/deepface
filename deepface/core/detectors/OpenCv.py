@@ -1,4 +1,4 @@
-from typing import Any, List, Optional, Sequence
+from typing import Any, Dict, List, Optional, Sequence
 
 import os
 import cv2
@@ -33,18 +33,19 @@ class Detector(DetectorBase):
     def process(
         self,
         img: numpy.ndarray,
-        min_dims: Optional[BoxDimensions] = None,
-        min_confidence: float = 0.0,
+        tag: Optional[str] = None,
+        min_dims: BoxDimensions = BoxDimensions(0, 0),
+        min_confidence: float = float(0.0),
+        key_points: bool = True,
         raise_notfound: bool = False,
-        detect_eyes: bool = True,
     ) -> DetectorBase.Results:
 
         # Validation of inputs
-        super().process(img, min_dims, min_confidence)
-        img_height, img_width = img.shape[:2]
-
-        gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        super().process(img, tag, min_dims, min_confidence, key_points, raise_notfound)
         detected_faces: List[DetectedFace] = []
+
+        img_height, img_width = img.shape[:2]
+        gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
         # note that, by design, opencv's haarcascade scores are >0 but not capped at 1
         # TODO : document values and magic numbers
@@ -56,34 +57,26 @@ class Detector(DetectorBase):
         )
 
         for rect, weight in zip(faces, weights):
-            if min_confidence is not None and float(weight) < min_confidence:
+            if float(weight) < min_confidence:
                 continue
 
             x, y, w, h = rect
             x_range = RangeInt(int(x), int(min(x + w, img_width)))
             y_range = RangeInt(int(y), int(min(y + h, img_height)))
-            if x_range.span <= 0 or y_range.span <= 0:
-                continue  # Invalid detection
-
-            if isinstance(min_dims, BoxDimensions):
-                if min_dims.width > 0 and x_range.span < min_dims.width:
-                    continue
-                if min_dims.height > 0 and y_range.span < min_dims.height:
-                    continue
+            if x_range.span <= min_dims.width or y_range.span <= min_dims.height:
+                continue  # Invalid or empty detection
 
             bounding_box: BoundingBox = BoundingBox(
                 top_left=Point(x=x_range.start, y=y_range.start),
                 bottom_right=Point(x=x_range.end, y=y_range.end),
             )
 
-            cropped_img = gray_img[
-                bounding_box.top_left.y : bounding_box.bottom_right.y,
-                bounding_box.top_left.x : bounding_box.bottom_right.x,
-            ]
-
-            le_point = None
-            re_point = None
-            if detect_eyes:
+            points: Optional[Dict[str, Optional[Point]]] = None
+            if key_points:
+                cropped_img = gray_img[
+                    bounding_box.top_left.y : bounding_box.bottom_right.y,
+                    bounding_box.top_left.x : bounding_box.bottom_right.x,
+                ]
                 eyes: List[Point] = self.find_eyes(cropped_img)
                 if len(eyes) == 2:
                     # Normalize left and right eye coordinates to the whole image
@@ -96,25 +89,23 @@ class Detector(DetectorBase):
                         x=eyes[1].x + bounding_box.top_left.x,
                         y=eyes[1].y + bounding_box.top_left.y,
                     )
-                    if le_point not in bounding_box or re_point not in bounding_box:
-                        le_point = None
-                        re_point = None
+                    points = {"le": le_point, "re": re_point}
 
             detected_faces.append(
                 DetectedFace(
-                    bounding_box=bounding_box,
-                    left_eye=le_point,
-                    right_eye=re_point,
                     confidence=float(weight),
+                    bounding_box=bounding_box,
+                    key_points=points,
                 )
             )
 
-        if len(detected_faces) == 0 and raise_notfound == True:
+        if 0 == len(detected_faces) and raise_notfound:
             raise FaceNotFoundError("No face detected. Check the input image.")
 
         return DetectorBase.Results(
             detector=str(self._name),
             img=img,
+            tag=tag,
             detections=detected_faces,
         )
 

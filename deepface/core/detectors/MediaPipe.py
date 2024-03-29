@@ -133,7 +133,7 @@ class Detector(DetectorBase):
                     )
                 )
 
-        if len(detected_faces) == 0 and raise_notfound == True:
+        if 0 == len(detected_faces) and raise_notfound:
             raise FaceNotFoundError("No face detected. Check the input image.")
 
         return DetectorBase.Results(

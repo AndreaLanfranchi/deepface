@@ -1,4 +1,4 @@
-from typing import Any, List, Optional
+from typing import Any, Dict, List, Optional
 
 import os
 import cv2
@@ -72,17 +72,18 @@ class Detector(DetectorBase):
     def process(
         self,
         img: numpy.ndarray,
-        min_dims: Optional[BoxDimensions] = None,
-        min_confidence: float = 0.9,
+        tag: Optional[str] = None,
+        min_dims: BoxDimensions = BoxDimensions(0, 0),
+        min_confidence: float = float(0.0),
+        key_points: bool = True,
         raise_notfound: bool = False,
-        detect_eyes: bool = True,
     ) -> DetectorBase.Results:
 
         # Validation of inputs
-        super().process(img, min_dims, min_confidence)
+        super().process(img, tag, min_dims, min_confidence, key_points, raise_notfound)
+        detected_faces: List[DetectedFace] = []
         img_height, img_width = img.shape[:2]
         processed_img = img
-        detected_faces: List[DetectedFace] = []
 
         # resize image if it is too large (Yunet fails to detect faces on large input sometimes)
         # I picked 640 as a threshold because it is the default value of max_size in Yunet.
@@ -99,6 +100,10 @@ class Detector(DetectorBase):
         if faces is not None:
             for face in faces:
 
+                confidence = float(face[-1])
+                if confidence < min_confidence:
+                    continue  # Skip low confidence detections
+
                 # The detection output faces is a two-dimension array of type CV_32F,
                 # whose rows are the detected face instances, columns are the location
                 # of a face and 5 facial landmarks.
@@ -114,43 +119,34 @@ class Detector(DetectorBase):
                 ]
                 x_range = RangeInt(x, min(x + w, img_width))
                 y_range = RangeInt(y, min(y + h, img_height))
-                if x_range.span <= 0 or y_range.span <= 0:
-                    continue
-                if isinstance(min_dims, BoxDimensions):
-                    if min_dims.width > 0 and x_range.span < min_dims.width:
-                        continue
-                    if min_dims.height > 0 and y_range.span < min_dims.height:
-                        continue
+                if x_range.span <= min_dims.width or y_range.span <= min_dims.height:
+                    continue  # Invalid or empty detection
 
                 bounding_box: BoundingBox = BoundingBox(
                     top_left=Point(x=x, y=y),
                     bottom_right=Point(x=x + w, y=y + h),
                 )
 
-                le_point = None
-                re_point = None
-                if detect_eyes:
+                points: Optional[Dict[str, Optional[Point]]] = None
+                if key_points:
                     le_point = Point(x=x_le, y=y_le)
                     re_point = Point(x=x_re, y=y_re)
-                    if le_point not in bounding_box or re_point not in bounding_box:
-                        le_point = None
-                        re_point = None
+                    points = {"le": le_point, "re": re_point}
 
-                confidence = float(face[-1])
                 detected_faces.append(
                     DetectedFace(
-                        bounding_box=bounding_box,
-                        left_eye=le_point,
-                        right_eye=re_point,
                         confidence=confidence,
+                        bounding_box=bounding_box,
+                        key_points=points,
                     )
                 )
 
-        if len(detected_faces) == 0 and raise_notfound == True:
+        if 0 == len(detected_faces) and raise_notfound:
             raise FaceNotFoundError("No face detected. Check the input image.")
 
         return DetectorBase.Results(
             detector=self.name,
             img=img,
+            tag=tag,
             detections=detected_faces,
         )

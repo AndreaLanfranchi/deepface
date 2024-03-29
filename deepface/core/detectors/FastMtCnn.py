@@ -107,7 +107,7 @@ class Detector(DetectorBase):
                         y=int(round(keypoints[0][1])),
                     )
                     points.update({"le": le_point, "re": re_point})
-                    
+
                 if keypoints.shape[0] >= 3:
                     n_point = Point(
                         x=int(round(keypoints[2][0])),
@@ -138,7 +138,7 @@ class Detector(DetectorBase):
                 )
             )
 
-        if len(detected_faces) == 0 and raise_notfound == True:
+        if 0 == len(detected_faces) and raise_notfound:
             raise FaceNotFoundError("No face detected. Check the input image.")
 
         return DetectorBase.Results(
