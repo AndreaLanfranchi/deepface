@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 import numpy
 
@@ -46,14 +46,15 @@ class Detector(DetectorBase):
     def process(
         self,
         img: numpy.ndarray,
-        min_dims: Optional[BoxDimensions] = None,
-        min_confidence: float = 0.0,
+        tag: Optional[str] = None,
+        min_dims: BoxDimensions = BoxDimensions(0, 0),
+        min_confidence: float = float(0.0),
+        key_points: bool = True,
         raise_notfound: bool = False,
-        detect_eyes: bool = True,
     ) -> DetectorBase.Results:
 
         # Validation of inputs
-        super().process(img, min_dims, min_confidence)
+        super().process(img, tag, min_dims, min_confidence, key_points, raise_notfound)
         img_height, img_width = img.shape[:2]
         detected_faces: List[DetectedFace] = []
 
@@ -68,7 +69,7 @@ class Detector(DetectorBase):
 
                 assert len(detection.score) == 1
                 confidence = float(round(detection.score[0], 2))
-                if min_confidence is not None and confidence < min_confidence:
+                if confidence < min_confidence:
                     continue
 
                 rbb = detection.location_data.relative_bounding_box
@@ -80,14 +81,8 @@ class Detector(DetectorBase):
                     int(round(rbb.ymin * img_height)),
                     int(round(rbb.ymin * img_height)) + int(round(rbb.height * img_height)),
                 )
-                if x_range.span <= 0 or y_range.span <= 0:
-                    continue  # Invalid detection
-
-                if isinstance(min_dims, BoxDimensions):
-                    if min_dims.width > 0 and x_range.span < min_dims.width:
-                        continue
-                    if min_dims.height > 0 and y_range.span < min_dims.height:
-                        continue
+                if x_range.span <= min_dims.width or y_range.span <= min_dims.height:
+                    continue  # Invalid or empty detection
 
                 bounding_box: BoundingBox = BoundingBox(
                     top_left=Point(x=x_range.start, y=y_range.start),
@@ -105,33 +100,36 @@ class Detector(DetectorBase):
                 # 5 Right eye tragion
                 # pylint: enable=line-too-long
 
-                le_point = None
-                re_point = None
+                points: Optional[Dict[str, Optional[Point]]] = None
+                relative_keypoints = detection.location_data.relative_keypoints
+                if key_points and relative_keypoints is not None and len(relative_keypoints) > 0:
+                    points = dict[str, Optional[Point]]()
+                    if len(relative_keypoints) >= 2:
+                        x1 = int(min(round(relative_keypoints[1].x * img_width), img_width))
+                        y1 = int(min(round(relative_keypoints[1].y * img_height), img_height))
+                        x2 = int(min(round(relative_keypoints[0].x * img_width), img_width))
+                        y2 = int(min(round(relative_keypoints[0].y * img_height), img_height))
+                        le_point = Point(x1, y1)
+                        re_point = Point(x2, y2)
+                        points = {"le": le_point, "re": re_point}
 
-                keypoints = detection.location_data.relative_keypoints
-                if detect_eyes and keypoints is not None and len(keypoints) == 6:
+                    if len(relative_keypoints) >= 3:
+                        x = int(min(round(relative_keypoints[2].x * img_width), img_width))
+                        y = int(min(round(relative_keypoints[2].y * img_height), img_height))
+                        n_point = Point(x, y)
+                        points.update({"n": n_point})
 
-                    # We swap the left and right eyes: from observer's point of view
-                    # to the image's point of view
-                    x1 = int(min(round(keypoints[1].x * img_width), img_width))
-                    y1 = int(min(round(keypoints[1].y * img_height), img_height))
-                    x2 = int(min(round(keypoints[0].x * img_width), img_width))
-                    y2 = int(min(round(keypoints[0].y * img_height), img_height))
-                    le_point = Point(x1, y1)
-                    re_point = Point(x2, y2)
-
-                    # Martian positions ?
-                    # TODO Decide whether to discard the face or to not include the eyes
-                    if le_point not in bounding_box or re_point not in bounding_box:
-                        le_point = None
-                        re_point = None
+                    if len(relative_keypoints) >= 4:
+                        x = int(min(round(relative_keypoints[3].x * img_width), img_width))
+                        y = int(min(round(relative_keypoints[3].y * img_height), img_height))
+                        cm_point = Point(x, y)
+                        points.update({"cm": cm_point})
 
                 detected_faces.append(
                     DetectedFace(
-                        bounding_box=bounding_box,
-                        left_eye=le_point,
-                        right_eye=re_point,
                         confidence=float(confidence),
+                        bounding_box=bounding_box,
+                        key_points=points,
                     )
                 )
 
@@ -140,6 +138,7 @@ class Detector(DetectorBase):
 
         return DetectorBase.Results(
             detector=self.name,
-            source=img,
+            img=img,
+            tag=tag,
             detections=detected_faces,
         )

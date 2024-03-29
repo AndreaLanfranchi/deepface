@@ -175,7 +175,7 @@ def analysis(
 
             best_frame, best_detection = _get_best_detection(good_captures)
             boxed_frame = best_detection.plot(
-                img=best_frame, copy=True, thickness=2, eyes=False
+                img=best_frame, copy=True, thickness=2, eyes=True
             )
             cv2.imshow(
                 capture_window_title,
@@ -340,7 +340,7 @@ def _get_best_detection(
                 best_i = i
                 best_j = j
 
-    return (good_captures[best_i].source, good_captures[best_i].detections[best_j])
+    return (good_captures[best_i].img, good_captures[best_i].detections[best_j])
 
 
 # Draw box(es) around the detected face(s)

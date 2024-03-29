@@ -151,6 +151,6 @@ class Detector(DetectorBase):
 
         return DetectorBase.Results(
             detector=self.name,
-            source=img,
+            img=img,
             detections=detected_faces,
         )

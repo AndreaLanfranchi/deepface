@@ -27,14 +27,15 @@ class Detector(ABC):
     @dataclass(frozen=True)
     class Results:
         detector: str
-        source: numpy.ndarray
+        img: numpy.ndarray
+        tag: Optional[str]
         detections: list[DetectedFace]
 
         def __post_init__(self):
             assert isinstance(self.detector, str)
-            assert isinstance(self.source, numpy.ndarray)
+            assert isinstance(self.img, numpy.ndarray)
+            assert self.tag is None or isinstance(self.tag, str)
             assert isinstance(self.detections, list)
-
             if self.detector.strip() == "":
                 raise ValueError("Detector name must be non-empty")
 
@@ -71,16 +72,16 @@ class Detector(ABC):
                 IndexError: If the index is out of bounds
             """
             if copy:
-                img = self.source.copy()
+                img = self.img.copy()
             else:
-                img = self.source
+                img = self.img
 
             if index is not None:
                 if index < 0 or index >= len(self.detections):
                     raise IndexError("Invalid index")
                 detection = self.detections[index]
                 img = detection.plot(
-                    img=img, copy = False, color=color, thickness=thickness, eyes=eyes
+                    img=img, copy=False, color=color, thickness=thickness, eyes=eyes
                 )
             else:
                 for detection in self.detections:
@@ -106,9 +107,9 @@ class Detector(ABC):
             if index is not None:
                 if index < 0 or index >= len(self.detections):
                     raise IndexError("Invalid index")
-                return [self.detections[index].crop(self.source)]
+                return [self.detections[index].crop(self.img)]
 
-            return [detection.crop(self.source) for detection in self.detections]
+            return [detection.crop(self.img) for detection in self.detections]
 
     @property
     def name(self) -> str:
@@ -124,21 +125,25 @@ class Detector(ABC):
     def process(
         self,
         img: numpy.ndarray,
-        min_dims: Optional[BoxDimensions] = None,
-        min_confidence: float = 0.0,
+        tag: Optional[str] = None,
+        min_dims: BoxDimensions = BoxDimensions(0, 0),
+        min_confidence: float = float(0.0),
+        key_points: bool = True,
         raise_notfound: bool = False,
-        detect_eyes: bool = True,
     ) -> Results:
         """
         Detect faces in the given image.
 
         Args:
             img (numpy.ndarray): pre-loaded image as numpy array
+            tag (Optional[str]): optional tag to identify the image
             min_dims: Optional[BoxDimensions]: filter to discard
-            boxes around faces that are smaller than the given dimensions
+              boxes around faces that are smaller than the given dimensions
             min_confidence (float): minimum confidence level for the detection
+              Default is 0.0.
+            key_points (bool): whether to detect facial landmarks. Default is True.
             raise_notfound (bool): if True, raise an exception if no faces are found
-            detect_eyes (bool): if True, detect eye landmarks
+              Default is False.
 
         Returns:
             An instance of `Results`
@@ -153,16 +158,26 @@ class Detector(ABC):
         if not isinstance(img, numpy.ndarray) or len(img.shape) != 3:
             raise TypeError("Image must be a valid numpy array")
 
+        if tag is not None and not isinstance(tag, str):
+            raise TypeError("Tag must be a valid string")
+
+        if len(img.shape) != 3:
+            raise ValueError("Image must be a 3D numpy array")
+
         if img.shape[0] == 0 or img.shape[1] == 0:
             raise ValueError("Image must be non-empty")
 
-        if min_dims is not None:
-            if not isinstance(min_dims, BoxDimensions):
-                raise TypeError("Min dims must be a valid BoxDimensions object")
-            if min_dims.width == 0 and min_dims.height == 0:
-                raise ValueError(
-                    "At least one dimension from min_dims must be non-zero"
-                )
+        if not isinstance(min_dims, BoxDimensions):
+            raise TypeError("Min dims must be a valid BoxDimensions object")
+
+        if not isinstance(min_confidence, float):
+            raise TypeError("Min confidence must be a valid float")
+
+        if not isinstance(raise_notfound, bool):
+            raise TypeError("Raise not found must be a valid boolean")
+
+        if min_confidence < 0.0:
+            raise ValueError("Min confidence must be non-negative")
 
     @staticmethod
     def get_available_detectors() -> List[str]:

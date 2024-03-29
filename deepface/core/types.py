@@ -1,4 +1,4 @@
-from typing import Optional, Tuple, Union
+from typing import Dict, Optional, Tuple, Union
 from dataclasses import dataclass, field
 
 import numpy
@@ -19,8 +19,7 @@ class RangeInt:
         assert isinstance(self.start, int)
         assert isinstance(self.end, int)
         object.__setattr__(self, "start", max(self.start, 0))
-        object.__setattr__(self, "end", max(self.end, 0))
-        assert self.start <= self.end
+        object.__setattr__(self, "end", max(self.end, self.start))
 
     @property
     def span(self) -> int:
@@ -191,38 +190,90 @@ class BoxDimensions:
 class DetectedFace:
     """
     Represents the detection of a single face in an image.
-    Note: an image may contain multiple faces.
+
+    Attributes:
+
+        confidence (float): The confidence score of the detection.
+        bounding_box (BoundingBox): The bounding box of the detected face.
+        key_points (Optional[Dict[str, Point]]): The key points of the detected face.
+
+            The key points are a dictionary of string keys and `Point` values.
+            The keys are the names of the key points and the values are the coordinates
+            of the key points relative to the whole processed image.
+
+            The key points are optionally detected hence may be None.
+            Keys are:
+            "le" (left eye),
+            "re" (right eye),
+            "n" (nose),
+            "lm" (left mouth),
+            "rm" (right mouth).
+            "cm" (center mouth).
+
+            Note: not all detectors provide all key points.
+            Left and right are considered from the perspective of the person in the image.
     """
 
+    confidence: float = field(default=0.0)
     bounding_box: BoundingBox = field(default_factory=BoundingBox)
-    left_eye: Optional[Point] = field(default=None)
-    right_eye: Optional[Point] = field(default=None)
-    confidence: Optional[float] = field(default=None)
+    key_points: Optional[Dict[str, Optional[Point]]] = field(default=None)
 
     def __post_init__(self):
+        assert isinstance(self.confidence, float)
         assert isinstance(self.bounding_box, BoundingBox)
-        assert self.left_eye is None or isinstance(self.left_eye, Point)
-        assert self.right_eye is None or isinstance(self.right_eye, Point)
-        if isinstance(self.confidence, float):
-            object.__setattr__(self, "confidence", max(self.confidence, 0.0))
-        else:
-            object.__setattr__(self, "confidence", float(0.0))
-
+        object.__setattr__(self, "confidence", max(self.confidence, 0.0))
         if self.bounding_box.area == 0:
             raise ValueError("Bounding box must be non-empty")
 
-        if bool(self.left_eye is None) != bool(self.right_eye is None):
-            raise ValueError("Both eyes must be provided or both must be None")
+        if self.key_points is not None:
+            if not isinstance(self.key_points, dict):
+                raise TypeError("Key points must be a dictionary")
 
-        if self.left_eye is not None and self.right_eye is not None:
-            if self.left_eye == self.right_eye:
-                raise ValueError("Left and right eyes must be different")
-            if self.left_eye < self.right_eye:
-                raise ValueError("Left eye must be to the left of the right eye")
-            if self.left_eye not in self.bounding_box:
-                raise ValueError("Left eye must be inside the bounding box")
-            if self.right_eye not in self.bounding_box:
-                raise ValueError("Right eye must be inside the bounding box")
+            # Only allow the specified keys
+            allowed_keys = ["le", "re", "n", "lm", "rm", "cm"]
+            object.__setattr__(
+                self,
+                "key_points",
+                {
+                    key: value
+                    for key, value in self.key_points.items()
+                    if key in allowed_keys
+                },
+            )
+
+            for key, value in self.key_points.items():
+                if not isinstance(key, str):
+                    raise TypeError("Keypoint Key must be a string")
+                if value is not None and not isinstance(value, Point):
+                    raise TypeError("Keypoint Value must be an Optional[Point] object")
+                
+                # Ensure that the key points are within the bounding box
+                if value is not None and value not in self.bounding_box:
+                    raise ValueError(f"Key point {key} must be inside the bounding box")
+
+            # Ensure that the left and right eyes are different
+            # and eventually swap them
+            le = self.key_points.get("le", None)
+            re = self.key_points.get("re", None)
+            if le is not None and re is not None:
+                if le == re:
+                    raise ValueError("Left and right eyes must be different points")
+                # Swap the left and right eyes if the left eye is to the right of the right eye
+                if le < re:
+                    self.key_points["le"] = re
+                    self.key_points["re"] = le
+
+            # Ensure that the left and right mouth are different
+            # and eventually swap them
+            lm = self.key_points.get("lm", None)
+            rm = self.key_points.get("rm", None)
+            if lm is not None and rm is not None:
+                if lm == rm:
+                    raise ValueError("Left and right mouth must be different points")
+                # Swap the left and right mouth if the left mouth is to the right of the right mouth
+                if lm < rm:
+                    self.key_points["lm"] = rm
+                    self.key_points["rm"] = lm
 
     @property
     def width(self) -> int:
@@ -237,6 +288,8 @@ class DetectedFace:
         img: numpy.ndarray,
         copy: bool = False,
         color: Tuple[int, int, int] = KBGR_COLOR_CYAN,
+        le_color: Tuple[int, int, int] = KBGR_COLOR_RED,
+        re_color: Tuple[int, int, int] = KBGR_COLOR_BLUE,
         thickness: int = 2,
         eyes: bool = False,
     ) -> numpy.ndarray:
@@ -246,8 +299,7 @@ class DetectedFace:
         Args:
             img (numpy.ndarray): The image to draw on.
             copy (bool): Whether to return the drawings on a copy of the image (default: False)
-            color (Tuple[int, int, int]): BGR color code for drawing the bounding box 
-                (default: KCOLOR_BGR_CYAN)
+            color (Tuple[int, int, int]): BGR color code for the drawings (default: KCOLOR_BGR_CYAN)
             thickness (int): Thickness of the bounding box (default: 2)
             eyes (bool): Whether to draw eye landmarks (default: False)
 
@@ -281,8 +333,8 @@ class DetectedFace:
             img = img.copy()
 
         if eyes == True and (self.left_eye is not None and self.right_eye is not None):
-            img = cv2.circle(img, self.left_eye.tolist(), 5, color, thickness)
-            img = cv2.circle(img, self.right_eye.tolist(), 5, color, thickness)
+            img = cv2.circle(img, self.left_eye.tolist(), 5, le_color, thickness)
+            img = cv2.circle(img, self.right_eye.tolist(), 5, re_color, thickness)
             img = cv2.line(
                 img, self.left_eye.tolist(), self.right_eye.tolist(), color, thickness
             )

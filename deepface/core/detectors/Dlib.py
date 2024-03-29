@@ -1,4 +1,4 @@
-from typing import Any, List, Optional
+from typing import Any, Dict, List, Optional
 
 import os
 import bz2
@@ -66,14 +66,15 @@ class Detector(DetectorBase):
     def process(
         self,
         img: numpy.ndarray,
-        min_dims: Optional[BoxDimensions] = None,
-        min_confidence: float = 0.0,
+        tag: Optional[str] = None,
+        min_dims: BoxDimensions = BoxDimensions(0, 0),
+        min_confidence: float = float(0.0),
+        key_points: bool = True,
         raise_notfound: bool = False,
-        detect_eyes: bool = True,
     ) -> DetectorBase.Results:
 
         # Validation of inputs
-        super().process(img, min_dims, min_confidence)
+        super().process(img, tag, min_dims, min_confidence, key_points, raise_notfound)
         img_height, img_width = img.shape[:2]
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         detected_faces: List[DetectedFace] = []
@@ -83,36 +84,28 @@ class Detector(DetectorBase):
         assert len(rects) == len(scores)
 
         for rect, score in zip(rects, scores):
-            if min_confidence is not None and score < min_confidence:
+            if float(score) < min_confidence:
                 continue
 
             x_range = RangeInt(rect.left(), min(rect.right(), img_width))
             y_range = RangeInt(rect.top(), min(rect.bottom(), img_height))
-            if x_range.span <= 0 or y_range.span <= 0:
-                continue  # Invalid detection
-            if isinstance(min_dims, BoxDimensions):
-                if min_dims.width > 0 and x_range.span < min_dims.width:
-                    continue
-                if min_dims.height > 0 and y_range.span < min_dims.height:
-                    continue
+            if x_range.span <= min_dims.width or y_range.span <= min_dims.height:
+                continue  # Invalid or empty detection
 
             bounding_box: BoundingBox = BoundingBox(
                 top_left=Point(x=x_range.start, y=y_range.start),
                 bottom_right=Point(x=x_range.end, y=y_range.end),
             )
 
-            le_point = None
-            re_point = None
-
-            if detect_eyes:
+            points: Optional[Dict[str, Optional[Point]]] = None
+            if key_points:
+                points = dict[str, Optional[Point]]()
+                # For dlib’s 5-point facial landmark detector
+                # Left eye: parts 0, 1
+                # Right eye: parts 2, 3
+                # Nose: part 4
                 shape = self._predictor(gray, rect)
-                if shape.num_parts == 5:
-                    # For dlib’s 5-point facial landmark detector
-                    # Left eye: parts 0, 1
-                    # Right eye: parts 2, 3
-                    # Nose: part 4 (actually not used)
-
-                    # For each eye, we will use the average of the two points
+                if shape.num_parts >= 4:
                     le_point = Point(
                         x=(shape.part(0).x + shape.part(1).x) // 2,
                         y=(shape.part(0).y + shape.part(1).y) // 2,
@@ -121,16 +114,19 @@ class Detector(DetectorBase):
                         x=(shape.part(2).x + shape.part(3).x) // 2,
                         y=(shape.part(2).y + shape.part(3).y) // 2,
                     )
-                    if le_point not in bounding_box or re_point not in bounding_box:
-                        le_point = None
-                        re_point = None
+                    points.update({"le": le_point, "re": re_point})
+                if shape.num_parts == 5:
+                    n_point = Point(
+                        x=shape.part(4).x,
+                        y=shape.part(4).y,
+                    )
+                    points.update({"n": n_point})
 
             detected_faces.append(
                 DetectedFace(
-                    bounding_box=bounding_box,
-                    left_eye=le_point,
-                    right_eye=re_point,
                     confidence=float(score),
+                    bounding_box=bounding_box,
+                    key_points=points,
                 )
             )
 
@@ -139,6 +135,7 @@ class Detector(DetectorBase):
 
         return DetectorBase.Results(
             detector=self.name,
-            source=img,
+            img=img,
+            tag=tag,
             detections=detected_faces,
         )

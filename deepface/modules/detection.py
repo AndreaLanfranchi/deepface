@@ -1,4 +1,4 @@
-from typing import List, Tuple, Union, Optional
+from typing import List, Union, Optional
 
 import numpy
 
@@ -10,8 +10,8 @@ logger = Logger.get_instance()
 
 def detect_faces(
     img: Union[str, numpy.ndarray],
-    detector: Optional[Union[str, Detector]] = None,
-) -> List[Detector.Results]:
+    detector: Union[str, Detector] = Detector.get_default(),
+) -> Detector.Results:
 
     results: List[Detector.Results] = []
     if not isinstance(detector, Detector):
