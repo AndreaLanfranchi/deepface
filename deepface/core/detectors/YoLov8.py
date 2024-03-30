@@ -62,7 +62,7 @@ class Detector(DetectorBase):
         img: numpy.ndarray,
         tag: Optional[str] = None,
         min_dims: BoxDimensions = BoxDimensions(0, 0),
-        min_confidence: float = float(0.0),
+        min_confidence: float = float(0.8),
         key_points: bool = True,
         raise_notfound: bool = False,
     ) -> DetectorBase.Results:
@@ -115,19 +115,48 @@ class Detector(DetectorBase):
 
             points: Optional[Dict[str, Optional[Point]]] = None
             if key_points and item.keypoints is not None:
-                left_eye = tuple(int(i) for i in item.keypoints.xy[0][0].tolist())
-                right_eye = tuple(int(i) for i in item.keypoints.xy[0][1].tolist())
-                le_point = Point(x=left_eye[0], y=left_eye[1])
-                re_point = Point(x=right_eye[0], y=right_eye[1])
-                points = {"le": le_point, "re": re_point}
 
-            detected_faces.append(
-                DetectedFace(
-                    confidence=confidence,
-                    bounding_box=bounding_box,
-                    key_points=points,
+                # Indices (note we have to swap from viewer to image perspective):
+                # 0: left eye (from the viewer's perspective)
+                # 1: right eye (from the viewer's perspective)
+                # 2: nose tip
+                # 3: left corner of the mouth (from the viewer's perspective)
+                # 4: right corner of the mouth (from the viewer's perspective)
+                for i in range(0, len(item.keypoints.xy[0])):
+                    xy = item.keypoints.xy[0][i].tolist()
+                    xy_point = Point(x=int(round(xy[0])), y=int(round(xy[1])))
+                    xy_key:Optional[str] = None
+                    match i:
+                        case 0:
+                            xy_key = "rec"
+                        case 1:
+                            xy_key = "lec"
+                        case 2:
+                            xy_key = "nt"
+                        case 3:
+                            xy_key = "mrc"
+                        case 4:
+                            xy_key = "mlc"
+                        case _:
+                            #should not happen
+                            pass
+
+                    if xy_key is not None:
+                        if points is None:
+                            points = {}
+                        points[xy_key] = xy_point
+
+            try:
+                # This might raise an exception if the values are out of bounds
+                detected_faces.append(
+                    DetectedFace(
+                        confidence=confidence,
+                        bounding_box=bounding_box,
+                        key_points=points,
+                    )
                 )
-            )
+            except Exception as e:
+                logger.debug(f"Error: {e}")
 
         if 0 == len(detected_faces) and raise_notfound:
             raise FaceNotFoundError("No face detected. Check the input image.")
