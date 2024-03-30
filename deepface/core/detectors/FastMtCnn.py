@@ -45,7 +45,7 @@ class Detector(DetectorBase):
         img: numpy.ndarray,
         tag: Optional[str] = None,
         min_dims: BoxDimensions = BoxDimensions(0, 0),
-        min_confidence: float = float(0.0),
+        min_confidence: float = float(0.99),
         key_points: bool = True,
         raise_notfound: bool = False,
     ) -> DetectorBase.Results:
@@ -66,7 +66,8 @@ class Detector(DetectorBase):
 
         for box, prob, keypoints in zip(boxes, probs, keypoints_list):
 
-            if float(prob) < min_confidence:
+            confidence = float(prob)
+            if confidence < min_confidence:
                 continue  # Confidence too low
 
             if box is None or not isinstance(box, numpy.ndarray) or box.shape[0] != 4:
@@ -106,14 +107,14 @@ class Detector(DetectorBase):
                         x=int(round(keypoints[0][0])),
                         y=int(round(keypoints[0][1])),
                     )
-                    points.update({"le": le_point, "re": re_point})
+                    points.update({"lec": le_point, "rec": re_point})
 
                 if keypoints.shape[0] >= 3:
                     n_point = Point(
                         x=int(round(keypoints[2][0])),
                         y=int(round(keypoints[2][1])),
                     )
-                    points.update({"n": n_point})
+                    points.update({"nt": n_point})
 
                 if keypoints.shape[0] >= 5:
                     lm_point = Point(
@@ -128,15 +129,19 @@ class Detector(DetectorBase):
                         x=(lm_point.x + rm_point.x) // 2,
                         y=(lm_point.y + rm_point.y) // 2,
                     )
-                    points.update({"lm": lm_point, "rm": rm_point, "cm": cm_point})
+                    points.update({"mlc": lm_point, "mrc": rm_point, "mc": cm_point})
 
-            detected_faces.append(
-                DetectedFace(
-                    confidence=float(prob),
-                    bounding_box=bounding_box,
-                    key_points=points,
+            try:
+                # This might raise an exception if the values are out of bounds
+                detected_faces.append(
+                    DetectedFace(
+                        confidence=confidence,
+                        bounding_box=bounding_box,
+                        key_points=points,
+                    )
                 )
-            )
+            except Exception as e:
+                logger.debug(f"Error: {e}")
 
         if 0 == len(detected_faces) and raise_notfound:
             raise FaceNotFoundError("No face detected. Check the input image.")
