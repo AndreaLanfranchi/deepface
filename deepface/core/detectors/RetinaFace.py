@@ -67,9 +67,11 @@ class Detector(DetectorBase):
                 left_xy: Optional[List[float]] = landmarks.get("left_eye")
                 right_xy: Optional[List[float]] = landmarks.get("right_eye")
                 if left_xy and right_xy:
-                    le_point = Point(int(round(left_xy[0])), int(round(left_xy[1])))
-                    re_point = Point(int(right_xy[0]), int(right_xy[1]))
-                    points.update({"lec": le_point, "rec": re_point})
+                    left_point = Point(int(round(left_xy[0])), int(round(left_xy[1])))
+                    right_point = Point(
+                        int(round(right_xy[0])), int(round(right_xy[1]))
+                    )
+                    points.update({"lec": left_point, "rec": right_point})
 
                 left_xy: Optional[List[float]] = landmarks.get("nose")
                 if left_xy:
@@ -79,13 +81,17 @@ class Detector(DetectorBase):
                 left_xy: Optional[List[float]] = landmarks.get("mouth_left")
                 right_xy: Optional[List[float]] = landmarks.get("mouth_right")
                 if left_xy and right_xy:
-                    mlc_point = Point(int(left_xy[0]), int(left_xy[1]))
-                    mrc_point = Point(int(right_xy[0]), int(right_xy[1]))
-                    mc_point = Point(
-                        x=(mlc_point.x + mrc_point.x) // 2,
-                        y=(mlc_point.y + mrc_point.y) // 2,
+                    left_point = Point(int(round(left_xy[0])), int(round(left_xy[1])))
+                    right_point = Point(
+                        int(round(right_xy[0])), int(round(right_xy[1]))
                     )
-                    points.update({"mlc": mlc_point, "mrc": mrc_point, "mc": mc_point})
+                    center_point = Point(
+                        x=(left_point.x + right_point.x) // 2,
+                        y=(left_point.y + right_point.y) // 2,
+                    )
+                    points.update(
+                        {"mlc": left_point, "mrc": right_point, "mc": center_point}
+                    )
 
             try:
                 # This might raise an exception if the values are out of bounds

@@ -4,6 +4,7 @@ import cv2
 import numpy
 from mtcnn import MTCNN
 
+from deepface.core.detector import Detector as DetectorBase
 from deepface.core.exceptions import FaceNotFoundError
 from deepface.core.types import (
     BoundingBox,
@@ -12,7 +13,10 @@ from deepface.core.types import (
     Point,
     RangeInt,
 )
-from deepface.core.detector import Detector as DetectorBase
+
+from deepface.commons.logger import Logger
+
+logger = Logger.get_instance()
 
 
 # MtCnn detector
@@ -26,7 +30,7 @@ class Detector(DetectorBase):
         img: numpy.ndarray,
         tag: Optional[str] = None,
         min_dims: BoxDimensions = BoxDimensions(0, 0),
-        min_confidence: float = float(0.0),
+        min_confidence: float = float(0.99),
         key_points: bool = True,
         raise_notfound: bool = False,
     ) -> DetectorBase.Results:
@@ -64,16 +68,42 @@ class Detector(DetectorBase):
                 points: Optional[Dict[str, Optional[Point]]] = None
                 keypoints = current_detection.get("keypoints", None)
                 if key_points and keypoints is not None:
+                    points = {}
+                    left_xy: Optional[List[float]] = keypoints.get("left_eye")
+                    right_xy: Optional[List[float]] = keypoints.get("right_eye")
+                    if left_xy and right_xy:
+                        left_point = Point(
+                            int(round(left_xy[0])), int(round(left_xy[1]))
+                        )
+                        right_point = Point(
+                            int(round(right_xy[0])), int(round(right_xy[1]))
+                        )
+                        points.update({"lec": left_point, "rec": right_point})
 
-                    # TODO: Remove this print
-                    print(f"keypoints: {keypoints}")
+                    left_xy: Optional[List[float]] = keypoints.get("nose")
+                    if left_xy:
+                        nt_point = Point(int(left_xy[0]), int(left_xy[1]))
+                        points.update({"nt": nt_point})
 
-                    left_eye = keypoints["left_eye"]
-                    right_eye = keypoints["right_eye"]
-                    le_point = Point(x=int(left_eye[0]), y=int(left_eye[1]))
-                    re_point = Point(x=int(right_eye[0]), y=int(right_eye[1]))
-                    points = {"le": le_point, "re": re_point}
+                    left_xy: Optional[List[float]] = keypoints.get("mouth_left")
+                    right_xy: Optional[List[float]] = keypoints.get("mouth_right")
+                    if left_xy and right_xy:
+                        left_point = Point(
+                            int(round(left_xy[0])), int(round(left_xy[1]))
+                        )
+                        right_point = Point(
+                            int(round(right_xy[0])), int(round(right_xy[1]))
+                        )
+                        center_point = Point(
+                            x=(left_point.x + right_point.x) // 2,
+                            y=(left_point.y + right_point.y) // 2,
+                        )
+                        points.update(
+                            {"mlc": left_point, "mrc": right_point, "mc": center_point}
+                        )
 
+            try:
+                # This might raise an exception if the values are out of bounds
                 detected_faces.append(
                     DetectedFace(
                         confidence=confidence,
@@ -81,6 +111,8 @@ class Detector(DetectorBase):
                         key_points=points,
                     )
                 )
+            except Exception as e:
+                logger.debug(f"Error: {e}")
 
         if 0 == len(detected_faces) and raise_notfound:
             raise FaceNotFoundError("No face detected. Check the input image.")
