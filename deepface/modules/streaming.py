@@ -175,7 +175,10 @@ def analysis(
 
             best_frame, best_detection = _get_best_detection(good_captures)
             boxed_frame = best_detection.plot(
-                img=best_frame, copy=True, thickness=2, eyes=True
+                img=best_frame,
+                copy=True,
+                thickness=2,
+                key_points=True,
             )
             cv2.imshow(
                 capture_window_title,
@@ -282,6 +285,7 @@ def _process_frame(
         start_time = time.time()
         detection_outcome: Detector.Results = detector.process(
             img=frame,
+            key_points=True,
             raise_notfound=True,
         )
         logger.debug(f"Frame detection time: {(time.time() - start_time):.5f} seconds")
@@ -299,7 +303,7 @@ def _process_frame(
         if len(detection_outcome) == 0:
             raise FaceNotFoundError("No face detected")
         if len(detection_outcome) > faces_count_threshold:
-            raise OverflowError("Too many faces found")
+            raise OverflowError(f"Too many faces found: {len(detection_outcome)}")
 
         # Store the good capture and its detection result
         good_captures.append(detection_outcome)
@@ -308,13 +312,13 @@ def _process_frame(
     # the good_captures list. Other exceptions are not caught here and will be
     # raised to the caller.
     except FaceNotFoundError as e:
-        logger.debug(f"{e.args[0]}")
+        logger.debug(f"Error : {e}")
         good_captures.clear()
     except ValueError as e:
-        logger.debug(f"{e.args[0]}")
+        logger.debug(f"Error : {e}")
         good_captures.clear()
     except OverflowError as e:
-        logger.debug(f"{e.args[0]}")
+        logger.debug(f"Error : {e}")
         good_captures.clear()
 
 
@@ -348,7 +352,7 @@ def _box_faces(
     picture: MatLike, faces: List[DetectedFace], number: Union[int, None] = None
 ) -> MatLike:
     for face in faces:
-        picture = face.plot(img=picture, thickness=2, eyes=True)
+        picture = face.plot(img=picture, thickness=2, key_points=True)
         if number is not None:
             cv2.putText(
                 picture,

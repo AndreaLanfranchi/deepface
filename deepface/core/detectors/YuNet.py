@@ -74,7 +74,7 @@ class Detector(DetectorBase):
         img: numpy.ndarray,
         tag: Optional[str] = None,
         min_dims: BoxDimensions = BoxDimensions(0, 0),
-        min_confidence: float = float(0.0),
+        min_confidence: float = float(0.91),  # default value is 0.9
         key_points: bool = True,
         raise_notfound: bool = False,
     ) -> DetectorBase.Results:
@@ -93,6 +93,8 @@ class Detector(DetectorBase):
                 map(int, (img_height * scale_factor, img_width * scale_factor))
             )
             processed_img = cv2.resize(img, (img_width, img_height))
+        else:
+            scale_factor = 1.0
 
         self._detector.setInputSize((img_width, img_height))
         self._detector.setScoreThreshold(min_confidence)
@@ -114,9 +116,22 @@ class Detector(DetectorBase):
                 # the face bounding box,
                 # {x, y}_{re, le, nt, rcm, lcm} stands for the coordinates of right eye,
                 # left eye, nose tip, the right corner and left corner of the mouth respectively.
-                (x, y, w, h, x_re, y_re, x_le, y_le) = [
-                    int(coord / scale_factor) for coord in face[:8]
-                ]
+                (
+                    x,
+                    y,
+                    w,
+                    h,
+                    x_re,
+                    y_re,
+                    x_le,
+                    y_le,
+                    x_nt,
+                    y_nt,
+                    x_rcm,
+                    y_rcm,
+                    x_lcm,
+                    y_lcm,
+                ) = [int(round(value / scale_factor)) for value in face[:14]]
                 x_range = RangeInt(x, min(x + w, img_width))
                 y_range = RangeInt(y, min(y + h, img_height))
                 if x_range.span <= min_dims.width or y_range.span <= min_dims.height:
@@ -131,15 +146,32 @@ class Detector(DetectorBase):
                 if key_points:
                     le_point = Point(x=x_le, y=y_le)
                     re_point = Point(x=x_re, y=y_re)
-                    points = {"le": le_point, "re": re_point}
-
-                detected_faces.append(
-                    DetectedFace(
-                        confidence=confidence,
-                        bounding_box=bounding_box,
-                        key_points=points,
+                    nt_point = Point(x=x_nt, y=y_nt)
+                    lm_point = Point(x=x_lcm, y=y_lcm)
+                    rm_point = Point(x=x_rcm, y=y_rcm)
+                    mc_point = Point(
+                        x=(x_lcm + x_rcm) // 2, y=(y_lcm + y_rcm) // 2
                     )
-                )
+                    points = {
+                        "lec": le_point,
+                        "rec": re_point,
+                        "nt": nt_point,
+                        "mlc": lm_point,
+                        "mrc": rm_point,
+                        "mc": mc_point,
+                    }
+
+                try:
+                    # This might raise an exception if the values are out of bounds
+                    detected_faces.append(
+                        DetectedFace(
+                            confidence=confidence,
+                            bounding_box=bounding_box,
+                            key_points=points,
+                        )
+                    )
+                except Exception as e:
+                    logger.debug(f"Error: {e}")
 
         if 0 == len(detected_faces) and raise_notfound:
             raise FaceNotFoundError("No face detected. Check the input image.")

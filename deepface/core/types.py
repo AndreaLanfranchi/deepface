@@ -203,12 +203,12 @@ class DetectedFace:
 
             The key points are optionally detected hence may be None.
             Keys are:
-            "le" (left eye),
-            "re" (right eye),
-            "n" (nose),
-            "lm" (left mouth),
-            "rm" (right mouth).
-            "cm" (center mouth).
+            "lec" (left eye center),
+            "rec" (right eye center),
+            "nt" (nose tip),
+            "mlc" (mouth left corner),
+            "mrc" (mouth right corner).
+            "mc" (mouth center).
 
             Note: not all detectors provide all key points.
             Left and right are considered from the perspective of the person in the image.
@@ -230,7 +230,7 @@ class DetectedFace:
                 raise TypeError("Key points must be a dictionary")
 
             # Only allow the specified keys
-            allowed_keys = ["le", "re", "n", "lm", "rm", "cm"]
+            allowed_keys = ["lec", "rec", "nt", "mlc", "mrc", "mc"]
             object.__setattr__(
                 self,
                 "key_points",
@@ -246,34 +246,34 @@ class DetectedFace:
                     raise TypeError("Keypoint Key must be a string")
                 if value is not None and not isinstance(value, Point):
                     raise TypeError("Keypoint Value must be an Optional[Point] object")
-                
+
                 # Ensure that the key points are within the bounding box
                 if value is not None and value not in self.bounding_box:
-                    raise ValueError(f"Key point {key} must be inside the bounding box")
+                    raise ValueError(f"Key point \"{key}\"={value} must be inside the bounding box {self.bounding_box}")
 
             # Ensure that the left and right eyes are different
             # and eventually swap them
-            le = self.key_points.get("le", None)
-            re = self.key_points.get("re", None)
+            le = self.key_points.get("lec", None)
+            re = self.key_points.get("rec", None)
             if le is not None and re is not None:
                 if le == re:
                     raise ValueError("Left and right eyes must be different points")
                 # Swap the left and right eyes if the left eye is to the right of the right eye
-                if le < re:
-                    self.key_points["le"] = re
-                    self.key_points["re"] = le
+                if le.x < re.x:
+                    self.key_points["lec"] = re
+                    self.key_points["rec"] = le
 
             # Ensure that the left and right mouth are different
             # and eventually swap them
-            lm = self.key_points.get("lm", None)
-            rm = self.key_points.get("rm", None)
+            lm = self.key_points.get("mlc", None)
+            rm = self.key_points.get("mrc", None)
             if lm is not None and rm is not None:
                 if lm == rm:
                     raise ValueError("Left and right mouth must be different points")
                 # Swap the left and right mouth if the left mouth is to the right of the right mouth
-                if lm < rm:
-                    self.key_points["lm"] = rm
-                    self.key_points["rm"] = lm
+                if lm.x < rm.x:
+                    self.key_points["mlc"] = rm
+                    self.key_points["mrc"] = lm
 
     @property
     def width(self) -> int:
@@ -287,11 +287,9 @@ class DetectedFace:
         self,
         img: numpy.ndarray,
         copy: bool = False,
-        color: Tuple[int, int, int] = KBGR_COLOR_CYAN,
-        le_color: Tuple[int, int, int] = KBGR_COLOR_RED,
-        re_color: Tuple[int, int, int] = KBGR_COLOR_BLUE,
+        color: Tuple[int, int, int] = KBGR_COLOR_BOUNDING_BOX,
         thickness: int = 2,
-        eyes: bool = False,
+        key_points: bool = False,
     ) -> numpy.ndarray:
         """
         Draw the detected face boundaries and landmarks on the image.
@@ -332,12 +330,6 @@ class DetectedFace:
         if copy:
             img = img.copy()
 
-        if eyes == True and (self.left_eye is not None and self.right_eye is not None):
-            img = cv2.circle(img, self.left_eye.tolist(), 5, le_color, thickness)
-            img = cv2.circle(img, self.right_eye.tolist(), 5, re_color, thickness)
-            img = cv2.line(
-                img, self.left_eye.tolist(), self.right_eye.tolist(), color, thickness
-            )
         img = cv2.rectangle(
             img,
             (self.bounding_box.top_left.x, self.bounding_box.top_left.y),
@@ -345,6 +337,31 @@ class DetectedFace:
             color,
             thickness,
         )
+
+        if key_points and self.key_points is not None and len(self.key_points) > 0:
+            left_eye = self.key_points.get("lec", None)
+            right_eye = self.key_points.get("rec", None)
+            nose = self.key_points.get("nt", None)
+            left_mouth = self.key_points.get("mlc", None)
+            right_mouth = self.key_points.get("mrc", None)
+            center_mouth = self.key_points.get("mc", None)
+            if left_eye is not None:
+                img = cv2.circle(img, left_eye.tolist(), 3, KBGR_COLOR_LEFT_EYE, thickness)
+            if right_eye is not None:
+                img = cv2.circle(img, right_eye.tolist(), 3, KBGR_COLOR_RIGHT_EYE, thickness)
+            if left_eye is not None and right_eye is not None:
+                img = cv2.line(img, left_eye.tolist(), right_eye.tolist(), color, thickness)
+            if nose is not None:
+                img = cv2.circle(img, nose.tolist(), 3, KBGR_COLOR_NOSE, thickness)
+            if left_mouth is not None:
+                img = cv2.circle(img, left_mouth.tolist(), 3, KBGR_COLOR_LEFT_MOUTH, thickness)
+            if right_mouth is not None:
+                img = cv2.circle(img, right_mouth.tolist(), 3, KBGR_COLOR_RIGHT_MOUTH, thickness)
+            if center_mouth is not None:
+                img = cv2.circle(img, center_mouth.tolist(), 3, KBGR_COLOR_CENTER_MOUTH, thickness)
+            if left_mouth is not None and right_mouth is not None:
+                img = cv2.line(img, left_mouth.tolist(), right_mouth.tolist(), color, thickness)
+
         return img
 
     def crop(self, img: numpy.ndarray) -> numpy.ndarray:

@@ -134,6 +134,7 @@ class Detector(DetectorBase):
             if key_points:
 
                 eyes: List[Point] = self._opencv_detector.find_eyes(img[y1:y2, x1:x2])
+                print(eyes)
                 if len(eyes) == 2:
                     # Normalize left and right eye coordinates to the whole image
                     # We swap the eyes because the first eye is the right one

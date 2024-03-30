@@ -6,7 +6,7 @@ import time
 import numpy
 
 from deepface.core.types import DetectedFace, BoxDimensions
-from deepface.core.colors import KBGR_COLOR_CYAN
+from deepface.core.colors import KBGR_COLOR_BOUNDING_BOX
 from deepface.core import reflection, detectors
 from deepface.commons.logger import Logger
 
@@ -49,9 +49,9 @@ class Detector(ABC):
             self,
             index: Optional[int] = None,
             copy: bool = False,
-            color: Tuple[int, int, int] = KBGR_COLOR_CYAN,
+            color: Tuple[int, int, int] = KBGR_COLOR_BOUNDING_BOX,
             thickness: int = 2,
-            eyes: bool = False,
+            key_points: bool = False,
         ) -> numpy.ndarray:
             """
             Draw the detected face(s) boundaries and landmarks on the image.
@@ -81,12 +81,12 @@ class Detector(ABC):
                     raise IndexError("Invalid index")
                 detection = self.detections[index]
                 img = detection.plot(
-                    img=img, copy=False, color=color, thickness=thickness, eyes=eyes
+                    img=img, copy=False, color=color, thickness=thickness, key_points=key_points
                 )
             else:
                 for detection in self.detections:
                     img = detection.plot(
-                        img=img, copy=False, color=color, thickness=thickness, eyes=eyes
+                        img=img, copy=False, color=color, thickness=thickness, key_points=key_points
                     )
             return img
 
@@ -141,7 +141,7 @@ class Detector(ABC):
               boxes around faces that are smaller than the given dimensions
             min_confidence (float): minimum confidence level for the detection
               Default is 0.0.
-            key_points (bool): whether to detect facial landmarks. Default is True.
+            key_points (bool): whether to detect facial key points. Default is True.
             raise_notfound (bool): if True, raise an exception if no faces are found
               Default is False.
 
