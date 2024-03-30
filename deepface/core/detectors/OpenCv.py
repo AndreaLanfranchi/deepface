@@ -16,6 +16,8 @@ from deepface.core.types import (
     RangeInt,
 )
 
+from deepface.commons.logger import Logger
+logger = Logger.get_instance()
 
 # OpenCV's detector (default)
 class Detector(DetectorBase):
@@ -93,13 +95,17 @@ class Detector(DetectorBase):
                     )
                     points = {"lec": le_point, "rec": re_point}
 
-            detected_faces.append(
-                DetectedFace(
-                    confidence=confidence,
-                    bounding_box=bounding_box,
-                    key_points=points,
+            try:
+                # This might raise an exception if the values are out of bounds
+                detected_faces.append(
+                    DetectedFace(
+                        confidence=confidence,
+                        bounding_box=bounding_box,
+                        key_points=points,
+                    )
                 )
-            )
+            except Exception as e:
+                logger.debug(f"Error: {e}")
 
         if 0 == len(detected_faces) and raise_notfound:
             raise FaceNotFoundError("No face detected. Check the input image.")
