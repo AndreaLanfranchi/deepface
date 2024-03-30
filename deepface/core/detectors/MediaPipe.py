@@ -10,8 +10,10 @@ from deepface.core.types import (
     Point,
     RangeInt,
 )
-from deepface.commons.logger import Logger
 from deepface.core.exceptions import FaceNotFoundError, MissingDependencyError
+from deepface.commons.logger import Logger
+
+logger = Logger.get_instance()
 
 try:
     from mediapipe.python.solutions.face_detection import FaceDetection
@@ -19,8 +21,6 @@ except ModuleNotFoundError:
     what: str = f"{__name__} requires `mediapipe` library."
     what += "You can install by 'pip install mediapipe' "
     raise MissingDependencyError(what) from None
-
-logger = Logger.get_instance()
 
 
 # MediaPipe detector (optional)
@@ -48,7 +48,7 @@ class Detector(DetectorBase):
         img: numpy.ndarray,
         tag: Optional[str] = None,
         min_dims: BoxDimensions = BoxDimensions(0, 0),
-        min_confidence: float = float(0.0),
+        min_confidence: float = float(0.85),
         key_points: bool = True,
         raise_notfound: bool = False,
     ) -> DetectorBase.Results:
@@ -111,27 +111,31 @@ class Detector(DetectorBase):
                         y2 = int(min(round(relative_keypoints[0].y * img_height), img_height))
                         le_point = Point(x1, y1)
                         re_point = Point(x2, y2)
-                        points = {"le": le_point, "re": re_point}
+                        points = {"lec": le_point, "rec": re_point}
 
                     if len(relative_keypoints) >= 3:
                         x = int(min(round(relative_keypoints[2].x * img_width), img_width))
                         y = int(min(round(relative_keypoints[2].y * img_height), img_height))
                         n_point = Point(x, y)
-                        points.update({"n": n_point})
+                        points.update({"nt": n_point})
 
                     if len(relative_keypoints) >= 4:
                         x = int(min(round(relative_keypoints[3].x * img_width), img_width))
                         y = int(min(round(relative_keypoints[3].y * img_height), img_height))
                         cm_point = Point(x, y)
-                        points.update({"cm": cm_point})
+                        points.update({"mc": cm_point})
 
-                detected_faces.append(
-                    DetectedFace(
-                        confidence=float(confidence),
-                        bounding_box=bounding_box,
-                        key_points=points,
+                try:
+                    # This might raise an exception if the values are out of bounds
+                    detected_faces.append(
+                        DetectedFace(
+                            confidence=confidence,
+                            bounding_box=bounding_box,
+                            key_points=points,
+                        )
                     )
-                )
+                except Exception as e:
+                    logger.debug(f"Error: {e}")
 
         if 0 == len(detected_faces) and raise_notfound:
             raise FaceNotFoundError("No face detected. Check the input image.")
