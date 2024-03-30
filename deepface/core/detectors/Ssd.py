@@ -67,7 +67,7 @@ class Detector(DetectorBase):
         img: numpy.ndarray,
         tag: Optional[str] = None,
         min_dims: BoxDimensions = BoxDimensions(0, 0),
-        min_confidence: float = float(0.0),
+        min_confidence: float = float(0.95),
         key_points: bool = True,
         raise_notfound: bool = False,
     ) -> DetectorBase.Results:
@@ -132,9 +132,11 @@ class Detector(DetectorBase):
 
             points: Optional[Dict[str, Optional[Point]]] = None
             if key_points:
-
-                eyes: List[Point] = self._opencv_detector.find_eyes(img[y1:y2, x1:x2])
-                print(eyes)
+                cropped_img = img[
+                    bounding_box.top_left.y : bounding_box.bottom_right.y,
+                    bounding_box.top_left.x : bounding_box.bottom_right.x,
+                ]
+                eyes: List[Point] = self._opencv_detector.find_eyes(img=cropped_img)
                 if len(eyes) == 2:
                     # Normalize left and right eye coordinates to the whole image
                     # We swap the eyes because the first eye is the right one
@@ -146,15 +148,19 @@ class Detector(DetectorBase):
                         x=eyes[1].x + bounding_box.top_left.x,
                         y=eyes[1].y + bounding_box.top_left.y,
                     )
-                    points = {"le": le_point, "re": re_point}
+                    points = {"lec": le_point, "rec": re_point}
 
-            detected_faces.append(
-                DetectedFace(
-                    confidence=float(confidence),
-                    bounding_box=bounding_box,
-                    key_points=points,
+            try:
+                # This might raise an exception if the values are out of bounds
+                detected_faces.append(
+                    DetectedFace(
+                        confidence=confidence,
+                        bounding_box=bounding_box,
+                        key_points=points,
+                    )
                 )
-            )
+            except Exception as e:
+                logger.debug(f"Error: {e}")
 
         if 0 == len(detected_faces) and raise_notfound:
             raise FaceNotFoundError("No face detected. Check the input image.")

@@ -5,6 +5,7 @@ import cv2
 import numpy
 
 from cv2.typing import MatLike, Rect
+from deepface.core.colors import is_gray_scale
 from deepface.core.detector import Detector as DetectorBase
 from deepface.core.exceptions import FaceNotFoundError
 from deepface.core.types import (
@@ -35,7 +36,7 @@ class Detector(DetectorBase):
         img: numpy.ndarray,
         tag: Optional[str] = None,
         min_dims: BoxDimensions = BoxDimensions(0, 0),
-        min_confidence: float = float(0.0),
+        min_confidence: float = float(0.8), # See notes below
         key_points: bool = True,
         raise_notfound: bool = False,
     ) -> DetectorBase.Results:
@@ -43,21 +44,23 @@ class Detector(DetectorBase):
         # Validation of inputs
         super().process(img, tag, min_dims, min_confidence, key_points, raise_notfound)
         detected_faces: List[DetectedFace] = []
-
         img_height, img_width = img.shape[:2]
-        gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
         # note that, by design, opencv's haarcascade scores are >0 but not capped at 1
         # TODO : document values and magic numbers
         faces, _, weights = self._detector.detectMultiScale3(
-            image=gray_img,
+            image=img,
             scaleFactor=1.1,
             minNeighbors=10,
             outputRejectLevels=True,
         )
 
         for rect, weight in zip(faces, weights):
-            if float(weight) < min_confidence:
+
+            # We normalize weight to [0, 1] range
+            # considering an optimum value of 5.0
+            confidence = float(min(weight / 5.0, 1.0))
+            if confidence < min_confidence:
                 continue
 
             x, y, w, h = rect
@@ -73,14 +76,13 @@ class Detector(DetectorBase):
 
             points: Optional[Dict[str, Optional[Point]]] = None
             if key_points:
-                cropped_img = gray_img[
+                cropped_img = img[
                     bounding_box.top_left.y : bounding_box.bottom_right.y,
                     bounding_box.top_left.x : bounding_box.bottom_right.x,
                 ]
                 eyes: List[Point] = self.find_eyes(cropped_img)
                 if len(eyes) == 2:
                     # Normalize left and right eye coordinates to the whole image
-                    # We swap the eyes because the first eye is the right one
                     re_point = Point(
                         x=eyes[0].x + bounding_box.top_left.x,
                         y=eyes[0].y + bounding_box.top_left.y,
@@ -89,11 +91,11 @@ class Detector(DetectorBase):
                         x=eyes[1].x + bounding_box.top_left.x,
                         y=eyes[1].y + bounding_box.top_left.y,
                     )
-                    points = {"le": le_point, "re": re_point}
+                    points = {"lec": le_point, "rec": re_point}
 
             detected_faces.append(
                 DetectedFace(
-                    confidence=float(weight),
+                    confidence=confidence,
                     bounding_box=bounding_box,
                     key_points=points,
                 )
@@ -112,57 +114,37 @@ class Detector(DetectorBase):
     def find_eyes(self, img: MatLike) -> List[Point]:
 
         ret: List[Point] = []
+        if not is_gray_scale(img):
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
         rects: Sequence[Rect] = self._eye_detector.detectMultiScale(
             image=img,
+            scaleFactor=float(1.1),
             minNeighbors=int(10),
-            flags=cv2.CASCADE_SCALE_IMAGE,
-        )
-        if len(rects) < int(2):
-            return ret
-
-        # ----------------------------------------------------------------
-
-        # opencv eye detection module is not strong. it might find more than 2 eyes!
-        # besides, it returns eyes with different order in each call (issue 435)
-        # this is an important issue because opencv is the default detector and ssd also uses this
-        # find the largest 2 eye. Thanks to @thelostpeace
-
-        rects: Sequence[Rect] = sorted(
-            rects, key=lambda v: abs(v[2] * v[3]), reverse=True
-        )[:2]
-
-        # Eventually, we have 2 eyes which we order left to right by x coordinate
-        rects: Sequence[Rect] = sorted(rects, key=lambda v: v[0])
-
-        x, y, w, h = (int(val) for val in rects[0])
-        left_box = BoundingBox(
-            top_left=Point(x=x, y=y),
-            bottom_right=Point(x=x + w, y=y + h),
         )
 
-        x, y, w, h = (int(val) for val in rects[1])
-        right_box = BoundingBox(
-            top_left=Point(x=x, y=y),
-            bottom_right=Point(x=x + w, y=y + h),
-        )
+        # We don't actually care about their order.
+        # They will be eventually ordered during the
+        # addition to the detected face.
+        for i in range(min(2, len(rects))):
+            x, y, w, h = (int(round(val)) for val in rects[i])
+            ret.append(Point(x=x + w // 2, y=y + h // 2))
 
-        left_eye = left_box.center
-        right_eye = right_box.center
-
-        return [left_eye, right_eye]
+        return ret
 
     def _build_cascade(self, model_name="haarcascade") -> Any:
 
         match model_name:
             case "haarcascade":
-                file_name = "haarcascade_frontalface_default.xml"
+                file_name = "haarcascade_frontalface_default"
             case "haarcascade_eye":
-                file_name = "haarcascade_eye.xml"
+                # file_name = "haarcascade_eye"
+                file_name = "haarcascade_eye_tree_eyeglasses"
             case _:
                 raise NotImplementedError(f"Unknown : {model_name}")
 
         cv2_root = os.path.dirname(cv2.__file__)
-        file_path = os.path.join(cv2_root, "data", file_name)
+        file_path = os.path.join(cv2_root, "data", f"{file_name}.xml")
         if os.path.isfile(file_path) != True:
             raise RuntimeError(
                 f"Coulnd't find {file_path}\n" "Check opencv is installed properly"
