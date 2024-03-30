@@ -68,7 +68,7 @@ class Detector(DetectorBase):
         img: numpy.ndarray,
         tag: Optional[str] = None,
         min_dims: BoxDimensions = BoxDimensions(0, 0),
-        min_confidence: float = float(0.0),
+        min_confidence: float = float(0.4),
         key_points: bool = True,
         raise_notfound: bool = False,
     ) -> DetectorBase.Results:
@@ -84,7 +84,9 @@ class Detector(DetectorBase):
         assert len(rects) == len(scores)
 
         for rect, score in zip(rects, scores):
-            if float(score) < min_confidence:
+
+            confidence = float(score)
+            if confidence < min_confidence:
                 continue
 
             x_range = RangeInt(rect.left(), min(rect.right(), img_width))
@@ -114,21 +116,25 @@ class Detector(DetectorBase):
                         x=(shape.part(2).x + shape.part(3).x) // 2,
                         y=(shape.part(2).y + shape.part(3).y) // 2,
                     )
-                    points.update({"le": le_point, "re": re_point})
+                    points.update({"lec": le_point, "rec": re_point})
                 if shape.num_parts == 5:
                     n_point = Point(
                         x=shape.part(4).x,
                         y=shape.part(4).y,
                     )
-                    points.update({"n": n_point})
+                    points.update({"nt": n_point})
 
-            detected_faces.append(
-                DetectedFace(
-                    confidence=float(score),
-                    bounding_box=bounding_box,
-                    key_points=points,
+            try:
+                # This might raise an exception if the values are out of bounds
+                detected_faces.append(
+                    DetectedFace(
+                        confidence=confidence,
+                        bounding_box=bounding_box,
+                        key_points=points,
+                    )
                 )
-            )
+            except Exception as e:
+                logger.debug(f"Error: {e}")
 
         if 0 == len(detected_faces) and raise_notfound:
             raise FaceNotFoundError("No face detected. Check the input image.")

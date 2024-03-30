@@ -291,7 +291,7 @@ def represent(
 def stream(
     db_path: str,
     detector: Optional[str] = None,
-    decomposer: Optional[str] = None,
+    extractor: Optional[str] = None,
     distance_metric: str = "cosine",
     analyzers: List[str] = ["Age", "Emotion", "Gender"],
     source: Union[str, int] = int(0),
@@ -343,7 +343,7 @@ def stream(
 
     streaming.analysis(
         db_path=db_path,
-        extractor=decomposer,
+        extractor=extractor,
         detector=detector,
         distance_metric=distance_metric,
         attributes=analyzers,

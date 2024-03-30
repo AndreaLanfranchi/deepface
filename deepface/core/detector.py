@@ -202,7 +202,7 @@ class Detector(ABC):
         Returns:
             The name of the default face detector.
         """
-        return "yunet"
+        return "fastmtcnn"
 
     @staticmethod
     def instance(name: Optional[str] = None, singleton: bool = True) -> "Detector":
