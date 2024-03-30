@@ -18,6 +18,7 @@ KBGR_COLOR_RIGHT_MOUTH: Tuple[int, int, int] = KBGR_COLOR_BLUE
 KBGR_COLOR_CENTER_MOUTH: Tuple[int, int, int] = KBGR_COLOR_GREEN
 KBGR_COLOR_BOUNDING_BOX: Tuple[int, int, int] = KBGR_COLOR_CYAN
 
+
 def is_gray_scale(image: numpy.ndarray) -> bool:
     """
     Check if the image is in grayscale
@@ -37,17 +38,19 @@ def is_gray_scale(image: numpy.ndarray) -> bool:
     ValueError
         If the image is not a numpy array
     """
-    
+
     if not isinstance(image, numpy.ndarray) or image.ndim < 2 or image.ndim > 3:
         raise ValueError("Image must be a valid numpy array for a single image")
-    
+
     if image.ndim == 2:
         return True
-    
+
     if image.shape[2] == 1:
         return True
-    
-    if (image[:, :, 0] == image[:, :, 1]).all() and (image[:, :, 1] == image[:, :, 2]).all():
+
+    if (image[:, :, 0] == image[:, :, 1]).all() and (
+        image[:, :, 1] == image[:, :, 2]
+    ).all():
         return True
-    
+
     return False

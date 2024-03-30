@@ -16,7 +16,7 @@ from deepface.core.analyzer import Analyzer
 from deepface.core.detector import Detector
 from deepface.core.extractor import Extractor
 from deepface.core.exceptions import FaceNotFoundError
-from deepface.core.types import DetectedFace
+from deepface.core.types import BoxDimensions, DetectedFace
 from deepface.commons.logger import Logger
 
 logger = Logger.get_instance()
@@ -267,46 +267,49 @@ def _cv2_refresh(timeout: int = 1):
         raise KeyboardInterrupt("User requested to stop")
 
 
-# Process the captured frame as follows:
-# - Adds it to the list of good captures when this
-#   frame contains a detected face ...
-# - ... or resets the list of good captures when no
-#   face is detected
-# Note ! Faces validly detected but too small are
-# discarded. A face is considered too small when its
-# area is less than 1/10rd of original image size.
 def _process_frame(
     frame: MatLike,
-    faces_count_threshold: int,
-    good_captures: List[Detector.Results],
     detector: Detector,
+    good_captures: List[Detector.Results],
+    faces_count_threshold: int,
+    min_box_dims: BoxDimensions = BoxDimensions(40, 40),
 ):
+    """
+    Process the frame to detect faces and store the good captures
+
+    Params:
+    -------
+    frame: numpy.ndarray
+        Image to process
+    detector: Detector
+        Face detector to use
+    faces_count_threshold: int
+        Maximum number of faces allowed in the frame
+    min_box_dims: BoxDimensions
+        Minimum dimensions for a face bounding box
+    good_captures: List[Detector.Results]
+        List of good captures where to store the results
+
+    """
     try:
         start_time = time.time()
-        detection_outcome: Detector.Results = detector.process(
+        detector_results: Detector.Results = detector.process(
             img=frame,
+            tag="Capture",
+            min_dims=min_box_dims,
             key_points=True,
             raise_notfound=True,
         )
-        logger.debug(f"Frame detection time: {(time.time() - start_time):.5f} seconds")
+        debug_line = f"Frame detection time: {(time.time() - start_time):.5f} seconds."
+        debug_line += f" Got {len(detector_results)} face(s)"
+        logger.debug(debug_line)
 
-        img_height, img_width = tuple(int(val) for val in frame.shape[:2])
-        min_area = (img_height * img_width) / 20  # TODO: This is a magic number
-
-        # Remove too small detected faces
-        for i in range(len(detection_outcome.detections) - 1, -1, -1):
-            box = detection_outcome.detections[i].bounding_box
-            if box.area < min_area:
-                detection_outcome.detections.pop(i)
-
-        # Treat no or too many results as error
-        if len(detection_outcome) == 0:
-            raise FaceNotFoundError("No face detected")
-        if len(detection_outcome) > faces_count_threshold:
-            raise OverflowError(f"Too many faces found: {len(detection_outcome)}")
+        # Treat too many results as error
+        if len(detector_results) > faces_count_threshold:
+            raise OverflowError(f"Too many faces found: {len(detector_results)}")
 
         # Store the good capture and its detection result
-        good_captures.append(detection_outcome)
+        good_captures.append(detector_results)
 
     # We only catch the ValueError and OverflowError exceptions here to reset
     # the good_captures list. Other exceptions are not caught here and will be
