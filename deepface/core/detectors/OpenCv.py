@@ -5,7 +5,7 @@ import cv2
 import numpy
 
 from cv2.typing import MatLike, Rect
-from deepface.core.colors import is_gray_scale
+from deepface.core.imgutils import is_grayscale_image
 from deepface.core.detector import Detector as DetectorBase
 from deepface.core.exceptions import FaceNotFoundError
 from deepface.core.types import (
@@ -120,7 +120,7 @@ class Detector(DetectorBase):
     def find_eyes(self, img: MatLike) -> List[Point]:
 
         ret: List[Point] = []
-        if not is_gray_scale(img):
+        if not is_grayscale_image(img):
             img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
         rects: Sequence[Rect] = self._eye_detector.detectMultiScale(

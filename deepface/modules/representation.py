@@ -93,7 +93,7 @@ def represent(
         region = img_obj["facial_area"]
         confidence = img_obj["confidence"]
         # custom normalization
-        img = preprocessing.normalize_input(img=img, normalization=normalization)
+        img = preprocessing.normalize_input(img=img, mode=normalization)
 
         embedding = model.process(img)
 

@@ -1,12 +1,11 @@
-# built-in dependencies
+
 from typing import Any, Dict, List, Optional, Union
 
-# 3rd party dependencies
+
 import numpy
 from tqdm import tqdm
 from deepface.core.analyzer import Analyzer
 
-# project dependencies
 from deepface.modules import detection
 from deepface.commons.logger import Logger
 

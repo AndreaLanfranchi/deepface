@@ -170,66 +170,22 @@ def analyze(
 def find(
     img: Union[str, numpy.ndarray],
     db_path: str,
-    extractor: Optional[str] = None,
-    distance_metric: str = "cosine",
     detector: Optional[Union[str, Detector]] = None,
+    extractor: Optional[Union[str, Extractor]] = None,
+    distance_metric: str = "cosine",
     align: bool = True,
     threshold: Optional[float] = None,
     normalization: str = "base",
 ) -> List[pandas.DataFrame]:
     """
     Identify individuals in a database
-    Args:
-        img_path (str or numpy.ndarray): The exact path to the image, a numpy array in BGR format,
-            or a base64 encoded image. If the source image contains multiple faces, the result will
-            include information for each detected face.
-
-        db_path (string): Path to the folder containing image files. All detected faces
-            in the database will be considered in the decision-making process.
-
-        model_name (str): Model for face recognition. Options: VGG-Face, Facenet, Facenet512,
-            OpenFace, DeepFace, DeepID, Dlib, ArcFace and SFace (default is VGG-Face).
-
-        distance_metric (string): Metric for measuring similarity. Options: 'cosine',
-            'euclidean', 'euclidean_l2' (default is cosine).
-
-        detector_backend (string): face detector backend. Options: 'opencv', 'retinaface',
-            'mtcnn', 'ssd', 'dlib', 'mediapipe', 'yolov8' (default is opencv).
-
-        align (boolean): Perform alignment based on the eye positions (default is True).
-
-        threshold (float): Specify a threshold to determine whether a pair represents the same
-            person or different individuals. This threshold is used for comparing distances.
-            If left unset, default pre-tuned threshold values will be applied based on the specified
-            model name and distance metric (default is None).
-
-        normalization (string): Normalize the input image before feeding it to the model.
-            Options: base, raw, Facenet, Facenet2018, VGGFace, VGGFace2, ArcFace (default is base).
-
-    Returns:
-        results (List[pd.DataFrame]): A list of pandas dataframes. Each dataframe corresponds
-            to the identity information for an individual detected in the source image.
-            The DataFrame columns include:
-
-        - 'identity': Identity label of the detected individual.
-
-        - 'target_x', 'target_y', 'target_w', 'target_h': Bounding box coordinates of the
-                target face in the database.
-
-        - 'source_x', 'source_y', 'source_w', 'source_h': Bounding box coordinates of the
-                detected face in the source image.
-
-        - 'threshold': threshold to determine a pair whether same person or different persons
-
-        - 'distance': Similarity score between the faces based on the
-                specified model and distance metric
     """
     return recognition.find(
         img=img,
         db_path=db_path,
-        decomposer=extractor,
-        distance_metric=distance_metric,
         detector=detector,
+        extractor=extractor,
+        distance_metric=distance_metric,
         align=align,
         threshold=threshold,
         normalization=normalization,
@@ -293,7 +249,7 @@ def stream(
     detector: Optional[str] = None,
     extractor: Optional[str] = None,
     distance_metric: str = "cosine",
-    analyzers: List[str] = ["Age", "Emotion", "Gender"],
+    analyzers: List[str] = [],
     source: Union[str, int] = int(0),
     freeze_time_seconds: int = 3,
     valid_frames_count: int = 5,

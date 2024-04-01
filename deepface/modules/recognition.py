@@ -1,19 +1,18 @@
-# built-in dependencies
+from typing import List, Set, Union, Optional
+
 import os
 import re
 import pickle
-from typing import List, Set, Union, Optional
 import time
 
-# 3rd party dependencies
 import numpy
 import pandas
 from tqdm import tqdm
 
-# project dependencies
 from deepface.commons.logger import Logger
-from deepface.modules import representation, detection, verification
+from deepface.core.detector import Detector
 from deepface.core.extractor import Extractor
+from deepface.modules import representation, detection, verification
 
 logger = Logger.get_instance()
 
@@ -21,9 +20,9 @@ logger = Logger.get_instance()
 def find(
     img: Union[str, numpy.ndarray],
     db_path: str,
-    decomposer: Optional[str] = None,
+    detector: Optional[Union[str, Detector]] = None,
+    extractor: Optional[Union[str, Extractor]] = None,
     distance_metric: str = "cosine",
-    detector: Optional[str] = None,
     align: bool = True,
     threshold: Optional[float] = None,
     normalization: str = "base",
@@ -84,13 +83,15 @@ def find(
     if os.path.isdir(db_path) is not True:
         raise NotADirectoryError(f"{db_path} does not exist or is not a directory.")
 
-    model: Extractor = Extractor.instance(decomposer)
+    detector = Detector.instance(detector)
+    extractor = Extractor.instance(extractor)
+
     # target_size = model.input_shape
     target_size = None
 
     # ---------------------------------------
 
-    file_name = f"representations_{model.name}.pkl"
+    file_name = f"representations_{extractor.name}.pkl"
     file_name = file_name.replace("-", "_").lower()
     datastore_path = os.path.join(db_path, file_name)
     representations = []
@@ -98,7 +99,7 @@ def find(
     # This is the "record template" for each item in the pickle file
     template_cols: List[str] = [
         "identity",
-        f"{model.name}_representation",
+        f"{extractor.name}_representation",
         "target_x",
         "target_y",
         "target_w",
@@ -213,7 +214,7 @@ def find(
 
         distances = []
         for _, instance in df.iterrows():
-            source_representation = instance[f"{model.name}_representation"]
+            source_representation = instance[f"{extractor.name}_representation"]
             if source_representation is None:
                 distances.append(float("inf")) # no representation for this image
                 continue
@@ -234,7 +235,7 @@ def find(
         result_df["threshold"] = target_threshold
         result_df["distance"] = distances
 
-        result_df = result_df.drop(columns=[f"{model.name}_representation"])
+        result_df = result_df.drop(columns=[f"{extractor.name}_representation"])
         result_df = result_df[result_df["distance"] <= target_threshold]
         result_df = result_df.sort_values(by=["distance"], ascending=True).reset_index(drop=True)
 

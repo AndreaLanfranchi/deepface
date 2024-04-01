@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Union
 
 import time
 import cv2
@@ -109,37 +109,50 @@ class Extractor(ABC):
         return "VGGFace"
 
     @staticmethod
-    def instance(name: Optional[str] = None, singleton: bool = True) -> "Extractor":
+    def instance(
+        name_or_inst: Optional[Union[str, "Extractor"]] = None,
+        singleton: bool = True,
+    ) -> "Extractor":
         """
-        `Representer` factory method.
+        `Extractor` "lazy" factory method.
 
-        Args:
-            `name (str)`: The name of the representer to instantiate
+        Params:
+        -------
+            `name_or_inst`: A string representing the name of the extractor to instantiate
+              or an instance of a `Extractor` subclass. If None, the default detector will be used
+              
             `singleton (bool)`: If True, the same instance will be returned
 
-        Return:
+        Returns:
+        --------
             An instance of the `Extractor` subclass matching the given name
 
         Raises:
+        -------
             `TypeError`: If the name or singleton arguments are not of the expected type
             `ValueError`: If the detector name empty
             `NotImplementedError`: If the detector name is unknown
             'ImportError': If the detector instance cannot be instantiated
         """
-        if name is None:
-            name = Extractor.get_default()
-        elif not isinstance(name, str):
+        
+        if name_or_inst is None:
+            name_or_inst = Extractor.get_default()
+
+        if isinstance(name_or_inst, Extractor):
+            return name_or_inst
+    
+        if not isinstance(name_or_inst, str):
             raise TypeError(
-                f"Invalid 'name' argument type [{type(name).__name__}] : expected str"
+                f"Invalid 'name' argument type [{type(name_or_inst).__name__}] : expected str"
             )
         if not isinstance(singleton, bool):
             raise TypeError(
                 f"Invalid 'singleton' argument type [{type(singleton).__name__}] : expected bool"
             )
 
-        name = name.lower().strip()
-        if len(name) == 0:
-            name = Extractor.get_default()
+        name_or_inst = name_or_inst.lower().strip()
+        if len(name_or_inst) == 0:
+            name_or_inst = Extractor.get_default()
 
         global extractors_instances  # singleton design pattern
         if not "extractors_instances" in globals():
@@ -151,26 +164,26 @@ class Extractor(ABC):
                 package=extractors, base_class=Extractor
             )
 
-        if name not in available_extractors.keys():
-            raise NotImplementedError(f"Unknown extractor [{name}]")
+        if name_or_inst not in available_extractors.keys():
+            raise NotImplementedError(f"Unknown extractor [{name_or_inst}]")
 
         tic = time.time()
         try:
             if not singleton:
-                instance = available_extractors[name]()
+                instance = available_extractors[name_or_inst]()
                 logger.debug(
-                    f"Instantiated extractor [{name}] ({time.time() - tic:.3f} seconds)"
+                    f"Instantiated extractor [{name_or_inst}] ({time.time() - tic:.3f} seconds)"
                 )
             else:
-                if name not in extractors_instances.keys():
-                    extractors_instances[name] = available_extractors[name]()
+                if name_or_inst not in extractors_instances.keys():
+                    extractors_instances[name_or_inst] = available_extractors[name_or_inst]()
                     logger.debug(
-                        f"Instantiated extractor [{name}] ({time.time() - tic:.3f} seconds)"
+                        f"Instantiated extractor [{name_or_inst}] ({time.time() - tic:.3f} seconds)"
                     )
-                instance = extractors_instances[name]
+                instance = extractors_instances[name_or_inst]
         except Exception as ex:
             logger.critical(
-                f"{type(ex).__name__} on extractor [{name}] Error: {ex.args}"
+                f"{type(ex).__name__} on extractor [{name_or_inst}] Error: {ex.args}"
             )
             raise ex
 

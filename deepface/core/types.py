@@ -1,15 +1,40 @@
-from typing import Dict, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 from dataclasses import dataclass, field
 
 import numpy
 import cv2
 
-from deepface.core.colors import *
+from deepface.core.colors import (
+    KBGR_COLOR_BOUNDING_BOX,
+    KBGR_COLOR_CENTER_MOUTH,
+    KBGR_COLOR_LEFT_EYE,
+    KBGR_COLOR_LEFT_MOUTH,
+    KBGR_COLOR_NOSE,
+    KBGR_COLOR_RIGHT_EYE,
+    KBGR_COLOR_RIGHT_MOUTH,
+)
+
 
 @dataclass(frozen=True)
 class RangeInt:
     """
-    Represents a range of integers as [start, end]
+    Represents a range of integers as [start, end]\n
+    Negative values are normalized to 0.\n
+    The start value is always less than or equal to the end value.\n
+    Used to represent the range of a sequence of coordinates on a 2D plane.
+
+    Attributes:
+    -----------
+
+        start (int): The start of the range.
+        end (int): The end of the range.
+
+    Properties:
+    -----------
+
+        span (int): The span of the range.
+        empty (bool): Whether the range is empty.
+        contains(item: int) -> bool: Whether the range contains the item.
     """
 
     start: int = field(default=int(0))
@@ -25,25 +50,34 @@ class RangeInt:
     def span(self) -> int:
         return self.end - self.start
 
-    def contains(self, item: int) -> bool:
-        return self.start <= item <= self.end
+    def contains(self, value: int) -> bool:
+        if not isinstance(value, int):
+            raise TypeError("Value must be an integer")
+        return self.start <= value <= self.end
 
 
 @dataclass(frozen=True)
 class Point:
     """
-    Represents a point in a 2D plane.
+    Represents a point in a 2D plane.\n
     Negative values are normalized to 0.
+
+    Attributes:
+    -----------
+
+        x (int): The x-coordinate of the point.
+        y (int): The y-coordinate of the point.
+
     """
 
-    x: int = field(default=0)
-    y: int = field(default=0)
+    x: int = field(default=int(0))
+    y: int = field(default=int(0))
 
     def __post_init__(self):
         assert isinstance(self.x, int)
         assert isinstance(self.y, int)
-        object.__setattr__(self, "x", max(self.x, 0))
-        object.__setattr__(self, "y", max(self.y, 0))
+        object.__setattr__(self, "x", max(self.x, int(0)))
+        object.__setattr__(self, "y", max(self.y, int(0)))
 
     def __iter__(self):
         yield self.x
@@ -53,11 +87,13 @@ class Point:
         return 2
 
     def __getitem__(self, index: int) -> int:
-        if index == 0:
-            return self.x
-        if index == 1:
-            return self.y
-        raise IndexError("Index out of range")
+        match index:
+            case 0:
+                return self.x
+            case 1:
+                return self.y
+            case _:
+                raise IndexError("Index out of range")
 
     def __eq__(self, other: "Point") -> bool:
         if isinstance(other, Point):
@@ -69,22 +105,26 @@ class Point:
 
     def __gt__(self, other: "Point") -> bool:
         if isinstance(other, Point):
-            return self.x > other.x and self.y > other.y
+            if self.x == other.x:
+                return self.y > other.y
+            return self.x > other.x
         return False
 
     def __ge__(self, other: "Point") -> bool:
         if isinstance(other, Point):
-            return self.x >= other.x and self.y >= other.y
+            return self > other or self == other
         return False
 
     def __lt__(self, other: "Point") -> bool:
         if isinstance(other, Point):
-            return self.x < other.x and self.y < other.y
+            if self.x == other.x:
+                return self.y < other.y
+            return self.x < other.x
         return False
 
     def __le__(self, other: "Point") -> bool:
         if isinstance(other, Point):
-            return self.x <= other.x and self.y <= other.y
+            return self < other or self == other
         return False
 
     def tolist(self) -> list:
@@ -95,10 +135,29 @@ class Point:
 class BoundingBox:
     """
     Represents a box in a 2D plane enclosed by two points which
-    are the top-left and bottom-right corners of the box.
+    are the top-left and bottom-right corners of the box.\n
     The top-right and bottom-left corners are also provided
-    as derived properties for convenience.
+    as derived properties for convenience.\n
     Is used to represent the position of a face in an image.
+
+    Attributes:
+    -----------
+
+        top_left (Point): The top-left corner of the box.
+        bottom_right (Point): The bottom-right corner of the box.
+
+    Properties:
+    -----------
+
+        width (int): The width of the box.
+        height (int): The height of the box.
+        top_right (Point): The top-right corner of the box.
+        bottom_left (Point): The bottom-left corner of the box.
+        area (int): The area of the box.
+        empty (bool): Whether the box is empty.
+        center (Point): The center of the box.
+        xywh (Tuple[int, int, int, int]): The x, y, width, height of the box.
+
     """
 
     top_left: Point = field(default_factory=Point)
@@ -143,7 +202,21 @@ class BoundingBox:
 
     @property
     def xywh(self) -> Tuple[int, int, int, int]:
-        return (self.top_left.x, self.top_left.y, self.width, self.height)
+        return (
+            self.top_left.x,
+            self.top_left.y,
+            self.width,
+            self.height,
+        )
+
+    @property
+    def x1y1x2y2(self) -> Tuple[int, int, int, int]:
+        return (
+            self.top_left.x,
+            self.top_left.y,
+            self.bottom_right.x,
+            self.bottom_right.y,
+        )
 
     def __contains__(self, point: Point) -> bool:
         return (
@@ -154,6 +227,16 @@ class BoundingBox:
 
 @dataclass(frozen=True)
 class BoxDimensions:
+    """
+    Represents the dimensions of a box in a 2D plane.\n
+    Used to represent the width and height of a face's bounding box.
+
+    Attributes:
+    -----------
+
+        width (int): The width of the box.
+        height (int): The height of the box.
+    """
 
     width: int = field(default=0)
     height: int = field(default=0)
@@ -172,11 +255,17 @@ class BoxDimensions:
         return 2
 
     def __getitem__(self, index: int) -> int:
-        if index == 0:
-            return self.width
-        if index == 1:
-            return self.height
-        raise IndexError("Index out of range")
+        match index:
+            case 0:
+                return self.width
+            case 1:
+                return self.height
+            case _:
+                raise IndexError("Index out of range")
+
+    @property
+    def area(self) -> int:
+        return self.width * self.height
 
     def __lt__(self, other: Union[BoundingBox, "BoxDimensions"]) -> bool:
         if isinstance(other, BoundingBox):
@@ -192,26 +281,29 @@ class DetectedFace:
     Represents the detection of a single face in an image.
 
     Attributes:
+    -----------
 
         confidence (float): The confidence score of the detection.
         bounding_box (BoundingBox): The bounding box of the detected face.
         key_points (Optional[Dict[str, Point]]): The key points of the detected face.
 
-            The key points are a dictionary of string keys and `Point` values.
-            The keys are the names of the key points and the values are the coordinates
-            of the key points relative to the whole processed image.
+    Notes:
+    ------
 
-            The key points are optionally detected hence may be None.
-            Keys are:
-            "lec" (left eye center),
-            "rec" (right eye center),
-            "nt" (nose tip),
-            "mlc" (mouth left corner),
-            "mrc" (mouth right corner).
-            "mc" (mouth center).
+        The key points are a dictionary of string keys and class `Point` values.
+        The keys are the names of the key points and the values are the coordinates
+        of the key points relative to the whole processed image.
+        The key points are optionally detected hence may be None.\n
+        Keys are:
+        * "lec" (left eye center),
+        * "rec" (right eye center),
+        * "nt" (nose tip),
+        * "mlc" (mouth left corner),
+        * "mrc" (mouth right corner).
+        * "mc" (mouth center).
 
-            Note: not all detectors provide all key points.
-            Left and right are considered from the perspective of the person in the image.
+        Not all detectors provide all key points.\n
+        Left and right are considered from the perspective of the person in the image.
     """
 
     confidence: float = field(default=0.0)
@@ -230,46 +322,46 @@ class DetectedFace:
                 raise TypeError("Key points must be a dictionary")
 
             # Only allow the specified keys
-            allowed_keys = ["lec", "rec", "nt", "mlc", "mrc", "mc"]
-            object.__setattr__(
-                self,
-                "key_points",
-                {
-                    key: value
-                    for key, value in self.key_points.items()
-                    if key in allowed_keys
-                },
-            )
-
+            allowed_keys: List[str] = ["lec", "rec", "nt", "mlc", "mrc", "mc"]
             for key, value in self.key_points.items():
                 if not isinstance(key, str):
-                    raise TypeError("Keypoint Key must be a string")
-                if value is not None and not isinstance(value, Point):
-                    raise TypeError("Keypoint Value must be an Optional[Point] object")
+                    what: str = "Keypoint Key must be a string"
+                    what += f" : got {type(key)}=[{key}]"
+                    raise TypeError(what)
+                if key not in allowed_keys:
+                    what: str = f'Keypoint Key "{key}" is not one of'
+                    what += f" the allowed keys {allowed_keys}"
+                    raise ValueError(what)
+                if value is None:
+                    continue
+                if not isinstance(value, Point):
+                    raise TypeError(
+                        "Keypoint Value must be an Optional[Point] object : got {type(value)}"
+                    )
+                if value not in self.bounding_box:
+                    what: str = f'Key point "{key}"={value} is not inside'
+                    what += f" the bounding box xywh [{self.bounding_box.xywh}]"
+                    raise ValueError(what)
 
-                # Ensure that the key points are within the bounding box
-                if value is not None and value not in self.bounding_box:
-                    raise ValueError(f"Key point \"{key}\"={value} must be inside the bounding box {self.bounding_box}")
-
-            # Ensure that the left and right eyes are different
-            # and eventually swap them
             le = self.key_points.get("lec", None)
             re = self.key_points.get("rec", None)
             if le is not None and re is not None:
                 if le == re:
-                    raise ValueError("Left and right eyes must be different points")
+                    what: str = "Left and right eyes must be different points."
+                    what += f" Got left eye={le} and right eye={re}"
+                    raise ValueError(what)
                 # Swap the left and right eyes if the left eye is to the right of the right eye
                 if le.x < re.x:
                     self.key_points["lec"] = re
                     self.key_points["rec"] = le
 
-            # Ensure that the left and right mouth are different
-            # and eventually swap them
             lm = self.key_points.get("mlc", None)
             rm = self.key_points.get("mrc", None)
             if lm is not None and rm is not None:
                 if lm == rm:
-                    raise ValueError("Left and right mouth must be different points")
+                    what: str = "Left and right mouth corners must be different points."
+                    what += f" Got left mouth={lm} and right mouth={rm}"
+                    raise ValueError(what)
                 # Swap the left and right mouth if the left mouth is to the right of the right mouth
                 if lm.x < rm.x:
                     self.key_points["mlc"] = rm
@@ -294,23 +386,25 @@ class DetectedFace:
         """
         Draw the detected face boundaries and landmarks on the image.
 
-        Args:
+        Params:
+        -------
             img (numpy.ndarray): The image to draw on.
             copy (bool): Whether to return the drawings on a copy of the image (default: False)
             color (Tuple[int, int, int]): BGR color code for the drawings (default: KCOLOR_BGR_CYAN)
             thickness (int): Thickness of the bounding box (default: 2)
-            eyes (bool): Whether to draw eye landmarks (default: False)
+            key_points (bool): Whether to draw eye landmarks (default: False)
 
         Returns:
-            numpy.ndarray: The image with the detected faces plotted.
+        --------
+            numpy.ndarray: The (copy of) image with the detected face plotted on it.
 
         Raises:
+        -------
             TypeError: If the image is not a valid numpy array.
             ValueError: If the image is empty or the bounding box is empty.
             OverflowError: If the bounding box is out of bounds of the image.
         """
 
-        # TODO: Maybe introduce an option for rounded corners ?
         if not isinstance(img, numpy.ndarray) or len(img.shape) != 3:
             raise TypeError("Image must be a valid numpy array for an RGB image")
 
@@ -346,21 +440,35 @@ class DetectedFace:
             right_mouth = self.key_points.get("mrc", None)
             center_mouth = self.key_points.get("mc", None)
             if left_eye is not None:
-                img = cv2.circle(img, left_eye.tolist(), 3, KBGR_COLOR_LEFT_EYE, thickness)
+                img = cv2.circle(
+                    img, left_eye.tolist(), 3, KBGR_COLOR_LEFT_EYE, thickness
+                )
             if right_eye is not None:
-                img = cv2.circle(img, right_eye.tolist(), 3, KBGR_COLOR_RIGHT_EYE, thickness)
+                img = cv2.circle(
+                    img, right_eye.tolist(), 3, KBGR_COLOR_RIGHT_EYE, thickness
+                )
             if left_eye is not None and right_eye is not None:
-                img = cv2.line(img, left_eye.tolist(), right_eye.tolist(), color, thickness)
+                img = cv2.line(
+                    img, left_eye.tolist(), right_eye.tolist(), color, thickness
+                )
             if nose is not None:
                 img = cv2.circle(img, nose.tolist(), 3, KBGR_COLOR_NOSE, thickness)
             if left_mouth is not None:
-                img = cv2.circle(img, left_mouth.tolist(), 3, KBGR_COLOR_LEFT_MOUTH, thickness)
+                img = cv2.circle(
+                    img, left_mouth.tolist(), 3, KBGR_COLOR_LEFT_MOUTH, thickness
+                )
             if right_mouth is not None:
-                img = cv2.circle(img, right_mouth.tolist(), 3, KBGR_COLOR_RIGHT_MOUTH, thickness)
+                img = cv2.circle(
+                    img, right_mouth.tolist(), 3, KBGR_COLOR_RIGHT_MOUTH, thickness
+                )
             if center_mouth is not None:
-                img = cv2.circle(img, center_mouth.tolist(), 3, KBGR_COLOR_CENTER_MOUTH, thickness)
+                img = cv2.circle(
+                    img, center_mouth.tolist(), 3, KBGR_COLOR_CENTER_MOUTH, thickness
+                )
             if left_mouth is not None and right_mouth is not None:
-                img = cv2.line(img, left_mouth.tolist(), right_mouth.tolist(), color, thickness)
+                img = cv2.line(
+                    img, left_mouth.tolist(), right_mouth.tolist(), color, thickness
+                )
 
         return img
 
@@ -388,7 +496,10 @@ class DetectedFace:
             raise ValueError("Image must be non-empty")
         if self.bounding_box.empty:
             raise ValueError("Bounding box must be non-empty")
-        if self.bounding_box.top_right.x > img_w or self.bounding_box.bottom_right.y > img_h:
+        if (
+            self.bounding_box.top_right.x > img_w
+            or self.bounding_box.bottom_right.y > img_h
+        ):
             raise OverflowError("Bounding box is out of bounds of the image")
         return img[
             self.bounding_box.top_left.y : self.bounding_box.bottom_right.y,

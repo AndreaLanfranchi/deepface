@@ -13,6 +13,7 @@ import pandas
 
 from deepface import DeepFace
 from deepface.core.analyzer import Analyzer
+from deepface.core.colors import KBGR_COLOR_WHITE
 from deepface.core.detector import Detector
 from deepface.core.extractor import Extractor
 from deepface.core.exceptions import FaceNotFoundError
@@ -29,13 +30,16 @@ os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 class Stream(threading.Thread):
     """
     A class to read frames from a video capture source in a separate thread.
-    This is necessary due to the "freeze" feature of this module which
-    causes the capture source to accumulate frames in the read queue which
-    cannot be processed fast enoungh when the main thread resumes.
-    The higher FPS connected cameras can provide the more the problem is
-    noticeable.
-    Credits for the implementation of this class go to the following:
-    https://stackoverflow.com/a/65191619
+
+    Rationale:
+    ---------
+        This is necessary due to the "freeze" feature of this module which
+        causes the capture source to accumulate frames in the read queue which
+        cannot be processed fast enoungh when the main thread resumes.
+        The higher FPS connected cameras can provide the more the problem is
+        noticeable.
+        Credits for the implementation of this class go to the following:
+        https://stackoverflow.com/a/65191619
     """
 
     def __init__(
@@ -91,14 +95,11 @@ def analysis(
     valid_frames_count = max(1, min(valid_frames_count, 5))  # In range [1, 5] positive
     faces_count_threshold = max(1, faces_count_threshold)  # In range [1, inf] positive
 
-    if not isinstance(detector, Detector):
-        detector = Detector.instance(detector)
-    if not isinstance(extractor, Extractor):
-        extractor = Extractor.instance(extractor)
+    detector = Detector.instance(detector)
+    extractor = Extractor.instance(extractor)
 
     # Constants
     capture_window_title: str = "Capture"
-    text_color = (255, 255, 255)
 
     # ------------------------
     # build models once to store them in the memory
@@ -116,7 +117,7 @@ def analysis(
     # -----------------------
     # call a dummy find function for db_path once to create embeddings in the initialization
     # _ = DeepFace.find(
-    #     img=numpy.zeros((10, 10), dtype=numpy.uint8),
+    #     img=numpy.zeros((1, 1), dtype=numpy.uint8),
     #     db_path=db_path,
     #     detector=detector,
     #     extractor=extractor,
@@ -177,7 +178,7 @@ def analysis(
             boxed_frame = best_detection.plot(
                 img=best_frame,
                 copy=True,
-                thickness=2,
+                thickness=1,
                 key_points=True,
             )
             cv2.imshow(
@@ -225,7 +226,7 @@ def analysis(
                         (30, 40),
                         cv2.FONT_HERSHEY_SIMPLEX,
                         1,
-                        text_color,
+                        KBGR_COLOR_WHITE,
                         2,
                         cv2.LINE_AA,
                     )
@@ -254,13 +255,20 @@ def analysis(
     logger.info(f"Total duration {(time.time() - tic):.5f} seconds")
 
 
-# The only way for OpenCV to refresh displayed window(s)
-# is to call cv2.waitKey() function. This function waits
-# for a given amount of time for a key to be pressed and
-# returns the ASCII code of the key pressed.
-# We use this as a trick to also check if the 'q' key
-# has been pressed by the user.
 def _cv2_refresh(timeout: int = 1):
+    """
+    Refresh the OpenCV displayed window(s) and check for user input
+
+    Params:
+    -------
+    timeout: int
+        Time in milliseconds to wait for a key press
+
+    Raises:
+    -------
+    KeyboardInterrupt
+        If the user presses the 'q' key
+    """
     timeout = max(1, timeout)
     result: int = cv2.waitKey(timeout) & 0xFF
     if result == ord("q"):
@@ -311,9 +319,9 @@ def _process_frame(
         # Store the good capture and its detection result
         good_captures.append(detector_results)
 
-    # We only catch the ValueError and OverflowError exceptions here to reset
-    # the good_captures list. Other exceptions are not caught here and will be
-    # raised to the caller.
+    # We only catch the FaceNotFoundError, ValueError and OverflowError exceptions here
+    # to reset the good_captures list. Other exceptions are not caught here and will pop
+    # to the caller.
     except FaceNotFoundError as e:
         logger.debug(f"Error : {e}")
         good_captures.clear()
@@ -348,29 +356,6 @@ def _get_best_detection(
                 best_j = j
 
     return (good_captures[best_i].img, good_captures[best_i].detections[best_j])
-
-
-# Draw box(es) around the detected face(s)
-def _box_faces(
-    picture: MatLike, faces: List[DetectedFace], number: Union[int, None] = None
-) -> MatLike:
-    for face in faces:
-        picture = face.plot(img=picture, thickness=2, key_points=True)
-        if number is not None:
-            cv2.putText(
-                picture,
-                str(number),
-                (
-                    face.bounding_box.center.x,
-                    face.bounding_box.center.y,
-                ),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                4,
-                (255, 255, 255),
-                2,
-                cv2.LINE_AA,
-            )
-    return picture
 
 
 # Get the matches from the dataset

@@ -1,92 +1,192 @@
+from typing import Tuple, Union
+
 import base64
 import re
 import os
 import binascii
-from typing import Union, Tuple
+import requests
 
-# 3rd party
 import numpy
 import cv2
-import requests
+
+
+def is_valid_image(img: numpy.ndarray) -> bool:
+    """
+    Check if the image is valid
+
+    Params:
+    -------
+    image: numpy.ndarray
+        Image to check
+
+    Returns:
+    --------
+    bool
+        True if the image is valid, False otherwise
+
+    Raises:
+    -------
+        None
+    """
+
+    if not isinstance(img, numpy.ndarray):
+        return False
+
+    if img.ndim not in [2, 3]:
+        return False
+
+    if img.shape[0] == 0 or img.shape[1] == 0:
+        return False
+
+    if img.ndim == 3:
+        if img.shape[2] not in [1, 3]:  # grayscale or BGR
+            return False
+    else:
+        if not numpy.issubdtype(img.dtype, numpy.uint8):
+            return False
+
+    return True
+
+
+def is_grayscale_image(img: numpy.ndarray) -> bool:
+    """
+    Check if the image is in grayscale
+
+    Params:
+    -------
+    image: numpy.ndarray
+        Image to check
+
+    Returns:
+    --------
+    bool
+        True if the image is in grayscale, False otherwise
+
+    Raises:
+    -------
+    ValueError
+        If the image is not a valid numpy array
+    """
+
+    if not is_valid_image(img):
+        raise ValueError("Image must be a valid numpy array for a single image")
+
+    if img.ndim == 2:
+        return True
+
+    if img.shape[2] == 1:
+        return True
+
+    if (img[:, :, 0] == img[:, :, 1]).all() and (img[:, :, 1] == img[:, :, 2]).all():
+        return True
+
+    return False
+
 
 # Pseudo-constants
 _http_pattern = re.compile(r"^http(s)?://.*", re.IGNORECASE)
 _base64_pattern = re.compile(r"^data:image\/.*", re.IGNORECASE)
-_base64_pattern_ext = re.compile(r"^data:image\/(jpeg|jpg|png)?(;base64)$", re.IGNORECASE)
+_base64_pattern_ext = re.compile(
+    r"^data:image\/(jpeg|jpg|png)?(;base64)$", re.IGNORECASE
+)
+
 
 def load_image(source: Union[str, numpy.ndarray]) -> Tuple[numpy.ndarray, str]:
     """
     Load image from path, url, base64 or numpy array.
 
     Args:
+    -----
         source: the origin of image data to be loaded
 
     Returns:
+    --------
         A tuple of :\n
         image (numpy array): the loaded image in BGR format\n
         name (str): image name itself\n
 
     Raises:
+    -------
         ValueError: if the input is somewhat invalid
         TypeError: if the input is not a supported type
         HTTPError: if the input is a url and the response status code is not 200
         FileNotFoundError: if the input is a path and the file does not exist
     """
 
+    if source is None:
+        raise TypeError("Invalid source. None type.")
+
+    loaded_image: numpy.ndarray = numpy.array([])
+    tag: str = ""
+
+    if isinstance(source, str):
+        origin: str = str(source.strip())
+        if len(origin) == 0:
+            raise ValueError("Invalid source. Empty string.")
+        if _http_pattern.match(origin):
+            loaded_image = _load_image_from_web(url=origin)
+            tag = "web"
+        elif _base64_pattern.match(origin):
+            loaded_image = _load_base64(uri=origin)
+            tag = "base64"
+        else:
+            # TODO : this is still unsafe as there are many other ways to
+            # express the source of image to be loaded.
+            # for example, an "ftp://" link or a "sftp://" link
+            # as a result bailing out to a filesystem load might be
+            # an issue
+            loaded_image = _load_image_from_file(filename=origin)
+            tag = f"file {origin}"
+
+        if not is_valid_image(loaded_image):
+            what: str = "Invalid image from "
+            what += f"{tag}"
+            raise ValueError("Invalid image from web")
+        return (loaded_image, tag)
+
     if isinstance(source, numpy.ndarray):
-        return source, "numpy array"
-    if not isinstance(source, str):
-        raise TypeError(f"Unsupoorted source type {type(source)}")
+        if not is_valid_image(source):
+            raise ValueError("Invalid image")
+        return (source, f"{type(source)}")
 
-    source = source.strip()
-    if len(source) == 0:
-        raise ValueError("Invalid source. Empty string.")
-
-    if _http_pattern.match(source):
-        return _load_image_from_web(url=source), source
-
-    if _base64_pattern.match(source):
-        return _load_base64(uri=source), "base64 encoded string"
-
-    # TODO : this is still unsafe as there are many other ways to
-    # express the source of image to be loaded.
-    # for example, an "ftp://" link or a "sftp://" link
-    # as a result bailing out to a filesystem load might be
-    # an issue
-
-    return _load_image_from_file(filename=source), source
 
 def _load_image_from_web(url: str) -> numpy.ndarray:
     """
     Loading an image from web
 
     Args:
-
+    -----
         url: link for the image
 
     Returns:
+    --------
         img (numpy.ndarray): equivalent to pre-loaded image from opencv (BGR format)
 
     Raises:
+    -------
         HTTPError: if the response status code is not 200
     """
     response = requests.get(url, stream=True, timeout=60)
     response.raise_for_status()
     image_array = numpy.asarray(bytearray(response.raw.read()), dtype=numpy.uint8)
-    image = cv2.imdecode(image_array, cv2.IMREAD_COLOR)
+    image = cv2.imdecode(image_array, cv2.IMREAD_ANYCOLOR)
     return image
 
 
 def _load_base64(uri: str) -> numpy.ndarray:
-    """Load image from base64 string.
+    """
+    Load image from base64 string.
 
     Args:
+    -----
         uri: a base64 string.
 
     Returns:
+    --------
         numpy array: the loaded image.
 
     Raises:
+    -------
         ValueError: if the input is invalid.
     """
 
@@ -104,18 +204,27 @@ def _load_base64(uri: str) -> numpy.ndarray:
     except binascii.Error as ex:
         raise ValueError("Invalid base64 input") from ex
 
+
 def _load_image_from_file(filename: str) -> numpy.ndarray:
-    """Load image from file.
+    """
+    Load image from file.
 
     Args:
+    -----
         filename: full or relative path to the image file.
 
     Returns:
+    --------
         numpy array: the loaded image.
 
     Raises:
+    -------
         FileNotFoundError: if the file does not exist.
+
     """
+
+    # TODO : use file magic to determine the file type
+    # as the extension can be easily manipulated
     _, ext = os.path.splitext(filename)
     ext = ext.lower()
     if not ext in [".jpg", ".jpeg", ".png"]:
@@ -127,24 +236,42 @@ def _load_image_from_file(filename: str) -> numpy.ndarray:
 
     return cv2.imread(filename)
 
-def normalize_input(img: numpy.ndarray, normalization: str = "base") -> numpy.ndarray:
-    """Normalize input image.
+
+def normalize_input(img: numpy.ndarray, mode: str = "base") -> numpy.ndarray:
+    """
+    Normalize input image.
 
     Args:
+    -----
         img (numpy array): the input image.
-        normalization (str, optional): the normalization technique. Defaults to "base",
+        mode (str, optional): the normalization technique. Defaults to "base",
         for no normalization.
 
     Returns:
+    --------
         numpy array: the normalized image.
 
     Raises:
+    -------
         NotImplementedError: if the normalization technique is not implemented.
     """
 
+    if not isinstance(img, numpy.ndarray):
+        what: str = "Invalid input image type. Expected numpy.ndarray, "
+        what += f"got {type(img)}"
+        raise TypeError(what)
+
+    if not isinstance(mode, str):
+        what: str = 'Invalid "mode" type. Expected str, '
+        what += f"got {type(mode)}"
+        raise TypeError(what)
+
+    if img.ndim == 4:
+        img = img[0]
+
     # issue 131 declares that some normalization techniques improves the accuracy
 
-    if normalization == "base":
+    if mode == "base":
         return img
 
     # @trevorgribble and @davedgd contributed this feature
@@ -152,37 +279,37 @@ def normalize_input(img: numpy.ndarray, normalization: str = "base") -> numpy.nd
     # [0, 1] in preprocess_face
     img *= 255
 
-    if normalization == "raw":
+    if mode == "raw":
         pass  # return just restored pixels
 
-    elif normalization == "Facenet":
+    elif mode == "Facenet":
         mean, std = img.mean(), img.std()
         img = (img - mean) / std
 
-    elif normalization == "Facenet2018":
+    elif mode == "Facenet2018":
         # simply / 127.5 - 1 (similar to facenet 2018 model preprocessing step as @iamrishab posted)
         img /= 127.5
         img -= 1
 
-    elif normalization == "VGGFace":
+    elif mode == "VGGFace":
         # mean subtraction based on VGGFace1 training data
         img[..., 0] -= 93.5940
         img[..., 1] -= 104.7624
         img[..., 2] -= 129.1863
 
-    elif normalization == "VGGFace2":
+    elif mode == "VGGFace2":
         # mean subtraction based on VGGFace2 training data
         img[..., 0] -= 91.4953
         img[..., 1] -= 103.8827
         img[..., 2] -= 131.0912
 
-    elif normalization == "ArcFace":
+    elif mode == "ArcFace":
         # Reference study: The faces are cropped and resized to 112×112,
         # and each pixel (ranged between [0, 255]) in RGB images is normalised
         # by subtracting 127.5 then divided by 128.
         img -= 127.5
         img /= 128
     else:
-        raise NotImplementedError(f"Unimplemented normalization type : {normalization}")
+        raise NotImplementedError(f"Unimplemented normalization mode : {mode}")
 
     return img

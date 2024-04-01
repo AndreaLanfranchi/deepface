@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union
 from abc import ABC, abstractmethod
 
 import time
@@ -81,12 +81,20 @@ class Detector(ABC):
                     raise IndexError("Invalid index")
                 detection = self.detections[index]
                 img = detection.plot(
-                    img=img, copy=False, color=color, thickness=thickness, key_points=key_points
+                    img=img,
+                    copy=False,
+                    color=color,
+                    thickness=thickness,
+                    key_points=key_points,
                 )
             else:
                 for detection in self.detections:
                     img = detection.plot(
-                        img=img, copy=False, color=color, thickness=thickness, key_points=key_points
+                        img=img,
+                        copy=False,
+                        color=color,
+                        thickness=thickness,
+                        key_points=key_points,
                     )
             return img
 
@@ -168,7 +176,7 @@ class Detector(ABC):
             raise ValueError("Image must be non-empty")
 
         if not isinstance(min_dims, BoxDimensions):
-            raise TypeError("Min dims must be a valid BoxDimensions object")
+            raise TypeError("Min dims must be a valid BoxDimensions class object")
 
         if not isinstance(min_confidence, float):
             raise TypeError("Min confidence must be a valid float")
@@ -205,37 +213,50 @@ class Detector(ABC):
         return "fastmtcnn"
 
     @staticmethod
-    def instance(name: Optional[str] = None, singleton: bool = True) -> "Detector":
+    def instance(
+        name_or_inst: Optional[Union[str, "Detector"]] = None,
+        singleton: bool = True,
+    ) -> "Detector":
         """
-        `Detector` factory method.
+        `Detector` "lazy" factory method.
 
-        Args:
-            `name (str)`: The name of the detector to instantiate
+        Params:
+        -------
+            `name_or_inst`: A string representing the name of the detector to instantiate
+              or an instance of a `Detector` subclass. If None, the default detector will be used
+
             `singleton (bool)`: If True, the same instance will be returned
 
-        Return:
+        Returns:
+        --------
             An instance of the `Detector` subclass matching the given name
 
         Raises:
+        -------
             `TypeError`: If the name or singleton arguments are not of the expected type
             `ValueError`: If the detector name empty
             `NotImplementedError`: If the detector name is unknown
             'ImportError': If the detector instance cannot be instantiated
         """
-        if name is None:
-            name = Detector.get_default()
-        elif not isinstance(name, str):
+
+        if name_or_inst is None:
+            name_or_inst = Detector.get_default()
+
+        if isinstance(name_or_inst, Detector):
+            return name_or_inst
+
+        if not isinstance(name_or_inst, str):
             raise TypeError(
-                f"Invalid 'name' argument type [{type(name).__name__}] : expected str"
+                f"Invalid 'id' argument type [{type(name_or_inst).__name__}] : expected str"
             )
         if not isinstance(singleton, bool):
             raise TypeError(
                 f"Invalid 'singleton' argument type [{type(singleton).__name__}] : expected bool"
             )
 
-        name = name.lower().strip()
-        if len(name) == 0:
-            name = Detector.get_default()
+        name_or_inst = name_or_inst.lower().strip()
+        if len(name_or_inst) == 0:
+            name_or_inst = Detector.get_default()
 
         global detectors_instances  # singleton design pattern
         if not "detectors_instances" in globals():
@@ -247,26 +268,28 @@ class Detector(ABC):
                 package=detectors, base_class=Detector
             )
 
-        if name not in available_detectors.keys():
-            raise NotImplementedError(f"Unknown detector [{name}]")
+        if name_or_inst not in available_detectors.keys():
+            raise NotImplementedError(f"Unknown detector [{name_or_inst}]")
 
         tic = time.time()
         try:
             if not singleton:
-                instance = available_detectors[name]()
+                instance = available_detectors[name_or_inst]()
                 logger.debug(
-                    f"Instantiated detector [{name}] ({time.time() - tic:.3f} seconds)"
+                    f"Instantiated detector [{name_or_inst}] ({time.time() - tic:.3f} seconds)"
                 )
             else:
-                if name not in detectors_instances.keys():
-                    detectors_instances[name] = available_detectors[name]()
+                if name_or_inst not in detectors_instances.keys():
+                    detectors_instances[name_or_inst] = available_detectors[
+                        name_or_inst
+                    ]()
                     logger.debug(
-                        f"Instantiated detector [{name}] ({time.time() - tic:.3f} seconds)"
+                        f"Instantiated detector [{name_or_inst}] ({time.time() - tic:.3f} seconds)"
                     )
-                instance = detectors_instances[name]
+                instance = detectors_instances[name_or_inst]
         except Exception as ex:
             logger.critical(
-                f"{type(ex).__name__} on detector [{name}] Error: {ex.args}"
+                f"{type(ex).__name__} on detector [{name_or_inst}] Error: {ex.args}"
             )
             raise ex
 
