@@ -1,11 +1,8 @@
-# built-in dependencies
 from typing import Any, Dict, Optional, List, Union
 
-# 3rd party dependencies
 import numpy
 import cv2
 
-# project dependencies
 from deepface.modules import detection
 from deepface.core import imgutils
 from deepface.core.extractor import Extractor

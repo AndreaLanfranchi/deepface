@@ -48,7 +48,7 @@ def detect_faces(
 
 
 def batch_detect_faces(
-    imgs: Union[List[str], numpy.ndarray],
+    imgs: Union[str, List[str], numpy.ndarray],
     detector: Union[str, Detector] = Detector.get_default(),
     min_dims: BoxDimensions = BoxDimensions(25, 25),
 ) -> List[Detector.Results]:
@@ -92,9 +92,11 @@ def batch_detect_faces(
     if isinstance(imgs, list):
         if len(imgs) == 0:
             raise ValueError("Empty list of images for batch processing")
-        if not all(isinstance(img, str) for img in imgs):
-            raise ValueError("Expected list of strings for batch processing")
         for item in tqdm(imgs, ascii=True, desc="Batch detecting"):
+            if not isinstance(item, str):
+                continue
+            if not imgutils.is_valid_image_file(item):
+                continue
             results.append(
                 detect_faces(item, detector=detector_instance, min_dims=min_dims)
             )

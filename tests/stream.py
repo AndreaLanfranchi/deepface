@@ -1,4 +1,4 @@
-from deepface import DeepFace
+#from deepface import DeepFace
 
 # Sample code to run the stream function using a network camera
 # DeepFace.stream(db_path="dataset",
@@ -10,10 +10,15 @@ from deepface import DeepFace
 #                 )
 
 # Sample code to run the stream function using onboard camera
-DeepFace.stream(db_path="dataset",
-                extractor="openface",
-                faces_count_threshold = 2,
-                freeze_time_seconds = 2,
-                valid_frames_count = 2,
-                source = 0 # 0 for onboard camera
-                )
+# DeepFace.stream(db_path="dataset",
+#                 extractor="openface",
+#                 faces_count_threshold = 2,
+#                 freeze_time_seconds = 2,
+#                 valid_frames_count = 2,
+#                 source = 0 # 0 for onboard camera
+#                 )
+
+from deepface.modules import detection
+
+r = detection.batch_detect_faces(imgs=".")
+print(r)

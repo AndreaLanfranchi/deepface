@@ -323,7 +323,10 @@ def normalize_input(img: numpy.ndarray, mode: str = "base") -> numpy.ndarray:
         NotImplementedError: if the normalization technique is not implemented.
     """
 
-    if not isinstance(img, numpy.ndarray):
+    if img.ndim == 4:
+        img = img[0]
+
+    if not is_valid_image(img):
         what: str = "Invalid input image type. Expected numpy.ndarray, "
         what += f"got {type(img)}"
         raise TypeError(what)
@@ -332,9 +335,6 @@ def normalize_input(img: numpy.ndarray, mode: str = "base") -> numpy.ndarray:
         what: str = 'Invalid "mode" type. Expected str, '
         what += f"got {type(mode)}"
         raise TypeError(what)
-
-    if img.ndim == 4:
-        img = img[0]
 
     # issue 131 declares that some normalization techniques improves the accuracy
 
