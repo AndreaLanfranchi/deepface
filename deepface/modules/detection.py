@@ -1,5 +1,6 @@
-from typing import List, Union
+from typing import List, Optional, Union
 
+import os
 import numpy
 from tqdm import tqdm
 
@@ -52,7 +53,7 @@ def batch_detect_faces(
     min_dims: BoxDimensions = BoxDimensions(25, 25),
 ) -> List[Detector.Results]:
     """
-    Detect faces in a batch of images   
+    Detect faces in a batch of images
 
     Args:
     -----
@@ -81,7 +82,16 @@ def batch_detect_faces(
                 detect_faces(imgs[i], detector=detector_instance, min_dims=min_dims)
             )
 
+    if isinstance(imgs, str):
+        if os.path.isfile(imgs):
+            imgs = [imgs,]
+        elif os.path.isdir(imgs):
+            file_list = imgutils.get_all_valid_files(imgs, recurse=True)
+            imgs = file_list
+
     if isinstance(imgs, list):
+        if len(imgs) == 0:
+            raise ValueError("Empty list of images for batch processing")
         if not all(isinstance(img, str) for img in imgs):
             raise ValueError("Expected list of strings for batch processing")
         for item in tqdm(imgs, ascii=True, desc="Batch detecting"):

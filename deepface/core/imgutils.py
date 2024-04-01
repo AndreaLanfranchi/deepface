@@ -1,4 +1,4 @@
-from typing import Tuple, Union
+from typing import List, Tuple, Union
 
 import base64
 import re
@@ -48,6 +48,45 @@ def is_valid_image(img: numpy.ndarray) -> bool:
     return True
 
 
+def is_valid_image_file(filename: str) -> bool:
+    """
+    Check if the image file is valid
+
+    Params:
+    -------
+    filename: str
+        Image file to check
+
+    Returns:
+    --------
+    bool
+        True if the image file is valid, False otherwise
+
+    Raises:
+    -------
+        FileNotFoundError
+    """
+
+    if not isinstance(filename, str):
+        return False
+
+    # TODO: check if the file is a valid image file
+    # using the magic number of the file
+    # as the file extension is not a reliable way to check
+    _, ext = os.path.splitext(filename)
+    ext = ext.lower()
+    if not ext in [".jpg", ".jpeg", ".png"]:
+        return False
+
+    if not os.path.isfile(filename):
+        raise FileNotFoundError(f"File {filename} does not exist")
+
+    if os.path.getsize(filename) == 0:
+        raise ValueError(f"File {filename} is empty")
+
+    return True
+
+
 def is_grayscale_image(img: numpy.ndarray) -> bool:
     """
     Check if the image is in grayscale
@@ -89,6 +128,40 @@ _base64_pattern = re.compile(r"^data:image\/.*", re.IGNORECASE)
 _base64_pattern_ext = re.compile(
     r"^data:image\/(jpeg|jpg|png)?(;base64)$", re.IGNORECASE
 )
+
+
+def get_all_valid_files(directory: str, recurse: bool = True) -> List[str]:
+    """
+    Get all valid image files in a directory.
+
+    Args:
+    -----
+        directory: the directory to search for image files
+        recurse: whether to search recursively or not
+
+    Returns:
+    --------
+        A list of valid image files
+
+    Raises:
+    -------
+        FileNotFoundError: if the directory does not exist
+    """
+
+    if not os.path.isdir(directory):
+        raise FileNotFoundError(f"Directory {directory} does not exist")
+
+    valid_files = []
+    for root, _, files in os.walk(directory):
+        for file in files:
+            file_path = os.path.join(root, file)
+            if is_valid_image_file(file_path):
+                valid_files.append(file_path)
+
+        if not recurse:
+            break
+
+    return valid_files
 
 
 def load_image(source: Union[str, numpy.ndarray]) -> Tuple[numpy.ndarray, str]:
@@ -148,6 +221,8 @@ def load_image(source: Union[str, numpy.ndarray]) -> Tuple[numpy.ndarray, str]:
         if not is_valid_image(source):
             raise ValueError("Invalid image")
         return (source, f"{type(source)}")
+
+    raise TypeError("Invalid source type. Expected str or numpy.ndarray.")
 
 
 def _load_image_from_web(url: str) -> numpy.ndarray:
@@ -223,16 +298,8 @@ def _load_image_from_file(filename: str) -> numpy.ndarray:
 
     """
 
-    # TODO : use file magic to determine the file type
-    # as the extension can be easily manipulated
-    _, ext = os.path.splitext(filename)
-    ext = ext.lower()
-    if not ext in [".jpg", ".jpeg", ".png"]:
-        raise ValueError(f"Unsupported file type {ext}")
-    if not os.path.isfile(filename):
-        raise FileNotFoundError(f"File {filename} does not exist")
-    if os.path.getsize(filename) == 0:
-        raise ValueError(f"File {filename} is empty")
+    if not is_valid_image_file(filename):
+        raise ValueError("Invalid image file")
 
     return cv2.imread(filename)
 

@@ -9,6 +9,7 @@ from deepface.commons.logger import Logger
 
 logger = Logger.get_instance()
 
+
 def get_derived_classes(package: Any, base_class: type) -> Dict[str, type]:
     """
     Get classes inheriting from base_class in module.
@@ -18,13 +19,13 @@ def get_derived_classes(package: Any, base_class: type) -> Dict[str, type]:
     for _, module_name, _ in pkgutil.walk_packages(package.__path__):
 
         try:
-            
+
             if module_name.startswith("_"):
-                continue # Means it is a private module but for this
+                continue  # Means it is a private module but for this
                 # case, I consider it as "skipped" module
 
             module = importlib.import_module(name=f"{package.__name__}.{module_name}")
-            
+
         except MissingDependencyError as ex:
             what: str = (
                 f"Skipping module [{module_name}] from package {package.__path__}"

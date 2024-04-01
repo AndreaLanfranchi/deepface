@@ -6,7 +6,8 @@ import numpy
 import cv2
 
 # project dependencies
-from deepface.modules import detection, preprocessing
+from deepface.modules import detection
+from deepface.core import imgutils
 from deepface.core.extractor import Extractor
 
 
@@ -67,7 +68,7 @@ def represent(
         )
     else:  # skip
         # Try load. If load error, will raise exception internal
-        img, _ = preprocessing.load_image(img_path)
+        img, _ = imgutils.load_image(img_path)
         # --------------------------------
         if len(img.shape) == 4:
             img = img[0]  # e.g. (1, 224, 224, 3) to (224, 224, 3)
@@ -93,7 +94,7 @@ def represent(
         region = img_obj["facial_area"]
         confidence = img_obj["confidence"]
         # custom normalization
-        img = preprocessing.normalize_input(img=img, mode=normalization)
+        img = imgutils.normalize_input(img=img, mode=normalization)
 
         embedding = model.process(img)
 
