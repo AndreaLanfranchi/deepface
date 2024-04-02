@@ -20,7 +20,7 @@
 #     source=0,  # 0 for onboard camera
 # )
 
-from deepface.modules import detection
+from deepface.infra import detection
 
 results_list = detection.batch_detect_faces(inputs=".", detector="yunet")
 total_faces = int(0)

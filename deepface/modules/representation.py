@@ -3,7 +3,7 @@ from typing import Any, Dict, Optional, List, Union
 import numpy
 import cv2
 
-from deepface.modules import detection
+from deepface.infra import detection
 from deepface.core import imgutils
 from deepface.core.extractor import Extractor
 

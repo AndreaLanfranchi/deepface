@@ -6,7 +6,8 @@ from typing import Any, Dict, Optional, Union
 import numpy
 
 # project dependencies
-from deepface.modules import representation, detection
+from deepface.infra import detection
+from deepface.modules import representation
 from deepface.core.extractor import Extractor
 
 

@@ -6,6 +6,7 @@ import os
 import binascii
 import requests
 
+from PIL import Image
 import numpy
 import cv2
 
@@ -48,41 +49,53 @@ def is_valid_image(img: numpy.ndarray) -> bool:
     return True
 
 
-def is_valid_image_file(filename: str) -> bool:
+def is_valid_image_file(filename: str, check_ext: bool = False) -> bool:
     """
     Check if the image file is valid
 
     Params:
     -------
-    filename: str
-        Image file to check
+    `filename`: str Image file to test
+    `check_ext`: bool Check the file extension. This further checks the
+    file extension to be one of the supported image types. Default is False
+    Note: image type is checked using the `imghdr` module
 
     Returns:
     --------
-    bool
-        True if the image file is valid, False otherwise
+    True if the image file is valid, False otherwise
 
     Raises:
     -------
-        FileNotFoundError
+    `TypeError` : If filename is not a string
+    `ValueError` : If filename is not a string or is empty
     """
 
     if not isinstance(filename, str):
-        return False
+        raise TypeError("Filename must be a string")
 
-    # TODO: check if the file is a valid image file
-    # using the magic number of the file
-    # as the file extension is not a reliable way to check
-    _, ext = os.path.splitext(filename)
-    ext = ext.lower()
-    if not ext in [".jpg", ".jpeg", ".png"]:
+    filename = filename.strip()
+    if len(filename) == 0:
         return False
 
     if not os.path.isfile(filename):
-        raise FileNotFoundError(f"File {filename} does not exist")
+        return False
 
-    if os.path.getsize(filename) == 0:
-        raise ValueError(f"File {filename} is empty")
+    if 0 == os.path.getsize(filename):
+        return False
+
+    try:
+        with Image.open(filename) as img:
+            if not img.verify():
+                return False
+            if img.format not in ["JPEG", "PNG"]:
+                return False
+    except Exception:
+        return False
+
+    if check_ext:
+        _, ext = os.path.splitext(filename)
+        if not ext.lower() in [".jpg", ".jpeg", ".png"]:
+            return False
 
     return True
 
@@ -130,23 +143,32 @@ _base64_pattern_ext = re.compile(
 )
 
 
-def get_all_valid_files(directory: str, recurse: bool = True) -> List[str]:
+def get_all_image_files(directory: str, recurse: bool = True) -> List[str]:
     """
     Get all valid image files in a directory.
 
     Args:
     -----
-        directory: the directory to search for image files
-        recurse: whether to search recursively or not
+    `directory`: the directory to search for image files. An empty string
+    defaults to the current working directory (same as ".")
+    `recurse`: whether to search recursively
 
     Returns:
     --------
-        A list of valid image files
+    A list of valid image file names
 
     Raises:
     -------
-        FileNotFoundError: if the directory does not exist
+    TypeError: if the directory argument is not a string
+    `FileNotFoundError`: if the directory does not exist
     """
+
+    if not isinstance(directory, str):
+        raise TypeError("Directory must be a string")
+
+    directory = directory.strip()
+    if len(directory) == 0:
+        directory = os.getcwd()
 
     if not os.path.isdir(directory):
         raise FileNotFoundError(f"Directory {directory} does not exist")
@@ -157,7 +179,6 @@ def get_all_valid_files(directory: str, recurse: bool = True) -> List[str]:
             file_path = os.path.join(root, file)
             if is_valid_image_file(file_path):
                 valid_files.append(file_path)
-
         if not recurse:
             break
 
@@ -180,7 +201,7 @@ def load_image(
         - if the source is an Url, the tag will be the Url itself
         - if the source is a base64 string, the tag will be "base64"
         - if the source is a numpy array, the tag will be the type of the array
-        
+
 
     Returns:
     --------
@@ -196,7 +217,7 @@ def load_image(
         FileNotFoundError: if the input is a path and the file does not exist
     """
 
-    if source is None or not isinstance(source,(str, numpy.ndarray)):
+    if source is None or not isinstance(source, (str, numpy.ndarray)):
         what: str = "Invalid source. Expected [str | numpy.ndarray] "
         what += f"got {type(source)}"
         raise TypeError(what)
@@ -238,7 +259,7 @@ def load_image(
         what: str = "Invalid image from "
         what += f"{tag}"
         raise ValueError("Invalid image from web")
-    
+
     return (loaded_image, tag if tag is not None else "<unknown>")
 
 

@@ -6,7 +6,7 @@ import numpy
 from tqdm import tqdm
 from deepface.core.analyzer import Analyzer
 
-from deepface.modules import detection
+from deepface.infra import detection
 from deepface.commons.logger import Logger
 
 logger = Logger.get_instance()

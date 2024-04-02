@@ -12,7 +12,8 @@ from tqdm import tqdm
 from deepface.commons.logger import Logger
 from deepface.core.detector import Detector
 from deepface.core.extractor import Extractor
-from deepface.modules import representation, detection, verification
+from deepface.infra import detection
+from deepface.modules import representation, verification
 
 logger = Logger.get_instance()
 

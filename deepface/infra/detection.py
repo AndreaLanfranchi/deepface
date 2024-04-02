@@ -130,7 +130,7 @@ def batch_detect_faces(
         if os.path.isfile(source):
             files.append(source)
         elif os.path.isdir(source):
-            file_list = imgutils.get_all_valid_files(source, recurse=recurse)
+            file_list = imgutils.get_all_image_files(source, recurse=recurse)
             files.extend(file_list)
 
     for file in tqdm(files, ascii=True, desc="Batch detecting"):

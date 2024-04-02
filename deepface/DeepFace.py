@@ -15,12 +15,12 @@ from deepface.core.extractor import Extractor
 
 
 from deepface.commons.logger import Logger
+from deepface.infra import detection
 from deepface.modules import (
     representation,
     verification,
     recognition,
     demography,
-    detection,
     streaming,
 )
 from deepface import __version__
