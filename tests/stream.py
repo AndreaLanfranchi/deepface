@@ -22,7 +22,7 @@
 
 from deepface.modules import detection
 
-results_list = detection.batch_detect_faces(inputs=".", detector="ssd")
+results_list = detection.batch_detect_faces(inputs=".", detector="yunet")
 total_faces = int(0)
 for results in results_list:
     print(f"Detected {len(results)} face(s) in {results.tag}")

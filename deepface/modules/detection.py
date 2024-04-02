@@ -145,26 +145,4 @@ def batch_detect_faces(
             )
         )
 
-    # if isinstance(inputs, str):
-    #     if os.path.isfile(inputs):
-    #         inputs = [inputs,]
-    #     elif os.path.isdir(inputs):
-    #         file_list = imgutils.get_all_valid_files(inputs, recurse=True)
-    #         inputs = file_list
-
-    # if isinstance(inputs, list):
-    #     if len(inputs) == 0:
-    #         raise ValueError("Empty list of images for batch processing")
-    #     for item in tqdm(inputs, ascii=True, desc="Batch detecting"):
-    #         if not isinstance(item, str):
-    #             continue
-    #         # TODO: if the following raises decide whether the skip the
-    #         # offending image or let the exception to pop up
-    #         file_name:str = item.strip()
-    #         if not imgutils.is_valid_image_file(filename=file_name):
-    #             continue
-    #         results.append(
-    #             detect_faces(item, detector=detector_instance, min_dims=min_dims)
-    #         )
-
     return results
