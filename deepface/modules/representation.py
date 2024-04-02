@@ -57,7 +57,7 @@ def represent(
     target_size = model.input_shape
     if detector != "donotdetect":
         img_objs = detection.detect_faces(
-            img=img_path,
+            inp=img_path,
             target_size=(target_size[1], target_size[0]),
             detector=detector,
             grayscale=False,

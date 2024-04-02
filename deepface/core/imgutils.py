@@ -1,4 +1,4 @@
-from typing import List, Tuple, Union
+from typing import List, Optional, Tuple, Union
 
 import base64
 import re
@@ -39,7 +39,7 @@ def is_valid_image(img: numpy.ndarray) -> bool:
         return False
 
     if img.ndim == 3:
-        if img.shape[2] not in [1, 3]:  # grayscale or BGR
+        if img.shape[2] not in [1, 3]:  # grayscale or BGR/RGB
             return False
     else:
         if not numpy.issubdtype(img.dtype, numpy.uint8):
@@ -164,19 +164,29 @@ def get_all_valid_files(directory: str, recurse: bool = True) -> List[str]:
     return valid_files
 
 
-def load_image(source: Union[str, numpy.ndarray]) -> Tuple[numpy.ndarray, str]:
+def load_image(
+    source: Union[str, numpy.ndarray],
+    tag: Optional[str] = None,
+) -> Tuple[numpy.ndarray, str]:
     """
     Load image from path, url, base64 or numpy array.
 
     Args:
     -----
-        source: the origin of image data to be loaded
+        `source`: the origin of image data to be loaded
+
+        `tag`: a tag to be returned with the image
+        If none the returned tag will be determined as follows:
+        - if the source is an Url, the tag will be the Url itself
+        - if the source is a base64 string, the tag will be "base64"
+        - if the source is a numpy array, the tag will be the type of the array
+        
 
     Returns:
     --------
         A tuple of :\n
-        image (numpy array): the loaded image in BGR format\n
-        name (str): image name itself\n
+        `numpy.ndarray`: the loaded image in BGR format\n
+        `str`: image tag\n
 
     Raises:
     -------
@@ -186,11 +196,16 @@ def load_image(source: Union[str, numpy.ndarray]) -> Tuple[numpy.ndarray, str]:
         FileNotFoundError: if the input is a path and the file does not exist
     """
 
-    if source is None:
-        raise TypeError("Invalid source. None type.")
+    if source is None or not isinstance(source,(str, numpy.ndarray)):
+        what: str = "Invalid source. Expected [str | numpy.ndarray] "
+        what += f"got {type(source)}"
+        raise TypeError(what)
+    if tag is not None and not isinstance(tag, str):
+        what: str = 'Invalid "tag" type. Expected [str | None], '
+        what += f"got {type(tag)}"
+        raise TypeError(what)
 
     loaded_image: numpy.ndarray = numpy.array([])
-    tag: str = ""
 
     if isinstance(source, str):
         origin: str = str(source.strip())
@@ -198,10 +213,12 @@ def load_image(source: Union[str, numpy.ndarray]) -> Tuple[numpy.ndarray, str]:
             raise ValueError("Invalid source. Empty string.")
         if _http_pattern.match(origin):
             loaded_image = _load_image_from_web(url=origin)
-            tag = "web"
+            if tag is None:
+                tag = "web"
         elif _base64_pattern.match(origin):
             loaded_image = _load_base64(uri=origin)
-            tag = "base64"
+            if tag is None:
+                tag = "base64"
         else:
             # TODO : this is still unsafe as there are many other ways to
             # express the source of image to be loaded.
@@ -209,20 +226,20 @@ def load_image(source: Union[str, numpy.ndarray]) -> Tuple[numpy.ndarray, str]:
             # as a result bailing out to a filesystem load might be
             # an issue
             loaded_image = _load_image_from_file(filename=origin)
-            tag = f"file {origin}"
-
-        if not is_valid_image(loaded_image):
-            what: str = "Invalid image from "
-            what += f"{tag}"
-            raise ValueError("Invalid image from web")
-        return (loaded_image, tag)
+            if tag is None:
+                tag = origin
 
     if isinstance(source, numpy.ndarray):
-        if not is_valid_image(source):
-            raise ValueError("Invalid image")
-        return (source, f"{type(source)}")
+        loaded_image = source
+        if tag is None:
+            tag = f"{type(source)}"
 
-    raise TypeError("Invalid source type. Expected str or numpy.ndarray.")
+    if not is_valid_image(loaded_image):
+        what: str = "Invalid image from "
+        what += f"{tag}"
+        raise ValueError("Invalid image from web")
+    
+    return (loaded_image, tag if tag is not None else "<unknown>")
 
 
 def _load_image_from_web(url: str) -> numpy.ndarray:

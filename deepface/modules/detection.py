@@ -10,9 +10,10 @@ from deepface.core.types import BoxDimensions
 
 
 def detect_faces(
-    img: Union[str, numpy.ndarray],
+    inp: Union[str, numpy.ndarray],
     tag: Optional[str] = None,
     detector: Optional[Union[str, Detector]] = None,
+    min_confidence: Optional[float] = None,
     min_dims: Optional[BoxDimensions] = None,
     raise_notfound: bool = False,
 ) -> Detector.Results:
@@ -21,7 +22,7 @@ def detect_faces(
 
     Args:
     -----
-        img: image path or numpy array
+        input: image path or numpy array
         detector: detector instance or string
         min_dims: minimum dimensions for detected faces
         raise_notfound: raise exception if no faces are detected
@@ -38,7 +39,7 @@ def detect_faces(
     """
 
     detector_instance = Detector.instance(detector)
-    returned_img, returned_tag = imgutils.load_image(img)
+    returned_img, returned_tag = imgutils.load_image(inp)
     if tag is not None:
         if not isinstance(tag, str):
             tag = str(tag).strip()
@@ -46,6 +47,7 @@ def detect_faces(
     results: Detector.Results = detector_instance.process(
         img=returned_img,
         tag=returned_tag,
+        min_confidence=min_confidence,
         min_dims=min_dims,
         raise_notfound=raise_notfound,
     )
@@ -53,67 +55,120 @@ def detect_faces(
 
 
 def batch_detect_faces(
-    imgs: Union[str, List[str], numpy.ndarray],
+    inputs: Union[str, List[str], numpy.ndarray],
     detector: Optional[Union[str, Detector]] = None,
+    min_confidence: Optional[float] = None,
     min_dims: Optional[BoxDimensions] = None,
+    recurse: bool = True,
 ) -> List[Detector.Results]:
     """
     Detect faces in a batch of images
 
     Args:
     -----
-        imgs: list of image paths or numpy arrays
-        detector: detector instance or string
-        min_dims: minimum dimensions for detected faces
+        `inputs`: list of image paths or numpy arrays\n
+        In case of numpy arrays, the input should be a 4D array\n
+        In case of strings the behavior is the following:
+        - if the string is a file, it is considered an image file
+        - if the string is a directory, all valid image files in the
+          directory are considered
+      
+        `detector`: detector instance or name. If None, the default detector
+        is assumed
+
+        `min_confidence`: minimum confidence for detected faces. If None, the
+        default confidence typical for the detector is assumed
+
+        `min_dims`: minimum dimensions for detected faces
 
     Returns:
     --------
-        list of detection results
+        A list of `Detector.Results` class instances
 
     Raises:
     -------
-        ValueError: if the input is invalid
+        `ValueError`: if the input is invalid
+
         Any other exceptions raised by the detector or image loading
         functions
     """
+
+    if inputs is None:
+        raise ValueError("inputs cannot be None")
+
     detector_instance = Detector.instance(detector)
     results: List[Detector.Results] = []
 
-    if isinstance(imgs, numpy.ndarray):
-        if not imgs.ndim == 4:
+    if isinstance(inputs, numpy.ndarray):
+        if not inputs.ndim == 4:
             raise ValueError("Expected 4D array for batch processing")
-        for i in tqdm(range(imgs.shape[0]), ascii=True, desc="Batch detecting"):
+        for i in tqdm(range(inputs.shape[0]), ascii=True, desc="Batch detecting"):
             # TODO: if the following raises decide whether the skip the
             # offending image or let the exception to pop up
             results.append(
                 detect_faces(
-                    imgs[i],
-                    tag=str(i),
+                    inputs[i],
+                    tag= f"{i}/{inputs.shape[0]}",
                     detector=detector_instance,
+                    min_confidence=min_confidence,
                     min_dims=min_dims,
+                    raise_notfound=False, # Don't want an exception here
                 )
             )
 
-    if isinstance(imgs, str):
-        if os.path.isfile(imgs):
-            imgs = [imgs,]
-        elif os.path.isdir(imgs):
-            file_list = imgutils.get_all_valid_files(imgs, recurse=True)
-            imgs = file_list
+        return results
 
-    if isinstance(imgs, list):
-        if len(imgs) == 0:
-            raise ValueError("Empty list of images for batch processing")
-        for item in tqdm(imgs, ascii=True, desc="Batch detecting"):
-            if not isinstance(item, str):
-                continue
-            # TODO: if the following raises decide whether the skip the
-            # offending image or let the exception to pop up
-            file_name:str = item.strip()
-            if not imgutils.is_valid_image_file(filename=file_name):
-                continue
-            results.append(
-                detect_faces(item, detector=detector_instance, min_dims=min_dims)
+    sources:List[str] = []
+    if not isinstance(inputs, list):
+        sources = [str(inputs),]
+    else:
+        sources = inputs
+
+    if len(sources) == 0:
+        raise ValueError("Empty list of images for batch processing")
+
+    files:List[str] = []
+    for source in sources:
+        if not isinstance(source, str):
+            continue
+        if os.path.isfile(source):
+            files.append(source)
+        elif os.path.isdir(source):
+            file_list = imgutils.get_all_valid_files(source, recurse=recurse)
+            files.extend(file_list)
+
+    for file in tqdm(files, ascii=True, desc="Batch detecting"):
+        file_name:str = file.strip()
+        results.append(
+            detect_faces(
+                inp=file_name,
+                tag=file_name,
+                detector=detector_instance,
+                min_confidence=min_confidence,
+                min_dims=min_dims,
             )
+        )
+
+    # if isinstance(inputs, str):
+    #     if os.path.isfile(inputs):
+    #         inputs = [inputs,]
+    #     elif os.path.isdir(inputs):
+    #         file_list = imgutils.get_all_valid_files(inputs, recurse=True)
+    #         inputs = file_list
+
+    # if isinstance(inputs, list):
+    #     if len(inputs) == 0:
+    #         raise ValueError("Empty list of images for batch processing")
+    #     for item in tqdm(inputs, ascii=True, desc="Batch detecting"):
+    #         if not isinstance(item, str):
+    #             continue
+    #         # TODO: if the following raises decide whether the skip the
+    #         # offending image or let the exception to pop up
+    #         file_name:str = item.strip()
+    #         if not imgutils.is_valid_image_file(filename=file_name):
+    #             continue
+    #         results.append(
+    #             detect_faces(item, detector=detector_instance, min_dims=min_dims)
+    #         )
 
     return results

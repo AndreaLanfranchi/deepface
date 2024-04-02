@@ -20,5 +20,5 @@
 
 from deepface.modules import detection
 
-r = detection.batch_detect_faces(imgs=".")
+r = detection.batch_detect_faces(inputs=".", detector="opencv")
 print(r)

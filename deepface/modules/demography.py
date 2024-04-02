@@ -91,7 +91,7 @@ def analyze(
     results = []
 
     detected_faces = detection.detect_faces(
-        img=img_path,
+        inp=img_path,
         target_size=(224, 224),
         detector=detector,
         grayscale=False,

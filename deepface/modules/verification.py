@@ -80,7 +80,7 @@ def verify(
 
     # img pairs might have many faces
     img1_objs = detection.detect_faces(
-        img=img1_path,
+        inp=img1_path,
         target_size=target_size,
         detector=detector,
         grayscale=False,
@@ -88,7 +88,7 @@ def verify(
     )
 
     img2_objs = detection.detect_faces(
-        img=img2_path,
+        inp=img2_path,
         target_size=target_size,
         detector=detector,
         grayscale=False,

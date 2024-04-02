@@ -238,7 +238,7 @@ class Detector(ABC):
             `TypeError`: If the name or singleton arguments are not of the expected type
             `ValueError`: If the detector name empty
             `NotImplementedError`: If the detector name is unknown
-            'ImportError': If the detector instance cannot be instantiated
+            `ImportError`: If the detector instance cannot be instantiated
         """
 
         if name_or_inst is None:
