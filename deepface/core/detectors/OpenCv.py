@@ -27,6 +27,7 @@ class Detector(DetectorBase):
 
     def __init__(self):
         self._name = str(__name__.rsplit(".", maxsplit=1)[-1])
+        self._KDEFAULT_MIN_CONFIDENCE = float(0.8)
         self._initialize()
 
     def _initialize(self):
@@ -38,7 +39,7 @@ class Detector(DetectorBase):
         img: numpy.ndarray,
         tag: Optional[str] = None,
         min_dims: Optional[BoxDimensions] = None,
-        min_confidence: float = float(0.8), # See notes below
+        min_confidence: Optional[float] = None, # See notes below
         key_points: bool = True,
         raise_notfound: bool = False,
     ) -> DetectorBase.Results:
@@ -48,6 +49,12 @@ class Detector(DetectorBase):
 
         if min_dims is None:
             min_dims = BoxDimensions(width=0, height=0)
+        if min_confidence is None:
+            min_confidence = self._KDEFAULT_MIN_CONFIDENCE
+        if min_confidence < 0 or min_confidence > 1:
+            raise ValueError(
+                f"min_confidence must be in the range [0, 1]. Got {min_confidence}."
+            )
 
         detected_faces: List[DetectedFace] = []
         img_height, img_width = img.shape[:2]

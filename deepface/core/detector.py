@@ -23,6 +23,7 @@ class Detector(ABC):
     """
 
     _name: Optional[str] = None  # Must be filled by specialized classes
+    _KDEFAULT_MIN_CONFIDENCE: float = 0.0 #Every detector must define its own
 
     @dataclass(frozen=True)
     class Results:
@@ -129,13 +130,17 @@ class Detector(ABC):
             return "<undefined>"
         return self._name
 
+    @property
+    def default_min_confidence(self) -> float:
+        return self._KDEFAULT_MIN_CONFIDENCE
+
     @abstractmethod
     def process(
         self,
         img: numpy.ndarray,
         tag: Optional[str] = None,
         min_dims: Optional[BoxDimensions] = None,
-        min_confidence: float = float(0.0),
+        min_confidence: Optional[float] = None,
         key_points: bool = True,
         raise_notfound: bool = False,
     ) -> Results:
@@ -178,14 +183,11 @@ class Detector(ABC):
         if min_dims is not None and not isinstance(min_dims, BoxDimensions):
             raise TypeError("Min dims must be a valid BoxDimensions class object or None")
 
-        if not isinstance(min_confidence, float):
-            raise TypeError("Min confidence must be a valid float")
+        if min_confidence is not None and not isinstance(min_confidence, float):
+            raise TypeError("Min confidence must be a valid float or None")
 
         if not isinstance(raise_notfound, bool):
             raise TypeError("Raise not found must be a valid boolean")
-
-        if min_confidence < 0.0:
-            raise ValueError("Min confidence must be non-negative")
 
     @staticmethod
     def get_available_detectors() -> List[str]:
