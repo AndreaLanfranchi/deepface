@@ -44,7 +44,7 @@ class Detector(DetectorBase):
         self,
         img: numpy.ndarray,
         tag: Optional[str] = None,
-        min_dims: BoxDimensions = BoxDimensions(0, 0),
+        min_dims: Optional[BoxDimensions] = None,
         min_confidence: float = float(0.99),
         key_points: bool = True,
         raise_notfound: bool = False,
@@ -52,6 +52,10 @@ class Detector(DetectorBase):
 
         # Validation of inputs
         super().process(img, tag, min_dims, min_confidence, key_points, raise_notfound)
+
+        if min_dims is None:
+            min_dims = BoxDimensions(width=0, height=0)
+
         img_height, img_width = img.shape[:2]
         detected_faces: List[DetectedFace] = []
 

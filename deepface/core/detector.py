@@ -134,7 +134,7 @@ class Detector(ABC):
         self,
         img: numpy.ndarray,
         tag: Optional[str] = None,
-        min_dims: BoxDimensions = BoxDimensions(0, 0),
+        min_dims: Optional[BoxDimensions] = None,
         min_confidence: float = float(0.0),
         key_points: bool = True,
         raise_notfound: bool = False,
@@ -175,8 +175,8 @@ class Detector(ABC):
         if img.shape[0] == 0 or img.shape[1] == 0:
             raise ValueError("Image must be non-empty")
 
-        if not isinstance(min_dims, BoxDimensions):
-            raise TypeError("Min dims must be a valid BoxDimensions class object")
+        if min_dims is not None and not isinstance(min_dims, BoxDimensions):
+            raise TypeError("Min dims must be a valid BoxDimensions class object or None")
 
         if not isinstance(min_confidence, float):
             raise TypeError("Min confidence must be a valid float")

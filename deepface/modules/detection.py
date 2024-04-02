@@ -11,8 +11,9 @@ from deepface.core.types import BoxDimensions
 
 def detect_faces(
     img: Union[str, numpy.ndarray],
-    detector: Union[str, Detector] = Detector.get_default(),
-    min_dims: BoxDimensions = BoxDimensions(25, 25),
+    tag: Optional[str] = None,
+    detector: Optional[Union[str, Detector]] = None,
+    min_dims: Optional[BoxDimensions] = None,
     raise_notfound: bool = False,
 ) -> Detector.Results:
     """
@@ -37,10 +38,14 @@ def detect_faces(
     """
 
     detector_instance = Detector.instance(detector)
-    img, tag = imgutils.load_image(img)
+    returned_img, returned_tag = imgutils.load_image(img)
+    if tag is not None:
+        if not isinstance(tag, str):
+            tag = str(tag).strip()
+        returned_tag = f"{tag} ({returned_tag})"
     results: Detector.Results = detector_instance.process(
-        img,
-        tag=tag,
+        img=returned_img,
+        tag=returned_tag,
         min_dims=min_dims,
         raise_notfound=raise_notfound,
     )
@@ -49,8 +54,8 @@ def detect_faces(
 
 def batch_detect_faces(
     imgs: Union[str, List[str], numpy.ndarray],
-    detector: Union[str, Detector] = Detector.get_default(),
-    min_dims: BoxDimensions = BoxDimensions(25, 25),
+    detector: Optional[Union[str, Detector]] = None,
+    min_dims: Optional[BoxDimensions] = None,
 ) -> List[Detector.Results]:
     """
     Detect faces in a batch of images
@@ -78,8 +83,15 @@ def batch_detect_faces(
         if not imgs.ndim == 4:
             raise ValueError("Expected 4D array for batch processing")
         for i in tqdm(range(imgs.shape[0]), ascii=True, desc="Batch detecting"):
+            # TODO: if the following raises decide whether the skip the
+            # offending image or let the exception to pop up
             results.append(
-                detect_faces(imgs[i], detector=detector_instance, min_dims=min_dims)
+                detect_faces(
+                    imgs[i],
+                    tag=str(i),
+                    detector=detector_instance,
+                    min_dims=min_dims,
+                )
             )
 
     if isinstance(imgs, str):
@@ -95,7 +107,10 @@ def batch_detect_faces(
         for item in tqdm(imgs, ascii=True, desc="Batch detecting"):
             if not isinstance(item, str):
                 continue
-            if not imgutils.is_valid_image_file(item):
+            # TODO: if the following raises decide whether the skip the
+            # offending image or let the exception to pop up
+            file_name:str = item.strip()
+            if not imgutils.is_valid_image_file(filename=file_name):
                 continue
             results.append(
                 detect_faces(item, detector=detector_instance, min_dims=min_dims)
