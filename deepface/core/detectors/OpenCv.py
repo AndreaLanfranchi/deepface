@@ -72,7 +72,7 @@ class Detector(DetectorBase):
 
             # We normalize weight to [0, 1] range
             # considering an optimum value of 5.0
-            confidence = float(min(weight / 5.0, 1.0))
+            confidence = round(float(min(weight / 5.0, 1.0)), 5)
             if confidence < min_confidence:
                 continue
 

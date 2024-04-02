@@ -56,7 +56,7 @@ class Detector(DetectorBase):
         )
         for key in faces.keys():
             item: Dict[str, Any] = faces[key]
-            confidence = float(item["score"])
+            confidence = round(float(item["score"]), 5)
             if confidence < min_confidence:
                 continue
 

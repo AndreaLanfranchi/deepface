@@ -77,7 +77,7 @@ class Detector(DetectorBase):
 
         for box, prob, keypoints in zip(boxes, probs, keypoints_list):
 
-            confidence = float(prob)
+            confidence = round(float(prob), 5)
             if confidence < min_confidence:
                 continue  # Confidence too low
 

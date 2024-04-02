@@ -39,14 +39,10 @@ def detect_faces(
     """
 
     detector_instance = Detector.instance(detector)
-    returned_img, returned_tag = imgutils.load_image(inp)
-    if tag is not None:
-        if not isinstance(tag, str):
-            tag = str(tag).strip()
-        returned_tag = f"{tag} ({returned_tag})"
+    img, tag = imgutils.load_image(inp, tag=tag)
     results: Detector.Results = detector_instance.process(
-        img=returned_img,
-        tag=returned_tag,
+        img=img,
+        tag=tag,
         min_confidence=min_confidence,
         min_dims=min_dims,
         raise_notfound=raise_notfound,

@@ -38,7 +38,7 @@ class Detector(DetectorBase):
 
     def __init__(self):
         self._name = str(__name__.rsplit(".", maxsplit=1)[-1])
-        self._KDEFAULT_MIN_CONFIDENCE = float(0.4)
+        self._KDEFAULT_MIN_CONFIDENCE = float(0.2)
         self._initialize()
 
     def _initialize(self):
@@ -81,6 +81,7 @@ class Detector(DetectorBase):
             min_dims = BoxDimensions(width=0, height=0)
         if min_confidence is None:
             min_confidence = self._KDEFAULT_MIN_CONFIDENCE
+        if min_confidence < 0 or min_confidence > 1:
             raise ValueError(
                 f"min_confidence must be in the range [0, 1]. Got {min_confidence}."
             )
@@ -95,7 +96,9 @@ class Detector(DetectorBase):
 
         for rect, score in zip(rects, scores):
 
-            confidence = float(score)
+            # We normalize weight to [0, 1] range
+            # considering an optimum value of 2.5
+            confidence = round(float(min(score / 2.5, 1.0)), 5)
             if confidence < min_confidence:
                 continue
 

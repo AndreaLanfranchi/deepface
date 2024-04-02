@@ -123,7 +123,7 @@ class Detector(DetectorBase):
 
         for _, row in detections_df.iterrows():
 
-            confidence = float(row["confidence"])
+            confidence = round(float(row["confidence"]), 5)
             if min_confidence is not None and confidence < min_confidence:
                 continue
 

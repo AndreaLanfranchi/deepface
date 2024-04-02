@@ -105,7 +105,7 @@ class Detector(DetectorBase):
             if item.boxes is None:
                 continue
 
-            confidence = float(item.boxes.conf.tolist()[0])
+            confidence = round(float(item.boxes.conf.tolist()[0]), 5)
             if confidence < min_confidence:
                 continue
 

@@ -79,7 +79,7 @@ class Detector(DetectorBase):
                     continue
 
                 assert len(detection.score) == 1
-                confidence = float(round(detection.score[0], 2))
+                confidence = round(float(detection.score[0]), 5)
                 if confidence < min_confidence:
                     continue
 

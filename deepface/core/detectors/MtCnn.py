@@ -61,7 +61,7 @@ class Detector(DetectorBase):
         if detections is not None:
             for current_detection in detections:
 
-                confidence = float(current_detection["confidence"])
+                confidence = round(float(current_detection["confidence"]), 5)
                 if confidence < min_confidence:
                     continue
 

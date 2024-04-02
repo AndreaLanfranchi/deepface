@@ -54,7 +54,7 @@ class Detector(DetectorBase):
 
     def __init__(self):
         self._name = str(__name__.rsplit(".", maxsplit=1)[-1])
-        self._KDEFAULT_MIN_CONFIDENCE = float(0.91)
+        self._KDEFAULT_MIN_CONFIDENCE = float(0.9)
         self._initialize()
 
     def _initialize(self) -> Any:
@@ -113,7 +113,7 @@ class Detector(DetectorBase):
         if faces is not None:
             for face in faces:
 
-                confidence = float(face[-1])
+                confidence = round(float(face[-1]), 5)
                 if confidence < min_confidence:
                     continue  # Skip low confidence detections
 

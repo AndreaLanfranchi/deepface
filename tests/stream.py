@@ -1,5 +1,3 @@
-#from deepface import DeepFace
-
 # Sample code to run the stream function using a network camera
 # DeepFace.stream(db_path="dataset",
 #                 model_name="VGG-Face",
@@ -10,15 +8,26 @@
 #                 )
 
 # Sample code to run the stream function using onboard camera
-# DeepFace.stream(db_path="dataset",
-#                 extractor="openface",
-#                 faces_count_threshold = 2,
-#                 freeze_time_seconds = 2,
-#                 valid_frames_count = 2,
-#                 source = 0 # 0 for onboard camera
-#                 )
+# from deepface import DeepFace
+
+# DeepFace.stream(
+#     db_path="dataset",
+#     detector="mtcnn",
+#     extractor="openface",
+#     faces_count_threshold=2,
+#     freeze_time_seconds=2,
+#     valid_frames_count=2,
+#     source=0,  # 0 for onboard camera
+# )
 
 from deepface.modules import detection
 
-r = detection.batch_detect_faces(inputs=".", detector="opencv")
-print(r)
+results_list = detection.batch_detect_faces(inputs=".", detector="ssd")
+total_faces = int(0)
+for results in results_list:
+    print(f"Detected {len(results)} face(s) in {results.tag}")
+    for detection in results.detections:
+        print(f"Face detected at {detection.bounding_box.xywh} with confidence {detection.confidence}")
+    total_faces += len(results)
+
+print(f"Total faces detected: {total_faces}")
