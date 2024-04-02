@@ -14,14 +14,13 @@ logger = Logger.get_instance()
 
 
 # Abstract class all specialized face extractors must inherit from.
-# Creates the synthetic digital representation of a face.
+# Creates the synthetic digital representation of a detected face.
 # It is assumed the input picture is already a face previously detected.
 class Extractor(ABC):
     """
     Interface for digital face(s) representation.
     """
-
-    _name: str
+    _name: Optional[str] = None  # Must be filled by derived classes
     _input_shape: BoxDimensions
     _output_shape: int
 
@@ -105,7 +104,14 @@ class Extractor(ABC):
         return list(available_extractors.keys())
 
     @staticmethod
-    def get_default() -> str:
+    def default() -> str:
+        """
+        Get the default face extractor name.
+
+        Returns:
+        --------
+            A string
+        """
         return "VGGFace"
 
     @staticmethod
@@ -121,7 +127,7 @@ class Extractor(ABC):
             `name_or_inst`: A string representing the name of the extractor to instantiate
               or an instance of a `Extractor` subclass. If None, the default detector will be used
               
-            `singleton (bool)`: If True, the same instance will be returned
+            `singleton (bool)`: If True, the factory will return the same instance for the same name
 
         Returns:
         --------
@@ -134,13 +140,13 @@ class Extractor(ABC):
             `NotImplementedError`: If the detector name is unknown
             'ImportError': If the detector instance cannot be instantiated
         """
-        
+
         if name_or_inst is None:
-            name_or_inst = Extractor.get_default()
+            name_or_inst = Extractor.default()
 
         if isinstance(name_or_inst, Extractor):
             return name_or_inst
-    
+
         if not isinstance(name_or_inst, str):
             raise TypeError(
                 f"Invalid 'name' argument type [{type(name_or_inst).__name__}] : expected str"
@@ -152,7 +158,7 @@ class Extractor(ABC):
 
         name_or_inst = name_or_inst.lower().strip()
         if len(name_or_inst) == 0:
-            name_or_inst = Extractor.get_default()
+            name_or_inst = Extractor.default()
 
         global extractors_instances  # singleton design pattern
         if not "extractors_instances" in globals():

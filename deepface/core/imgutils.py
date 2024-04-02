@@ -83,19 +83,17 @@ def is_valid_image_file(filename: str, check_ext: bool = False) -> bool:
     if 0 == os.path.getsize(filename):
         return False
 
-    try:
-        with Image.open(filename) as img:
-            if not img.verify():
-                return False
-            if img.format not in ["JPEG", "PNG"]:
-                return False
-    except Exception:
-        return False
-
     if check_ext:
         _, ext = os.path.splitext(filename)
         if not ext.lower() in [".jpg", ".jpeg", ".png"]:
             return False
+        
+    try:
+        with Image.open(filename) as img:
+            if img.format not in ["JPEG", "PNG"]:
+                return False
+    except Exception:
+        return False
 
     return True
 
@@ -143,7 +141,11 @@ _base64_pattern_ext = re.compile(
 )
 
 
-def get_all_image_files(directory: str, recurse: bool = True) -> List[str]:
+def get_all_image_files(
+    directory: str,
+    recurse: bool = True,
+    check_ext: bool = False,
+) -> List[str]:
     """
     Get all valid image files in a directory.
 
@@ -177,7 +179,7 @@ def get_all_image_files(directory: str, recurse: bool = True) -> List[str]:
     for root, _, files in os.walk(directory):
         for file in files:
             file_path = os.path.join(root, file)
-            if is_valid_image_file(file_path):
+            if is_valid_image_file(file_path, check_ext=check_ext):
                 valid_files.append(file_path)
         if not recurse:
             break

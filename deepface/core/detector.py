@@ -22,7 +22,7 @@ class Detector(ABC):
     Detects face(s) in an image and returns the bounding box(es) and landmarks.
     """
 
-    _name: Optional[str] = None  # Must be filled by specialized classes
+    _name: Optional[str] = None  # Must be filled by derived classes
     _KDEFAULT_MIN_CONFIDENCE: float = 0.0 #Every detector must define its own
 
     @dataclass(frozen=True)
@@ -37,7 +37,8 @@ class Detector(ABC):
             assert isinstance(self.img, numpy.ndarray)
             assert self.tag is None or isinstance(self.tag, str)
             assert isinstance(self.detections, list)
-            if self.detector.strip() == "":
+            assert all(isinstance(d, DetectedFace) for d in self.detections)
+            if 0 == len(self.detector.strip()):
                 raise ValueError("Detector name must be non-empty")
 
         def __bool__(self):
@@ -48,7 +49,7 @@ class Detector(ABC):
 
         def plot(
             self,
-            index: Optional[int] = None,
+            items: Optional[Union[int, List[int]]] = None,
             copy: bool = False,
             color: Tuple[int, int, int] = KBGR_COLOR_BOUNDING_BOX,
             thickness: int = 2,
@@ -70,17 +71,35 @@ class Detector(ABC):
                 numpy.ndarray: The image with the detected faces plotted.
 
             Raises:
+                TypeError: If the index is not an integer
                 IndexError: If the index is out of bounds
             """
+
+            if items is None:
+                items = list(range(len(self.detections)))
+            elif isinstance(items, int):
+                items = [items,]
+            if isinstance(items, list):
+                for item in items:
+                    if not isinstance(item, int):
+                        what:str = "Invalid index type. Expected int "
+                        what += f"got {type(item).__name__}"
+                        raise TypeError(what)
+                    if item < 0 or item >= len(self.detections):
+                        raise IndexError("Out of bounds index")
+            else:
+                what:str = "Invalid [items] argument type. Expected [int | list of int | None] "
+                what += f"got {type(items).__name__}"
+                raise TypeError(what)
+                    
+
             if copy:
                 img = self.img.copy()
             else:
                 img = self.img
 
-            if index is not None:
-                if index < 0 or index >= len(self.detections):
-                    raise IndexError("Invalid index")
-                detection = self.detections[index]
+            for item in items:
+                detection = self.detections[item]
                 img = detection.plot(
                     img=img,
                     copy=False,
@@ -88,15 +107,7 @@ class Detector(ABC):
                     thickness=thickness,
                     key_points=key_points,
                 )
-            else:
-                for detection in self.detections:
-                    img = detection.plot(
-                        img=img,
-                        copy=False,
-                        color=color,
-                        thickness=thickness,
-                        key_points=key_points,
-                    )
+
             return img
 
         def crop_faces(self, index: Optional[int] = None) -> List[numpy.ndarray]:
@@ -205,12 +216,13 @@ class Detector(ABC):
         return list(available_detectors.keys())
 
     @staticmethod
-    def get_default() -> str:
+    def default() -> str:
         """
         Get the default face detector name.
 
         Returns:
-            The name of the default face detector.
+        --------
+            A string
         """
         return "fastmtcnn"
 
@@ -227,7 +239,7 @@ class Detector(ABC):
             `name_or_inst`: A string representing the name of the detector to instantiate
               or an instance of a `Detector` subclass. If None, the default detector will be used
 
-            `singleton (bool)`: If True, the same instance will be returned
+            `singleton (bool)`: If True, the factory will return the same instance for the same name
 
         Returns:
         --------
@@ -242,7 +254,7 @@ class Detector(ABC):
         """
 
         if name_or_inst is None:
-            name_or_inst = Detector.get_default()
+            name_or_inst = Detector.default()
 
         if isinstance(name_or_inst, Detector):
             return name_or_inst
@@ -258,7 +270,7 @@ class Detector(ABC):
 
         name_or_inst = name_or_inst.lower().strip()
         if len(name_or_inst) == 0:
-            name_or_inst = Detector.get_default()
+            name_or_inst = Detector.default()
 
         global detectors_instances  # singleton design pattern
         if not "detectors_instances" in globals():
