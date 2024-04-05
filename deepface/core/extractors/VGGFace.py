@@ -19,8 +19,8 @@ if tensorflow_version_major < 2:
 
 # pylint: disable=wrong-import-order
 # pylint: disable=wrong-import-position
-from keras.models import Model, Sequential
-from keras.layers import (
+from tensorflow.keras.models import Model, Sequential
+from tensorflow.keras.layers import (
     Convolution2D,
     ZeroPadding2D,
     MaxPooling2D,
@@ -28,6 +28,7 @@ from keras.layers import (
     Dropout,
     Activation,
 )
+
 # pylint: enable=wrong-import-position
 # pylint: enable=wrong-import-order
 
@@ -35,6 +36,8 @@ logger = Logger.get_instance()
 
 
 class Extractor(ExtractorBase):
+
+    _model: Model
 
     def __init__(self):
         self._name = str(__name__.rsplit(".", maxsplit=1)[-1])
