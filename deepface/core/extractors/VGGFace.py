@@ -53,9 +53,12 @@ class Extractor(ExtractorBase):
 
         super().process(img, face)
         img = self._to_required_shape(img, face)
+        img = numpy.expand_dims(img, axis=0)
         embedding = self._model(img, training=False).numpy()[0].tolist()
         embedding = verification.l2_normalize(embedding)
-        return embedding.tolist()
+        ret = embedding.tolist()
+        assert len(ret) == self._output_shape
+        return ret
 
     def _initialize(self):
 

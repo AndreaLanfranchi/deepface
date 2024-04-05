@@ -71,7 +71,9 @@ class Extractor(ExtractorBase):
 
         super().process(img, face)
         img = self._to_required_shape(img, face)
-        return self._model(img, training=False).numpy()[0].tolist()
+        ret = self._model(img, training=False).numpy()[0].tolist()
+        assert len(ret) == self._output_shape
+        return ret
 
 
 def _scaling(x, scale):
@@ -81,7 +83,7 @@ def _scaling(x, scale):
 def _conv2d(
     inp,
     filters: int,
-    kernel_size: list[int],
+    kernel_size: Union[int ,tuple],
     strides: int = int(1),
     padding: str = "same",
     use_bias: bool = False,
@@ -95,26 +97,26 @@ def _conv2d(
 
 
 def _stem_block(inp):
-    ret = _conv2d(inp, 32, [3], strides=2, padding="valid")
-    ret = _conv2d(ret, 32, [3], padding="valid")
-    ret = _conv2d(ret, 64, [3])
+    ret = _conv2d(inp, 32, 3, strides=2, padding="valid")
+    ret = _conv2d(ret, 32, 3, padding="valid")
+    ret = _conv2d(ret, 64, 3)
 
     ret = MaxPooling2D(3, strides=2)(ret)
 
-    ret = _conv2d(ret, 80, [1], padding="valid")
-    ret = _conv2d(ret, 192, [3], padding="valid")
-    ret = _conv2d(ret, 256, [3], strides=2, padding="valid")
+    ret = _conv2d(ret, 80, 1, padding="valid")
+    ret = _conv2d(ret, 192, 3, padding="valid")
+    ret = _conv2d(ret, 256, 3, strides=2, padding="valid")
 
     return ret
 
 
 def _inception_resnet_a_block(inp):
-    branch_0 = _conv2d(inp, 32, [1])
-    branch_1 = _conv2d(inp, 32, [1])
-    branch_1 = _conv2d(branch_1, 32, [3])
-    branch_2 = _conv2d(inp, 32, [1])
-    branch_2 = _conv2d(branch_2, 32, [3])
-    branch_2 = _conv2d(branch_2, 32, [3])
+    branch_0 = _conv2d(inp, 32, 1)
+    branch_1 = _conv2d(inp, 32, 1)
+    branch_1 = _conv2d(branch_1, 32, 3)
+    branch_2 = _conv2d(inp, 32, 1)
+    branch_2 = _conv2d(branch_2, 32, 3)
+    branch_2 = _conv2d(branch_2, 32, 3)
 
     mixed = Concatenate(axis=3)([branch_0, branch_1, branch_2])
     up = Conv2D(256, 1, strides=1, padding="same", use_bias=True)(mixed)
@@ -126,18 +128,18 @@ def _inception_resnet_a_block(inp):
 
 
 def _reduction_a_block(inp):
-    branch_0 = _conv2d(inp, 384, [3], strides=2, padding="valid")
-    branch_1 = _conv2d(inp, 192, [1])
-    branch_1 = _conv2d(branch_1, 192, [3])
-    branch_1 = _conv2d(branch_1, 256, [3], strides=2, padding="valid")
+    branch_0 = _conv2d(inp, 384, 3, strides=2, padding="valid")
+    branch_1 = _conv2d(inp, 192, 1)
+    branch_1 = _conv2d(branch_1, 192, 3)
+    branch_1 = _conv2d(branch_1, 256, 3, strides=2, padding="valid")
     branch_2 = MaxPooling2D(3, strides=2, padding="valid")(inp)
     return Concatenate(axis=3)([branch_0, branch_1, branch_2])
 
 
 def _inception_resnet_b_block(inp):
-    branch_0 = _conv2d(inp, 128, [1])
-    branch_1 = _conv2d(inp, 128, [1])
-    branch_1 = _conv2d(branch_1, 128, [1, 7])
+    branch_0 = _conv2d(inp, 128, 1)
+    branch_1 = _conv2d(inp, 128, 1)
+    branch_1 = _conv2d(branch_1, 128, (1, 7))
 
     mixed = Concatenate(axis=3)([branch_0, branch_1])
     up = Conv2D(896, 1, strides=1, padding="same", use_bias=True)(mixed)
@@ -149,22 +151,22 @@ def _inception_resnet_b_block(inp):
 
 
 def _reduction_b_block(inp):
-    branch_0 = _conv2d(inp, 256, [1])
-    branch_0 = _conv2d(branch_0, 384, [3], strides=2, padding="valid")
-    branch_1 = _conv2d(inp, 256, [1])
-    branch_1 = _conv2d(branch_1, 256, [3], strides=2, padding="valid")
-    branch_2 = _conv2d(inp, 256, [1])
-    branch_2 = _conv2d(branch_2, 256, [3])
-    branch_2 = _conv2d(branch_2, 256, [3], strides=2, padding="valid")
+    branch_0 = _conv2d(inp, 256, 1)
+    branch_0 = _conv2d(branch_0, 384, 3, strides=2, padding="valid")
+    branch_1 = _conv2d(inp, 256, 1)
+    branch_1 = _conv2d(branch_1, 256, 3, strides=2, padding="valid")
+    branch_2 = _conv2d(inp, 256, 1)
+    branch_2 = _conv2d(branch_2, 256, 3)
+    branch_2 = _conv2d(branch_2, 256, 3, strides=2, padding="valid")
     branch_3 = MaxPooling2D(3, strides=2, padding="valid")(inp)
     return Concatenate(axis=3)([branch_0, branch_1, branch_2, branch_3])
 
 
 def _inception_resnet_c_block(inp, activation="relu"):
-    branch_0 = _conv2d(inp, 192, [1])
-    branch_1 = _conv2d(inp, 192, [1])
-    branch_1 = _conv2d(branch_1, 192, [1, 3])
-    branch_1 = _conv2d(branch_1, 192, [3, 1])
+    branch_0 = _conv2d(inp, 192, 1)
+    branch_1 = _conv2d(inp, 192, 1)
+    branch_1 = _conv2d(branch_1, 192, (1, 3))
+    branch_1 = _conv2d(branch_1, 192, (3, 1))
 
     mixed = Concatenate(axis=3)([branch_0, branch_1])
     up = Conv2D(1792, 1, strides=1, padding="same", use_bias=True)(mixed)

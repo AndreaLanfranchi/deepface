@@ -85,12 +85,12 @@ def batch_detect_faces(
     -------
         `ValueError`: if the input is invalid
 
-        Any other exceptions raised by the detector or image loading
+        Any other exception raised by the detector or image loading
         functions
     """
 
     if inputs is None:
-        raise ValueError("inputs cannot be None")
+        raise ValueError("Argument [inputs] cannot be None")
 
     detector_instance = Detector.instance(detector)
     results: List[Detector.Results] = []

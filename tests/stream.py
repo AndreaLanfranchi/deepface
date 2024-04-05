@@ -21,13 +21,16 @@
 # )
 
 from deepface.infra import detection
+from deepface.infra import extraction
 
-results_list = detection.batch_detect_faces(inputs=".", detector="yunet")
-total_faces = int(0)
-for results in results_list:
-    print(f"Detected {len(results)} face(s) in {results.tag}")
-    for detection in results.detections:
-        print(f"Face detected at {detection.bounding_box.xywh} with confidence {detection.confidence}")
-    total_faces += len(results)
+# results_list = detection.batch_detect_faces(inputs=".", detector="yunet")
+# total_faces = int(0)
+# for results in results_list:
+#     print(f"Detected {len(results)} face(s) in {results.tag}")
+#     for detection in results.detections:
+#         print(f"Face detected at {detection.bounding_box.xywh} with confidence {detection.confidence}")
+#     total_faces += len(results)
 
-print(f"Total faces detected: {total_faces}")
+# print(f"Total faces detected: {total_faces}")
+
+_ = extraction.extract_faces(inp=r".\dataset\RC2.jpg", extractor="vggface")

@@ -44,7 +44,9 @@ class Extractor(ExtractorBase):
         img_representation = self._model.compute_face_descriptor(img)
         img_representation = numpy.array(img_representation)
         img_representation = numpy.expand_dims(img_representation, axis=0)
-        return img_representation[0].tolist()
+        ret = img_representation[0].tolist()
+        assert len(ret) == self._output_shape
+        return ret
 
     def _initialize(self):
 
