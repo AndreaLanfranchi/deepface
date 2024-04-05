@@ -1,11 +1,11 @@
-from typing import List
+from typing import List, Optional, Union
 
 import os
 import tensorflow
 import gdown
 import numpy
 
-from deepface.core.types import BoxDimensions
+from deepface.core.types import BoundingBox, BoxDimensions, DetectedFace
 from deepface.modules import verification
 from deepface.core.extractor import Extractor as ExtractorBase
 from deepface.core.exceptions import InsufficentVersionError
@@ -42,9 +42,14 @@ class Extractor(ExtractorBase):
         self._output_shape = 4096
         self._initialize()
 
-    def process(self, img: numpy.ndarray) -> List[float]:
-        super().process(img)
-        img = self.to_required_shape(img)
+    def process(
+        self,
+        img: numpy.ndarray,
+        face: Optional[Union[DetectedFace, BoundingBox]] = None,
+    ) -> List[float]:
+
+        super().process(img, face)
+        img = self._to_required_shape(img, face)
         embedding = self._model(img, training=False).numpy()[0].tolist()
         embedding = verification.l2_normalize(embedding)
         return embedding.tolist()

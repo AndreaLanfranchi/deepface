@@ -23,7 +23,7 @@ class Detector(ABC):
     """
 
     _name: Optional[str] = None  # Must be filled by derived classes
-    _KDEFAULT_MIN_CONFIDENCE: float = 0.0 #Every detector must define its own
+    _KDEFAULT_MIN_CONFIDENCE: float = 0.0  # Every detector must define its own
 
     @dataclass(frozen=True)
     class Results:
@@ -59,7 +59,7 @@ class Detector(ABC):
             Draw the detected face(s) boundaries and landmarks on the image.
 
             Args:
-                index (Optional[int]): Index of the face detection to plot.
+                `items` : Index(es) of the face detection to plot.
                   Omitting the index will plot all detections (default: None)
                 copy (bool): Whether to return the drawings on a copy of the image (default: False)
                 color (Tuple[int, int, int]): BGR color code for drawing the bounding box
@@ -78,20 +78,23 @@ class Detector(ABC):
             if items is None:
                 items = list(range(len(self.detections)))
             elif isinstance(items, int):
-                items = [items,]
+                items = [
+                    items,
+                ]
             if isinstance(items, list):
                 for item in items:
                     if not isinstance(item, int):
-                        what:str = "Invalid index type. Expected int "
+                        what: str = "Invalid index type. Expected int "
                         what += f"got {type(item).__name__}"
                         raise TypeError(what)
                     if item < 0 or item >= len(self.detections):
                         raise IndexError("Out of bounds index")
             else:
-                what:str = "Invalid [items] argument type. Expected [int | list of int | None] "
+                what: str = (
+                    "Invalid [items] argument type. Expected [int | list of int | None] "
+                )
                 what += f"got {type(items).__name__}"
                 raise TypeError(what)
-                    
 
             if copy:
                 img = self.img.copy()
@@ -192,7 +195,9 @@ class Detector(ABC):
             raise ValueError("Image must be non-empty")
 
         if min_dims is not None and not isinstance(min_dims, BoxDimensions):
-            raise TypeError("Min dims must be a valid BoxDimensions class object or None")
+            raise TypeError(
+                "Min dims must be a valid BoxDimensions class object or None"
+            )
 
         if min_confidence is not None and not isinstance(min_confidence, float):
             raise TypeError("Min confidence must be a valid float or None")

@@ -87,7 +87,7 @@ def is_valid_image_file(filename: str, check_ext: bool = False) -> bool:
         _, ext = os.path.splitext(filename)
         if not ext.lower() in [".jpg", ".jpeg", ".png"]:
             return False
-        
+
     try:
         with Image.open(filename) as img:
             if img.format not in ["JPEG", "PNG"]:

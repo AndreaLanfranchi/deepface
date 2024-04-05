@@ -1,16 +1,16 @@
-from typing import List
+from typing import List, Optional, Union
 
 import os
 import bz2
-import cv2
 import shutil
+import cv2
 import gdown
 import numpy
 
 from deepface.commons import folder_utils
 from deepface.commons.logger import Logger
 from deepface.core.extractor import Extractor as ExtractorBase
-from deepface.core.types import BoxDimensions
+from deepface.core.types import BoundingBox, BoxDimensions, DetectedFace
 from deepface.core.exceptions import MissingDependencyError
 
 try:
@@ -32,10 +32,14 @@ class Extractor(ExtractorBase):
         self._output_shape = 128
         self._initialize()
 
-    def process(self, img: numpy.ndarray) -> List[float]:
+    def process(
+        self,
+        img: numpy.ndarray,
+        face: Optional[Union[DetectedFace, BoundingBox]] = None,
+    ) -> List[float]:
 
-        super().process(img)
-        img = self.to_required_shape(img)
+        super().process(img, face)
+        img = self._to_required_shape(img, face)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         img_representation = self._model.compute_face_descriptor(img)
         img_representation = numpy.array(img_representation)

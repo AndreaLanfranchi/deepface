@@ -7,7 +7,8 @@ import numpy
 
 from deepface.core import extractors
 from deepface.core import reflection
-from deepface.core.types import BoxDimensions
+from deepface.core import imgutils
+from deepface.core.types import BoundingBox, BoxDimensions, DetectedFace, Point
 from deepface.commons.logger import Logger
 
 logger = Logger.get_instance()
@@ -20,45 +21,110 @@ class Extractor(ABC):
     """
     Interface for digital face(s) representation.
     """
+
     _name: Optional[str] = None  # Must be filled by derived classes
     _input_shape: BoxDimensions
     _output_shape: int
 
     @abstractmethod
-    def process(self, img: numpy.ndarray) -> List[float]:
+    def process(
+        self,
+        img: numpy.ndarray,
+        face: Optional[Union[DetectedFace, BoundingBox]] = None,
+    ) -> List[float]:
         """
         Extracts the digital representation of a face from an image.
-        Note: It is strongly assumed that the input image is already a face
-        previously detected and cropped.
-        """
-        if not isinstance(img, numpy.ndarray) or len(img.shape) != 3:
-            raise TypeError("Image must be a valid numpy array")
-
-        if img.shape[0] * img.shape[1] == 0:
-            raise ValueError("Invalid image dimensions")
-
-    def to_required_shape(self, img: numpy.ndarray) -> numpy.ndarray:
-        """
-        Scales and pads the image to fit the input shape of the model.
-        Also validates the image shape.
 
         Args:
-            img (numpy.ndarray): The image to be scaled and padded
+        ----
+            `img` (numpy.ndarray): The image containing the face to be extracted
+            `face` (Optional[BoundingBox, DetectedFace]): The face to be extracted.
+                If None, the whole input image is assumed to be a face
 
         Returns:
+        -------
+            List[float]: The digital representation of the face
+
+        Raises:
+        ------
+            ValueError: If the image or the bounding box is invalid
+            TypeError: If the face argument is not of the expected type
+
+        """
+
+        if not imgutils.is_valid_image(img):
+            raise ValueError("Invalid image")
+
+        if not face is None:
+            if isinstance(face, BoundingBox):
+                if 0 == face.area:
+                    raise ValueError("Empty face bounding box")
+            elif isinstance(face, DetectedFace):
+                if 0 == face.bounding_box.area:
+                    raise ValueError("Empty face bounding box")
+            else:
+                what: str = "Invalid face argument type"
+                what += (
+                    " expected [BoundingBox | DetectedFace | None], got "
+                    + type(face).__name__
+                )
+                raise TypeError(what)
+
+    def _to_required_shape(
+        self,
+        img: numpy.ndarray,
+        face: Optional[Union[DetectedFace, BoundingBox]] = None,
+    ) -> numpy.ndarray:
+        """
+        Scales and pads the image to fit the input shape of the model.
+        If `face` argument is provided the image is cropped to the face bounding box.
+        Proportions are kept.
+
+        Args:
+        ----
+            `img` (numpy.ndarray): The image to be scaled and padded
+            `face` (Optional[BoundingBox, DetectedFace]): The face to be extracted.
+                If None, the whole input image is assumed to be a face
+
+        Returns:
+        -------
             numpy.ndarray: The scaled and padded image
 
         Raises:
-            ValueError: If the image shape is invalid
+        -------
+            ValueError: If the bounding box (when provided) exceeds
+                the image dimensions
         """
-        height, width = img.shape[:2]
+
         ret = numpy.zeros(
             shape=(self._input_shape.height, self._input_shape.width, 3),
             dtype=numpy.uint8,
         )
 
+        bbox: Optional[BoundingBox] = None
+        img_height: int = img.shape[0]
+        img_width: int = img.shape[1]
+
+        if face is None:
+            # Assume the whole image is a face
+            bbox = BoundingBox(
+                top_left=Point(0, 0), bottom_right=Point(img_width, img_height)
+            )
+        elif isinstance(face, BoundingBox):
+            bbox = face
+        elif isinstance(face, DetectedFace):
+            bbox = face.bounding_box
+
+        if bbox.bottom_right.x > img_width or bbox.bottom_right.y > img_height:
+            raise ValueError("Face bounding box exceeds image dimensions")
+        img = img[
+            bbox.top_left.y : bbox.bottom_right.y, bbox.top_left.x : bbox.bottom_right.x
+        ]
+        img_height = bbox.height
+        img_width = bbox.width
+
         scaling_factor: float = min(
-            self._input_shape.height / height, self._input_shape.width / width
+            self._input_shape.height / img_height, self._input_shape.width / img_width
         )
         if scaling_factor < 1:
             img = cv2.resize(img, None, fx=scaling_factor, fy=scaling_factor)
@@ -126,7 +192,7 @@ class Extractor(ABC):
         -------
             `name_or_inst`: A string representing the name of the extractor to instantiate
               or an instance of a `Extractor` subclass. If None, the default detector will be used
-              
+
             `singleton (bool)`: If True, the factory will return the same instance for the same name
 
         Returns:
@@ -182,7 +248,9 @@ class Extractor(ABC):
                 )
             else:
                 if name_or_inst not in extractors_instances.keys():
-                    extractors_instances[name_or_inst] = available_extractors[name_or_inst]()
+                    extractors_instances[name_or_inst] = available_extractors[
+                        name_or_inst
+                    ]()
                     logger.debug(
                         f"Instantiated extractor [{name_or_inst}] ({time.time() - tic:.3f} seconds)"
                     )

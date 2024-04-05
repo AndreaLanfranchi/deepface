@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional, Union
 
 import os
 import gdown
@@ -9,7 +9,7 @@ from deepface.commons import folder_utils
 from deepface.commons.logger import Logger
 from deepface.core.exceptions import InsufficentVersionError
 from deepface.core.extractor import Extractor as ExtractorBase
-from deepface.core.types import BoxDimensions
+from deepface.core.types import BoundingBox, BoxDimensions, DetectedFace
 
 
 tensorflow_version_major = int(tf.__version__.split(".", maxsplit=1)[0])
@@ -65,10 +65,14 @@ class Extractor(ExtractorBase):
         self._model = _build_model(self._input_shape, self._output_shape)
         self._model.load_weights(output)
 
-    def process(self, img: numpy.ndarray) -> List[float]:
+    def process(
+        self,
+        img: numpy.ndarray,
+        face: Optional[Union[DetectedFace, BoundingBox]] = None,
+    ) -> List[float]:
 
-        super().process(img)
-        img = self.to_required_shape(img)
+        super().process(img, face)
+        img = self._to_required_shape(img, face)
         x = keras.utils.img_to_array(img)
         x = numpy.expand_dims(x, axis=0)
         ret = self._model(x, training=False).numpy()[0].tolist()

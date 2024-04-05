@@ -1,6 +1,6 @@
-import os
-from typing import List
+from typing import List, Optional, Union
 
+import os
 import numpy
 import gdown
 
@@ -8,7 +8,7 @@ from deepface.commons import folder_utils
 from deepface.commons.logger import Logger
 from deepface.core.exceptions import MissingDependencyError
 from deepface.core.extractor import Extractor as ExtractorBase
-from deepface.core.types import BoxDimensions
+from deepface.core.types import BoundingBox, BoxDimensions, DetectedFace
 
 try:
     from cv2 import FaceRecognizerSF
@@ -47,11 +47,14 @@ class Extractor(ExtractorBase):
             model=output, config="", backend_id=0, target_id=0
         )
 
-    def process(self, img: numpy.ndarray) -> List[float]:
+    def process(
+        self,
+        img: numpy.ndarray,
+        face: Optional[Union[DetectedFace, BoundingBox]] = None,
+    ) -> List[float]:
 
-        super().process(img)
-        img = self.to_required_shape(img)
+        super().process(img, face)
+        img = self._to_required_shape(img, face)
         input_blob = (img[0] * 255).astype(numpy.uint8)
         embeddings = self._model.feature(input_blob)
         return embeddings[0].tolist()
-

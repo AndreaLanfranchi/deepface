@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional, Union
 
 import os
 import tensorflow
@@ -8,7 +8,7 @@ import numpy
 from deepface.commons import folder_utils
 from deepface.commons.logger import Logger
 from deepface.core.exceptions import InsufficentVersionError
-from deepface.core.types import BoxDimensions
+from deepface.core.types import BoundingBox, BoxDimensions, DetectedFace
 from deepface.core.extractor import Extractor as ExtractorBase
 from deepface.core.extractors.Facenet128 import InceptionResNetV1
 
@@ -49,7 +49,12 @@ class Extractor(ExtractorBase):
         self._model = InceptionResNetV1(self._input_shape, self._output_shape)
         self._model.load_weights(output)
 
-    def process(self, img: numpy.ndarray) -> List[float]:
-        super().process(img)
-        img = self.to_required_shape(img)
+    def process(
+        self,
+        img: numpy.ndarray,
+        face: Optional[Union[DetectedFace, BoundingBox]] = None,
+    ) -> List[float]:
+
+        super().process(img, face)
+        img = self._to_required_shape(img, face)
         return self._model(img, training=False).numpy()[0].tolist()
