@@ -27,20 +27,6 @@ class Extractor(ABC):
     _input_shape: BoxDimensions
     _output_shape: int
 
-    @dataclass(frozen=True)
-    class Results:
-        """
-        Digital face representation results.
-        """
-        extractor: str
-        img: numpy.ndarray
-        tag: Optional[str]
-        
-
-        def __init__(self, representation: List[float], tag: Optional[str] = None):
-            self.representation = representation
-            self.tag = tag
-
     @abstractmethod
     def process(
         self,

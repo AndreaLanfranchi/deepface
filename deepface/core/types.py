@@ -406,16 +406,13 @@ class DetectedFace:
             OverflowError: If the bounding box is out of bounds of the image.
         """
 
-        if not isinstance(img, numpy.ndarray) or len(img.shape) != 3:
-            raise TypeError("Image must be a valid numpy array for an RGB image")
-
-        img_h, img_w = img.shape[:2]
-        if img_h == 0 or img_w == 0:
-            raise ValueError("Image must be non-empty")
-
+        if not is_valid_image(img):
+            raise TypeError("Image must be a valid numpy array for a non empty image")
+        
         if self.bounding_box.empty:
             raise ValueError("Bounding box must be non-empty")
 
+        img_h, img_w = img.shape[:2]
         if (
             self.bounding_box.top_right.x > img_w
             or self.bounding_box.bottom_right.y > img_h

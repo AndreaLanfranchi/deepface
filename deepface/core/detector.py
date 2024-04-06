@@ -5,6 +5,7 @@ from abc import ABC, abstractmethod
 import time
 import numpy
 
+from deepface.core import imgutils
 from deepface.core.types import DetectedFace, BoxDimensions
 from deepface.core.colors import KBGR_COLOR_BOUNDING_BOX
 from deepface.core import reflection, detectors
@@ -33,13 +34,25 @@ class Detector(ABC):
         detections: list[DetectedFace]
 
         def __post_init__(self):
-            assert isinstance(self.detector, str)
-            assert isinstance(self.img, numpy.ndarray)
-            assert self.tag is None or isinstance(self.tag, str)
-            assert isinstance(self.detections, list)
-            assert all(isinstance(d, DetectedFace) for d in self.detections)
-            if 0 == len(self.detector.strip()):
-                raise ValueError("Detector name must be non-empty")
+
+            if not isinstance(self.detector, str):
+                raise TypeError("Detector name must be a valid string")
+            if self.detector not in Detector.get_available_detectors():
+                raise ValueError("Invalid or unknown detector")
+            if not imgutils.is_valid_image(self.img):
+                raise ValueError("Invalid or empty image")
+            if self.tag is not None:
+                if not isinstance(self.tag, str):
+                    raise TypeError("Tag must be a valid string")
+            if not isinstance(self.detections, list):
+                what: str = "Invalid detections type. Expected list "
+                what += f"got {type(self.detections).__name__}"
+                raise TypeError(what)
+            for item in self.detections:
+                if not isinstance(item, DetectedFace):
+                    what: str = "Invalid detection type. Expected DetectedFace "
+                    what += f"got {type(item).__name__}"
+                    raise TypeError(what)
 
         def __bool__(self):
             return len(self.detections) > 0
@@ -182,17 +195,11 @@ class Detector(ABC):
                 and the `raise_notfound` argument is True
         """
 
-        if not isinstance(img, numpy.ndarray) or len(img.shape) != 3:
-            raise TypeError("Image must be a valid numpy array")
+        if not imgutils.is_valid_image(img):
+            raise ValueError("Invalid image or empty image")
 
         if tag is not None and not isinstance(tag, str):
             raise TypeError("Tag must be a valid string")
-
-        if len(img.shape) != 3:
-            raise ValueError("Image must be a 3D numpy array")
-
-        if img.shape[0] == 0 or img.shape[1] == 0:
-            raise ValueError("Image must be non-empty")
 
         if min_dims is not None and not isinstance(min_dims, BoxDimensions):
             raise TypeError(
