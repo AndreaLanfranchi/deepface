@@ -71,6 +71,7 @@ class Extractor(ExtractorBase):
 
         super().process(img, face)
         img = self._to_required_shape(img, face)
+        img = numpy.expand_dims(img, axis=0)
         ret = self._model(img, training=False).numpy()[0].tolist()
         assert len(ret) == self._output_shape
         return ret
@@ -87,7 +88,7 @@ def _conv2d(
     strides: int = int(1),
     padding: str = "same",
     use_bias: bool = False,
-    activation: Optional[str] = "relu",
+    activation: str = "relu",
 ):
     ret = Conv2D(filters, kernel_size, strides, padding=padding, use_bias=use_bias)(inp)
     ret = BatchNormalization(axis=3, momentum=0.995, epsilon=0.001, scale=False)(ret)
@@ -97,7 +98,7 @@ def _conv2d(
 
 
 def _stem_block(inp):
-    ret = _conv2d(inp, 32, 3, strides=2, padding="valid")
+    ret = _conv2d(inp, 32, 3, 2, padding="valid")
     ret = _conv2d(ret, 32, 3, padding="valid")
     ret = _conv2d(ret, 64, 3)
 
@@ -105,7 +106,7 @@ def _stem_block(inp):
 
     ret = _conv2d(ret, 80, 1, padding="valid")
     ret = _conv2d(ret, 192, 3, padding="valid")
-    ret = _conv2d(ret, 256, 3, strides=2, padding="valid")
+    ret = _conv2d(ret, 256, 3, 2, padding="valid")
 
     return ret
 
@@ -128,7 +129,7 @@ def _inception_resnet_a_block(inp):
 
 
 def _reduction_a_block(inp):
-    branch_0 = _conv2d(inp, 384, 3, strides=2, padding="valid")
+    branch_0 = _conv2d(inp, 384, 3, 2, padding="valid")
     branch_1 = _conv2d(inp, 192, 1)
     branch_1 = _conv2d(branch_1, 192, 3)
     branch_1 = _conv2d(branch_1, 256, 3, strides=2, padding="valid")
@@ -140,6 +141,7 @@ def _inception_resnet_b_block(inp):
     branch_0 = _conv2d(inp, 128, 1)
     branch_1 = _conv2d(inp, 128, 1)
     branch_1 = _conv2d(branch_1, 128, (1, 7))
+    branch_1 = _conv2d(branch_1, 128, (7, 1))
 
     mixed = Concatenate(axis=3)([branch_0, branch_1])
     up = Conv2D(896, 1, strides=1, padding="same", use_bias=True)(mixed)

@@ -55,8 +55,7 @@ class Extractor(ExtractorBase):
 
         super().process(img, face)
         img = self._to_required_shape(img, face)
-        
-        #TODO: raises error
+        img = numpy.expand_dims(img, axis=0)
         input_blob = (img[0] * 255).astype(numpy.uint8)
         embeddings = self._model.feature(input_blob)
 

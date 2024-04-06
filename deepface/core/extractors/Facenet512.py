@@ -57,6 +57,7 @@ class Extractor(ExtractorBase):
 
         super().process(img, face)
         img = self._to_required_shape(img, face)
+        img = numpy.expand_dims(img, axis=0)
         ret = self._model(img, training=False).numpy()[0].tolist()
         assert len(ret) == self._output_shape
         return ret

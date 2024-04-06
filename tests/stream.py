@@ -20,8 +20,10 @@
 #     source=0,  # 0 for onboard camera
 # )
 
-from deepface.infra import detection
-from deepface.infra import extraction
+from deepface.infra import (
+    detection,
+    extraction,
+)
 
 # results_list = detection.batch_detect_faces(inputs=".", detector="yunet")
 # total_faces = int(0)
@@ -33,4 +35,4 @@ from deepface.infra import extraction
 
 # print(f"Total faces detected: {total_faces}")
 
-_ = extraction.extract_faces(inp=r".\dataset\RC2.jpg", extractor="vggface")
+_ = extraction.extract_faces(inp=r".\dataset\RC2.jpg", extractor="arcface")
