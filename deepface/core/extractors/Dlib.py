@@ -35,11 +35,10 @@ class Extractor(ExtractorBase):
     def process(
         self,
         img: numpy.ndarray,
-        tag: Optional[str] = None,
         face: Optional[Union[DetectedFace, BoundingBox]] = None,
     ) -> List[float]:
 
-        super().process(img, tag, face)
+        super().process(img, face)
         img = self._to_required_shape(img, face)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         img_representation = self._model.compute_face_descriptor(img)

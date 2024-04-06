@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from abc import ABC, abstractmethod
 from typing import Any, List, Optional, Union
 
@@ -31,7 +30,6 @@ class Extractor(ABC):
     def process(
         self,
         img: numpy.ndarray,
-        tag: Optional[str] = None,
         face: Optional[Union[DetectedFace, BoundingBox]] = None,
     ) -> List[float]:
         """
@@ -56,9 +54,6 @@ class Extractor(ABC):
 
         if not imgutils.is_valid_image(img):
             raise ValueError("Invalid image")
-
-        if tag is not None and not isinstance(tag, str):
-            raise TypeError("Tag must be a valid string")
 
         if not face is None:
             if isinstance(face, BoundingBox):

@@ -16,6 +16,7 @@ from deepface.core.colors import (
 
 from deepface.core.imgutils import is_valid_image
 
+
 @dataclass(frozen=True)
 class RangeInt:
     """
@@ -287,6 +288,8 @@ class DetectedFace:
         confidence (float): The confidence score of the detection.
         bounding_box (BoundingBox): The bounding box of the detected face.
         key_points (Optional[Dict[str, Point]]): The key points of the detected face.
+        embeddings (Optional[List[float]]): The embeddings of the detected face.
+            Embeddings are optionally provided by the extractor.
 
     Notes:
     ------
@@ -310,6 +313,7 @@ class DetectedFace:
     confidence: float = field(default=0.0)
     bounding_box: BoundingBox = field(default_factory=BoundingBox)
     key_points: Optional[Dict[str, Optional[Point]]] = field(default=None)
+    embeddings: Optional[List[float]] = field(default=None)
 
     def __post_init__(self):
         assert isinstance(self.confidence, float)
@@ -368,6 +372,15 @@ class DetectedFace:
                     self.key_points["mlc"] = rm
                     self.key_points["mrc"] = lm
 
+        if self.embeddings is not None:
+            if not isinstance(self.embeddings, list):
+                raise TypeError("Embeddings must be a list")
+            if len(self.embeddings) == 0:
+                raise ValueError("Embeddings must be non-empty list")
+            for value in self.embeddings:
+                if not isinstance(value, float):
+                    raise TypeError("Embedding value must be a float")
+
     @property
     def width(self) -> int:
         return self.bounding_box.width
@@ -408,7 +421,7 @@ class DetectedFace:
 
         if not is_valid_image(img):
             raise TypeError("Image must be a valid numpy array for a non empty image")
-        
+
         if self.bounding_box.empty:
             raise ValueError("Bounding box must be non-empty")
 
@@ -475,12 +488,15 @@ class DetectedFace:
         Returns the cropping of the detected face from the image
 
         Args:
+        -----
             img (numpy.ndarray): The image to crop from.
 
         Returns:
-            numpy.ndarray: The detected face as a new NumPy array.
+        --------
+            numpy.ndarray: The cropped image from the bounding box.
 
         Raises:
+        -------
             TypeError: If the image is not a valid numpy array.
             ValueError: If the image is empty or the bounding box is empty.
             OverflowError: If the bounding box is out of bounds of the image.

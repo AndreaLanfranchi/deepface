@@ -68,11 +68,10 @@ class Extractor(ExtractorBase):
     def process(
         self,
         img: numpy.ndarray,
-        tag: Optional[str] = None,
         face: Optional[Union[DetectedFace, BoundingBox]] = None,
     ) -> List[float]:
 
-        super().process(img, tag, face)
+        super().process(img, face)
         img = self._to_required_shape(img, face)
         x = keras.utils.img_to_array(img)
         x = numpy.expand_dims(x, axis=0)
