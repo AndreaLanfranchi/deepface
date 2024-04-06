@@ -66,10 +66,11 @@ class Extractor(ExtractorBase):
     def process(
         self,
         img: numpy.ndarray,
+        tag: Optional[str] = None,
         face: Optional[Union[DetectedFace, BoundingBox]] = None,
     ) -> List[float]:
 
-        super().process(img, face)
+        super().process(img, tag, face)
         img = self._to_required_shape(img, face)
         img = numpy.expand_dims(img, axis=0)
         ret = self._model(img, training=False).numpy()[0].tolist()

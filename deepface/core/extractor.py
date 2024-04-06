@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from abc import ABC, abstractmethod
 from typing import Any, List, Optional, Union
 
@@ -26,10 +27,25 @@ class Extractor(ABC):
     _input_shape: BoxDimensions
     _output_shape: int
 
+    @dataclass(frozen=True)
+    class Results:
+        """
+        Digital face representation results.
+        """
+        extractor: str
+        img: numpy.ndarray
+        tag: Optional[str]
+        
+
+        def __init__(self, representation: List[float], tag: Optional[str] = None):
+            self.representation = representation
+            self.tag = tag
+
     @abstractmethod
     def process(
         self,
         img: numpy.ndarray,
+        tag: Optional[str] = None,
         face: Optional[Union[DetectedFace, BoundingBox]] = None,
     ) -> List[float]:
         """
@@ -54,6 +70,9 @@ class Extractor(ABC):
 
         if not imgutils.is_valid_image(img):
             raise ValueError("Invalid image")
+
+        if tag is not None and not isinstance(tag, str):
+            raise TypeError("Tag must be a valid string")
 
         if not face is None:
             if isinstance(face, BoundingBox):

@@ -9,7 +9,6 @@
 
 # Sample code to run the stream function using onboard camera
 # from deepface import DeepFace
-
 # DeepFace.stream(
 #     db_path="dataset",
 #     detector="mtcnn",
