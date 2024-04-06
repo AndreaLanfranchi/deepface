@@ -120,9 +120,9 @@ class Extractor(ABC):
         img = img[
             bbox.top_left.y : bbox.bottom_right.y, bbox.top_left.x : bbox.bottom_right.x
         ]
-        img_height = bbox.height
-        img_width = bbox.width
-
+        
+        height = bbox.height
+        width = bbox.width
         scaling_factor: float = min(
             self._input_shape.height / img_height, self._input_shape.width / img_width
         )

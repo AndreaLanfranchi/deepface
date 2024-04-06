@@ -15,6 +15,7 @@ def detect_faces(
     detector: Optional[Union[str, Detector]] = None,
     min_confidence: Optional[float] = None,
     min_dims: Optional[BoxDimensions] = None,
+    key_points: bool = True,
     raise_notfound: bool = False,
 ) -> Detector.Results:
     """
@@ -22,10 +23,17 @@ def detect_faces(
 
     Args:
     -----
-        input: image path or numpy array
-        detector: detector instance or string
-        min_dims: minimum dimensions for detected faces
-        raise_notfound: raise exception if no faces are detected
+        `input`: image path or numpy array
+
+        `detector`: detector instance or name. If None, the default detector
+        is assumed
+
+        `min_confidence`: minimum confidence for detected faces. If None, the
+        default confidence typical for the detector is assumed
+
+        `min_dims`: minimum dimensions for detected faces
+
+        `key_points`: whether to detect key points
 
     Returns:
     --------
@@ -45,6 +53,7 @@ def detect_faces(
         tag=tag,
         min_confidence=min_confidence,
         min_dims=min_dims,
+        key_points=key_points,
         raise_notfound=raise_notfound,
     )
     return results
@@ -55,6 +64,8 @@ def batch_detect_faces(
     detector: Optional[Union[str, Detector]] = None,
     min_confidence: Optional[float] = None,
     min_dims: Optional[BoxDimensions] = None,
+    key_points: bool = True,
+    raise_notfound: bool = False,
     recurse: bool = True,
 ) -> List[Detector.Results]:
     """
@@ -76,6 +87,12 @@ def batch_detect_faces(
         default confidence typical for the detector is assumed
 
         `min_dims`: minimum dimensions for detected faces
+
+        `key_points`: whether to detect key points
+
+        `raise_notfound`: if True, raise an exception if no faces are found
+
+        `recurse`: if the input is a directory, recurse into subdirectories
 
     Returns:
     --------
@@ -108,7 +125,8 @@ def batch_detect_faces(
                     detector=detector_instance,
                     min_confidence=min_confidence,
                     min_dims=min_dims,
-                    raise_notfound=False, # Don't want an exception here
+                    key_points=key_points,
+                    raise_notfound=raise_notfound,
                 )
             )
 
@@ -146,6 +164,7 @@ def batch_detect_faces(
                     tag=file_name,
                     detector=detector_instance,
                     min_confidence=min_confidence,
+                    key_points=key_points,
                     min_dims=min_dims,
                 )
             )

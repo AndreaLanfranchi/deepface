@@ -33,7 +33,7 @@ class Detector(DetectorBase):
     _detector: fast_mtcnn
 
     def __init__(self):
-        self._name = str(__name__.rsplit(".", maxsplit=1)[-1])
+        self._name = str(__name__.rsplit(".", maxsplit=1)[-1]).lower()
         self._KDEFAULT_MIN_CONFIDENCE = float(0.99)
         self._initialize()
 

@@ -73,29 +73,30 @@ def is_valid_image_file(filename: str, check_ext: bool = False) -> bool:
     if not isinstance(filename, str):
         raise TypeError("Filename must be a string")
 
+    ret: bool = True
     filename = filename.strip()
     if len(filename) == 0:
-        return False
-
-    if not os.path.isfile(filename):
-        return False
-
-    if 0 == os.path.getsize(filename):
-        return False
-
-    if check_ext:
+        ret = False
+    elif not os.path.isfile(filename):
+        ret = False
+    elif 0 == os.path.getsize(filename):
+        ret = False
+    
+    if ret and check_ext:
         _, ext = os.path.splitext(filename)
         if not ext.lower() in [".jpg", ".jpeg", ".png"]:
-            return False
+            ret = False
+    if not ret:
+        return ret
 
     try:
         with Image.open(filename) as img:
-            if img.format not in ["JPEG", "PNG"]:
-                return False
+            if img.format not in ["JPEG", "PNG", "WEBP"]:
+                ret = False
     except Exception:
-        return False
+        ret = False
 
-    return True
+    return ret
 
 
 def is_grayscale_image(img: numpy.ndarray) -> bool:
@@ -339,7 +340,7 @@ def _load_image_from_file(filename: str) -> numpy.ndarray:
     """
 
     if not is_valid_image_file(filename):
-        raise ValueError("Invalid image file")
+        raise ValueError(f"{filename} is an invalid image file")
 
     return cv2.imread(filename)
 

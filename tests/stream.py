@@ -34,4 +34,9 @@ from deepface.infra import (
 
 # print(f"Total faces detected: {total_faces}")
 
-_ = extraction.extract_faces(inp=r".\dataset\RC2.jpg", extractor="arcface")
+r = extraction.batch_extract_faces(inputs=".\\dataset")
+for tag, detections in r.items():
+    count: int = 0
+    if detections is not None:
+        count = len(detections)
+    print(f"{tag}: {count} face(s) detected")
