@@ -10,6 +10,16 @@ from PIL import Image
 import numpy
 import cv2
 
+kKiB: int = 1024
+KMiB: int = 1024 ** 2
+kGiB: int = 1024 ** 3
+kVALID_IMAGE_TYPES: List[str] = ["jpg", "jpeg", "png", "webp"]
+
+_kHTTP_PATTERN = re.compile(r"^http(s)?://.*", re.IGNORECASE)
+_kBASE64_PATTERN = re.compile(r"^data:image\/.*", re.IGNORECASE)
+_kBASE64_PATTERN_EXT = re.compile(
+    r"^data:image\/(jpeg|jpg|png|webp)?(;base64)$", re.IGNORECASE
+)
 
 def is_valid_image(img: numpy.ndarray) -> bool:
     """
@@ -17,12 +27,10 @@ def is_valid_image(img: numpy.ndarray) -> bool:
 
     Params:
     -------
-    image: numpy.ndarray
-        Image to check
+        `img`: numpy.ndarray Image to check
 
     Returns:
     --------
-    bool
         True if the image is valid, False otherwise
 
     Raises:
@@ -49,25 +57,35 @@ def is_valid_image(img: numpy.ndarray) -> bool:
     return True
 
 
-def is_valid_image_file(filename: str, check_ext: bool = False) -> bool:
+def is_valid_image_file(
+    filename: str,
+    check_ext: bool = False,
+    max_size: int = 10 * KMiB,
+) -> bool:
     """
     Check if the image file is valid
 
     Params:
     -------
-    `filename`: str Image file to test
-    `check_ext`: bool Check the file extension. This further checks the
-    file extension to be one of the supported image types. Default is False
-    Note: image type is checked using the `imghdr` module
+        `filename`: str Image file to test
+        `check_ext`: bool Check the file extension. This further checks the
+            file extension to be one of the supported image types. 
+            Default is False
+        `max_size`: int Maximum file size in bytes. Default is 10 MiB
+
+    Remarks:
+    --------
+        Regardless the extension check, the file content is also checked
 
     Returns:
     --------
-    True if the image file is valid, False otherwise
+        True if the image file is valid, False otherwise
 
     Raises:
     -------
-    `TypeError` : If filename is not a string
-    `ValueError` : If filename is not a string or is empty
+        `TypeError` : If filename is not a string
+        `IOError` : If the file cannot be opened or read
+        `FileNotFoundError` : If the file does not exist
     """
 
     if not isinstance(filename, str):
@@ -75,26 +93,29 @@ def is_valid_image_file(filename: str, check_ext: bool = False) -> bool:
 
     ret: bool = True
     filename = filename.strip()
-    if len(filename) == 0:
-        ret = False
-    elif not os.path.isfile(filename):
-        ret = False
-    elif 0 == os.path.getsize(filename):
-        ret = False
+    if len(filename) == 0 or not os.path.isfile(filename):
+        raise FileNotFoundError(f"File [{filename}] does not exist")
     
+    file_size: int = os.path.getsize(filename)
+    if 0 == file_size or file_size > max_size:
+        ret = False
+
     if ret and check_ext:
         _, ext = os.path.splitext(filename)
-        if not ext.lower() in [".jpg", ".jpeg", ".png"]:
+        ext = ext.strip(".").lower()
+        if not ext in kVALID_IMAGE_TYPES:
             ret = False
     if not ret:
         return ret
 
     try:
         with Image.open(filename) as img:
-            if img.format not in ["JPEG", "PNG", "WEBP"]:
+            if img.format is None:
                 ret = False
-    except Exception:
-        ret = False
+            elif img.format.lower() not in kVALID_IMAGE_TYPES:
+                ret = False
+    except Exception as ex:
+        raise IOError(f"Error opening image file {filename}") from ex
 
     return ret
 
@@ -134,14 +155,6 @@ def is_grayscale_image(img: numpy.ndarray) -> bool:
     return False
 
 
-# Pseudo-constants
-_http_pattern = re.compile(r"^http(s)?://.*", re.IGNORECASE)
-_base64_pattern = re.compile(r"^data:image\/.*", re.IGNORECASE)
-_base64_pattern_ext = re.compile(
-    r"^data:image\/(jpeg|jpg|png)?(;base64)$", re.IGNORECASE
-)
-
-
 def get_all_image_files(
     directory: str,
     recurse: bool = True,
@@ -152,18 +165,18 @@ def get_all_image_files(
 
     Args:
     -----
-    `directory`: the directory to search for image files. An empty string
-    defaults to the current working directory (same as ".")
-    `recurse`: whether to search recursively
+        `directory`: the directory to search for image files. An empty string
+            defaults to the current working directory (same as ".")
+        `recurse`: whether to search recursively
 
     Returns:
     --------
-    A list of valid image file names
+        A list of valid image file names
 
     Raises:
     -------
-    TypeError: if the directory argument is not a string
-    `FileNotFoundError`: if the directory does not exist
+        TypeError: if the directory argument is not a string
+        `FileNotFoundError`: if the directory does not exist
     """
 
     if not isinstance(directory, str):
@@ -214,10 +227,10 @@ def load_image(
 
     Raises:
     -------
-        ValueError: if the input is somewhat invalid
-        TypeError: if the input is not a supported type
-        HTTPError: if the input is a url and the response status code is not 200
-        FileNotFoundError: if the input is a path and the file does not exist
+        `ValueError`: if the input is somewhat invalid
+        `TypeError`: if the input is not a supported type
+        `HTTPError`: if the input is a url and the response status code is not 200
+        `FileNotFoundError`: if the input is a path and the file does not exist
     """
 
     if source is None or not isinstance(source, (str, numpy.ndarray)):
@@ -235,11 +248,11 @@ def load_image(
         origin: str = str(source.strip())
         if len(origin) == 0:
             raise ValueError("Invalid source. Empty string.")
-        if _http_pattern.match(origin):
+        if _kHTTP_PATTERN.match(origin):
             loaded_image = _load_image_from_web(url=origin)
             if tag is None:
                 tag = "web"
-        elif _base64_pattern.match(origin):
+        elif _kBASE64_PATTERN.match(origin):
             loaded_image = _load_base64(uri=origin)
             if tag is None:
                 tag = "base64"
@@ -272,15 +285,15 @@ def _load_image_from_web(url: str) -> numpy.ndarray:
 
     Args:
     -----
-        url: link for the image
+        `url`: link for the image
 
     Returns:
     --------
-        img (numpy.ndarray): equivalent to pre-loaded image from opencv (BGR format)
+        `img` (numpy.ndarray): equivalent to pre-loaded image from opencv (BGR format)
 
     Raises:
     -------
-        HTTPError: if the response status code is not 200
+        `HTTPError`: if the response status code is not 200
     """
     response = requests.get(url, stream=True, timeout=60)
     response.raise_for_status()
@@ -295,7 +308,7 @@ def _load_base64(uri: str) -> numpy.ndarray:
 
     Args:
     -----
-        uri: a base64 string.
+        `uri`: a base64 string.
 
     Returns:
     --------
@@ -303,15 +316,15 @@ def _load_base64(uri: str) -> numpy.ndarray:
 
     Raises:
     -------
-        ValueError: if the input is invalid.
+        `ValueError`: if the input is invalid.
     """
 
     # TODO : use regex capture groups to traverse the input string
     # in one pass only
     split_data = uri.split(",")
-    if len(split_data) != 2:
+    if 2 != len(split_data):
         raise ValueError("Invalid base64 input")
-    if not _base64_pattern_ext.match(split_data[0]):
+    if not _kBASE64_PATTERN_EXT.match(split_data[0]):
         raise ValueError("Invalid mime-type. Supported types are jpeg, jpg and png.")
     try:
         decoded = base64.b64decode(split_data[1], validate=True)
@@ -327,7 +340,7 @@ def _load_image_from_file(filename: str) -> numpy.ndarray:
 
     Args:
     -----
-        filename: full or relative path to the image file.
+        `filename`: full or relative path to the image file.
 
     Returns:
     --------
@@ -335,8 +348,8 @@ def _load_image_from_file(filename: str) -> numpy.ndarray:
 
     Raises:
     -------
-        FileNotFoundError: if the file does not exist.
-
+        `FileNotFoundError`: if the file does not exist.
+        `ValueError`: if the file is not a valid image file.
     """
 
     if not is_valid_image_file(filename):
@@ -376,9 +389,9 @@ def normalize_input(img: numpy.ndarray, mode: str = "base") -> numpy.ndarray:
         what: str = 'Invalid "mode" type. Expected str, '
         what += f"got {type(mode)}"
         raise TypeError(what)
-
+    
     # issue 131 declares that some normalization techniques improves the accuracy
-
+    mode = mode.lower().strip()
     if mode == "base":
         return img
 
@@ -390,28 +403,28 @@ def normalize_input(img: numpy.ndarray, mode: str = "base") -> numpy.ndarray:
     if mode == "raw":
         pass  # return just restored pixels
 
-    elif mode == "Facenet":
+    elif mode == "facenet":
         mean, std = img.mean(), img.std()
         img = (img - mean) / std
 
-    elif mode == "Facenet2018":
+    elif mode == "facenet2018":
         # simply / 127.5 - 1 (similar to facenet 2018 model preprocessing step as @iamrishab posted)
         img /= 127.5
         img -= 1
 
-    elif mode == "VGGFace":
+    elif mode == "vggface":
         # mean subtraction based on VGGFace1 training data
         img[..., 0] -= 93.5940
         img[..., 1] -= 104.7624
         img[..., 2] -= 129.1863
 
-    elif mode == "VGGFace2":
+    elif mode == "vggface2":
         # mean subtraction based on VGGFace2 training data
         img[..., 0] -= 91.4953
         img[..., 1] -= 103.8827
         img[..., 2] -= 131.0912
 
-    elif mode == "ArcFace":
+    elif mode == "arcface":
         # Reference study: The faces are cropped and resized to 112×112,
         # and each pixel (ranged between [0, 255]) in RGB images is normalised
         # by subtracting 127.5 then divided by 128.
