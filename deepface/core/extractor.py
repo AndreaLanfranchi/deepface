@@ -52,69 +52,53 @@ class Extractor(ABC):
 
         """
 
-        if not imgutils.is_valid_image(img):
-            raise ValueError("Invalid image")
-
-        if not face is None:
-            if isinstance(face, BoundingBox):
-                if 0 == face.area:
-                    raise ValueError("Empty face bounding box")
-            elif isinstance(face, DetectedFace):
-                if 0 == face.bounding_box.area:
-                    raise ValueError("Empty face bounding box")
-            else:
-                what: str = "Invalid face argument type"
-                what += (
-                    " expected [BoundingBox | DetectedFace | None], got "
-                    + type(face).__name__
-                )
-                raise TypeError(what)
-
-    def _to_required_shape(
+    def _pre_process(
         self,
         img: numpy.ndarray,
         face: Optional[Union[DetectedFace, BoundingBox]] = None,
     ) -> numpy.ndarray:
         """
-        Scales and pads the image to fit the input shape of the model.
-        If `face` argument is provided the image is cropped to the face bounding box.
-        Proportions are kept.
+        Pre-processes the image before extracting the face.
 
         Args:
         ----
-            `img` (numpy.ndarray): The image to be scaled and padded
+            `img` (numpy.ndarray): The image to be pre-processed
             `face` (Optional[BoundingBox, DetectedFace]): The face to be extracted.
                 If None, the whole input image is assumed to be a face
 
         Returns:
         -------
-            numpy.ndarray: The scaled and padded image
+            numpy.ndarray: The pre-processed image
 
         Raises:
-        -------
-            ValueError: If the bounding box (when provided) exceeds
-                the image dimensions
+        ------
+            ValueError: If the image or the bounding box is invalid
+            TypeError: If the face argument is not of the expected type
         """
+        if not imgutils.is_valid_image(img):
+            raise ValueError("Invalid image")
 
-        ret = numpy.zeros(
-            shape=(self._input_shape.height, self._input_shape.width, 3),
-            dtype=numpy.uint8,
-        )
+        if isinstance(face, BoundingBox):
+            if 0 == face.area:
+                raise ValueError("Empty face bounding box")
+            if face.bottom_right.x > img.shape[1] or face.bottom_right.y > img.shape[0]:
+                raise ValueError("Face bounding box exceeds image dimensions")
+            img = img[
+                face.top_left.y : face.bottom_right.y,
+                face.top_left.x : face.bottom_right.x,
+            ]
 
-        bbox: Optional[BoundingBox] = None
-        img_height: int = img.shape[0]
-        img_width: int = img.shape[1]
-
-        if face is None:
-            # Assume the whole image is a face
-            bbox = BoundingBox(
-                top_left=Point(0, 0), bottom_right=Point(img_width, img_height)
-            )
-        elif isinstance(face, BoundingBox):
-            bbox = face
         elif isinstance(face, DetectedFace):
-            bbox = face.bounding_box
-        else:
+            if 0 == face.bounding_box.area:
+                raise ValueError("Empty face bounding box")
+            if (
+                face.bounding_box.bottom_right.x > img.shape[1]
+                or face.bounding_box.bottom_right.y > img.shape[0]
+            ):
+                raise ValueError("Face bounding box exceeds image dimensions")
+            img = face.crop(img)
+
+        elif face is not None:
             what: str = "Invalid face argument type"
             what += (
                 " expected [BoundingBox | DetectedFace | None], got "
@@ -122,25 +106,62 @@ class Extractor(ABC):
             )
             raise TypeError(what)
 
-        if bbox.bottom_right.x > img_width or bbox.bottom_right.y > img_height:
-            raise ValueError("Face bounding box exceeds image dimensions")
-        img = img[
-            bbox.top_left.y : bbox.bottom_right.y, bbox.top_left.x : bbox.bottom_right.x
-        ]
+        # Here we have the face image
+        # We now resize and pad the image to the required input shape
+        return self._pad_scale_image(img)
 
-        height = bbox.height
-        width = bbox.width
+    def _pad_scale_image(
+        self,
+        img: numpy.ndarray,
+    ) -> numpy.ndarray:
+        """
+        Pad and scale an image to a target shape.
+
+        Args:
+        -----
+            img (numpy.ndarray): the input image. It's assumed is a
+            valuid face from a valid image. No cropping is done here.
+
+        Returns:
+        --------
+            numpy.ndarray: the padded and scaled image
+
+        Raises:
+        -------
+            ValueError: if the image or the bounding box is invalid
+            TypeError: if the face argument is not of the expected type
+        """
+        if self._input_shape.height == 0 or self._input_shape.width == 0:
+            raise ValueError("Invalid input shape")
+        
+        target_shape = (self._input_shape.height, self._input_shape.width)
+        height, width, *_ = img.shape
         scaling_factor: float = min(
-            self._input_shape.height / img_height, self._input_shape.width / img_width
+            target_shape[0] / height,
+            target_shape[1] / width,
         )
-        if scaling_factor < 1:
-            img = cv2.resize(img, None, fx=scaling_factor, fy=scaling_factor)
-            height, width = img.shape[:2]
+        dsize = (
+            int(round(width * scaling_factor)),
+            int(round(height * scaling_factor)),
+        )
 
-        start_x = (self._input_shape.width - width) // 2
-        start_y = (self._input_shape.height - height) // 2
+        interpolation = cv2.INTER_AREA if scaling_factor < 1 else cv2.INTER_CUBIC
+        img = cv2.resize(img, dsize=dsize, interpolation=interpolation)
+        height, width, *_ = img.shape
+
+        start_x = (target_shape[1] - width) // 2
+        start_y = (target_shape[0] - height) // 2
+        ret = numpy.zeros(
+            shape=(target_shape[0], target_shape[1], 3),
+            dtype=numpy.uint8,
+        )
         ret[start_y : start_y + height, start_x : start_x + width] = img
+        if ret.ndim == 2:
+            ret = numpy.stack((ret,) * 3, axis=-1)
+        if ret.ndim == 3:
+            ret = numpy.expand_dims(ret, axis=0)
         return ret
+
 
     # @abstractmethod
     def base_model(self) -> Any:

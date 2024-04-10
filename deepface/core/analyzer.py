@@ -94,9 +94,6 @@ class Analyzer(ABC):
             target_shape (Tuple[int, int]): the target shape (height, width)
             face (Optional[Union[DetectedFace, BoundingBox]], optional): the face to be extracted.
                 If None, the whole input image is assumed to be a face. Defaults to None.
-            pad_color (Tuple[int, int, int], optional): the color for padding. Defaults to (0, 0, 0).
-            pad_mode (str, optional): the padding mode. Defaults to "constant".
-            pad_position (str, optional): the padding position. Defaults to "center".
 
         Returns:
         --------

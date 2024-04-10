@@ -7,6 +7,8 @@ import cv2
 import gdown
 import numpy
 
+from PIL import Image
+
 from deepface.commons import folder_utils
 from deepface.commons.logger import Logger
 from deepface.core.extractor import Extractor as ExtractorBase
@@ -38,9 +40,10 @@ class Extractor(ExtractorBase):
         face: Optional[Union[DetectedFace, BoundingBox]] = None,
     ) -> List[float]:
 
-        super().process(img, face)
-        img = self._to_required_shape(img, face)
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        img = self._pre_process(img, face)
+        if Image.fromarray(img).mode != "RGB":
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            
         img_representation = self._model.compute_face_descriptor(img)
         img_representation = numpy.array(img_representation)
         img_representation = numpy.expand_dims(img_representation, axis=0)

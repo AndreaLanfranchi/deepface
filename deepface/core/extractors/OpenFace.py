@@ -71,11 +71,8 @@ class Extractor(ExtractorBase):
         face: Optional[Union[DetectedFace, BoundingBox]] = None,
     ) -> List[float]:
 
-        super().process(img, face)
-        img = self._to_required_shape(img, face)
-        x = keras.utils.img_to_array(img)
-        x = numpy.expand_dims(x, axis=0)
-        ret = self._model(x, training=False).numpy()[0].tolist()
+        img = self._pre_process(img, face)
+        ret = self._model(img, training=False).numpy()[0].tolist()
         assert len(ret) == self._output_shape
         return ret
 

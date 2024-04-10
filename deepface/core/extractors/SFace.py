@@ -53,9 +53,7 @@ class Extractor(ExtractorBase):
         face: Optional[Union[DetectedFace, BoundingBox]] = None,
     ) -> List[float]:
 
-        super().process(img, face)
-        img = self._to_required_shape(img, face)
-        img = numpy.expand_dims(img, axis=0)
+        img = self._pre_process(img, face)
         input_blob = (img[0] * 255).astype(numpy.uint8)
         embeddings = self._model.feature(input_blob)
 

@@ -55,9 +55,7 @@ class Extractor(ExtractorBase):
         face: Optional[Union[DetectedFace, BoundingBox]] = None,
     ) -> List[float]:
 
-        super().process(img, face)
-        img = self._to_required_shape(img, face)
-        img = numpy.expand_dims(img, axis=0)
+        img = self._pre_process(img, face)
         ret = self._model(img, training=False).numpy()[0].tolist()
         assert len(ret) == self._output_shape
         return ret
