@@ -78,7 +78,6 @@ class Analyzer(ABC):
         if not imgutils.is_valid_image(img):
             raise ValueError("Invalid image or empty image")
 
-
     def _pad_scale_image(
         self,
         img: numpy.ndarray,
