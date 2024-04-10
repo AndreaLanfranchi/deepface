@@ -8,7 +8,7 @@ import numpy
 from deepface.core import extractors
 from deepface.core import reflection
 from deepface.core import imgutils
-from deepface.core.types import BoundingBox, BoxDimensions, DetectedFace, Point
+from deepface.core.types import BoundingBox, BoxDimensions, DetectedFace
 from deepface.commons.logger import Logger
 
 logger = Logger.get_instance()
@@ -133,7 +133,7 @@ class Extractor(ABC):
         """
         if self._input_shape.height == 0 or self._input_shape.width == 0:
             raise ValueError("Invalid input shape")
-        
+
         target_shape = (self._input_shape.height, self._input_shape.width)
         height, width, *_ = img.shape
         scaling_factor: float = min(
@@ -161,7 +161,6 @@ class Extractor(ABC):
         if ret.ndim == 3:
             ret = numpy.expand_dims(ret, axis=0)
         return ret
-
 
     # @abstractmethod
     def base_model(self) -> Any:

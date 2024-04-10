@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Union
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
 
@@ -10,7 +10,7 @@ from deepface.core import imgutils
 from deepface.core import analyzers
 from deepface.core import reflection
 from deepface.commons.logger import Logger
-from deepface.core.types import BoundingBox, DetectedFace, Point
+from deepface.core.types import BoundingBox, BoxDimensions, DetectedFace
 
 logger = Logger.get_instance()
 
@@ -19,6 +19,7 @@ logger = Logger.get_instance()
 class Analyzer(ABC):
 
     _name: Optional[str] = None  # Must be filled by specialized classes
+    _input_shape = BoxDimensions(224, 224)
 
     @dataclass(frozen=True)
     class Results:
@@ -56,14 +57,19 @@ class Analyzer(ABC):
                     raise TypeError("weights values must be all floats")
 
     @abstractmethod
-    def process(self, img: numpy.ndarray) -> Results:
+    def process(
+        self,
+        img: numpy.ndarray,
+        face: Optional[Union[DetectedFace, BoundingBox]] = None,
+    ) -> Results:
         """
         Process the given image analyzing the face attribute it was built for.
 
         Args:
         -----
             `img`: The image to analyze. Must be a valid image.
-            It is strongly assumed that the image is already a face image.
+            `face` (Optional[BoundingBox, DetectedFace]): The face to be extracted.
+                If None, the whole input image is assumed to be a face
 
         Returns:
         --------
@@ -72,27 +78,81 @@ class Analyzer(ABC):
 
         Raises:
         -------
-            `ValueError`: If the image is invalid or empty
+            ValueError: If the image or the bounding box is invalid
+            TypeError: If the face argument is not of the expected type
+
+
         """
 
+    def _pre_process(
+        self,
+        img: numpy.ndarray,
+        face: Optional[Union[DetectedFace, BoundingBox]] = None,
+    ) -> numpy.ndarray:
+        """
+        Pre-processes the image before analyzing the face.
+
+        Args:
+        ----
+            `img` (numpy.ndarray): The image to be pre-processed
+            `face` (Optional[BoundingBox, DetectedFace]): The face to be extracted.
+                If None, the whole input image is assumed to be a face
+
+        Returns:
+        -------
+            numpy.ndarray: The pre-processed image
+
+        Raises:
+        ------
+            ValueError: If the image or the bounding box is invalid
+            TypeError: If the face argument is not of the expected type
+        """
         if not imgutils.is_valid_image(img):
-            raise ValueError("Invalid image or empty image")
+            raise ValueError("Invalid image")
+
+        if isinstance(face, BoundingBox):
+            if 0 == face.area:
+                raise ValueError("Empty face bounding box")
+            if face.bottom_right.x > img.shape[1] or face.bottom_right.y > img.shape[0]:
+                raise ValueError("Face bounding box exceeds image dimensions")
+            img = img[
+                face.top_left.y : face.bottom_right.y,
+                face.top_left.x : face.bottom_right.x,
+            ]
+
+        elif isinstance(face, DetectedFace):
+            if 0 == face.bounding_box.area:
+                raise ValueError("Empty face bounding box")
+            if (
+                face.bounding_box.bottom_right.x > img.shape[1]
+                or face.bounding_box.bottom_right.y > img.shape[0]
+            ):
+                raise ValueError("Face bounding box exceeds image dimensions")
+            img = face.crop(img)
+
+        elif face is not None:
+            what: str = "Invalid face argument type"
+            what += (
+                " expected [BoundingBox | DetectedFace | None], got "
+                + type(face).__name__
+            )
+            raise TypeError(what)
+
+        # Here we have the face image
+        # We now resize and pad the image to the required input shape
+        return self._pad_scale_image(img)
 
     def _pad_scale_image(
         self,
         img: numpy.ndarray,
-        target_shape: Tuple[int, int],
-        face: Optional[Union[DetectedFace, BoundingBox]] = None,
     ) -> numpy.ndarray:
         """
         Pad and scale an image to a target shape.
 
         Args:
         -----
-            img (numpy.ndarray): the input image
-            target_shape (Tuple[int, int]): the target shape (height, width)
-            face (Optional[Union[DetectedFace, BoundingBox]], optional): the face to be extracted.
-                If None, the whole input image is assumed to be a face. Defaults to None.
+            img (numpy.ndarray): the input image. It's assumed is a
+            valuid face from a valid image. No cropping is done here.
 
         Returns:
         --------
@@ -103,42 +163,18 @@ class Analyzer(ABC):
             ValueError: if the image or the bounding box is invalid
             TypeError: if the face argument is not of the expected type
         """
+        if self._input_shape.height == 0 or self._input_shape.width == 0:
+            raise ValueError("Invalid input shape")
 
-        if not imgutils.is_valid_image(img):
-            raise ValueError("Invalid image")
-
-        bbox: Optional[BoundingBox] = None
-        img_height: int = img.shape[0]
-        img_width: int = img.shape[1]
-
-        if face is None:
-            bbox = BoundingBox(Point(0, 0), Point(img_width, img_height))
-        elif isinstance(face, BoundingBox):
-            bbox = face
-        elif isinstance(face, DetectedFace):
-            bbox = face.bounding_box
-        else:
-            what: str = "Invalid face argument type"
-            what += (
-                " expected [BoundingBox | DetectedFace | None], got " + type(face).__name__
-            )
-            raise TypeError(what)
-
-        if not isinstance(target_shape, tuple) or len(target_shape) != 2:
-            raise ValueError("Invalid target shape")
-        if not all(isinstance(x, int) for x in target_shape):
-            raise TypeError("Target shape must be a tuple of integers")
-
-        if bbox.bottom_right.x > img_width or bbox.bottom_right.y > img_height:
-            raise ValueError("Face bounding box exceeds image dimensions")
-
+        target_shape = (self._input_shape.height, self._input_shape.width)
+        height, width, *_ = img.shape
         scaling_factor: float = min(
-            target_shape[0] / img_height,
-            target_shape[1] / img_width,
+            target_shape[0] / height,
+            target_shape[1] / width,
         )
         dsize = (
-            int(round(img_width * scaling_factor)),
-            int(round(img_height * scaling_factor)),
+            int(round(width * scaling_factor)),
+            int(round(height * scaling_factor)),
         )
 
         interpolation = cv2.INTER_AREA if scaling_factor < 1 else cv2.INTER_CUBIC
@@ -151,8 +187,11 @@ class Analyzer(ABC):
             shape=(target_shape[0], target_shape[1], 3),
             dtype=numpy.uint8,
         )
-
         ret[start_y : start_y + height, start_x : start_x + width] = img
+        if ret.ndim == 2:
+            ret = numpy.stack((ret,) * 3, axis=-1)
+        if ret.ndim == 3:
+            ret = numpy.expand_dims(ret, axis=0)
         return ret
 
     @property

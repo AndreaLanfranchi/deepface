@@ -1,4 +1,5 @@
 import os
+from typing import Optional, Union
 import tensorflow
 import gdown
 import numpy
@@ -9,6 +10,7 @@ from deepface.core import imgutils
 from deepface.core.analyzer import Analyzer as AnalyzerBase
 from deepface.core.exceptions import InsufficentVersionError
 from deepface.core.extractor import Extractor
+from deepface.core.types import BoundingBox, DetectedFace
 
 tensorflow_version_major = int(tensorflow.__version__.split(".", maxsplit=1)[0])
 if tensorflow_version_major < 2:
@@ -38,14 +40,15 @@ class Analyzer(AnalyzerBase):
         self._output_indexes = numpy.array(list(range(0, self._classes)))
         self.__initialize()
 
-    def process(self, img: numpy.ndarray) -> AnalyzerBase.Results:
+    def process(
+        self,
+        img: numpy.ndarray,
+        face: Optional[Union[DetectedFace, BoundingBox]] = None,
+    ) -> AnalyzerBase.Results:
 
-        super().process(img)
-        img = self._pad_scale_image(img, (224, 224))
-        if 4 != len(img.shape):
-            img = numpy.expand_dims(img, axis=0)
+        img = self._pre_process(img,face)
+        
         estimates = self._model.predict(img, verbose=0)[0, :]
-
         attribute_name = self.name.lower()
         attribute_value = str(
             round(numpy.sum(estimates * self._output_indexes).astype(float))

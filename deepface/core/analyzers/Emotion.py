@@ -1,4 +1,5 @@
 import os
+from typing import Optional, Union
 import tensorflow
 import gdown
 import numpy
@@ -8,6 +9,7 @@ from deepface.commons import folder_utils
 from deepface.commons.logger import Logger
 from deepface.core.analyzer import Analyzer as AnalyzerBase
 from deepface.core.exceptions import InsufficentVersionError
+from deepface.core.types import BoundingBox, DetectedFace
 
 tensorflow_version_major = int(tensorflow.__version__.split(".", maxsplit=1)[0])
 if tensorflow_version_major < 2:
@@ -48,12 +50,13 @@ class Analyzer(AnalyzerBase):
         self._name = str(__name__.rsplit(".", maxsplit=1)[-1])
         self.__initialize()
 
-    def process(self, img: numpy.ndarray) -> AnalyzerBase.Results:
+    def process(
+        self,
+        img: numpy.ndarray,
+        face: Optional[Union[DetectedFace, BoundingBox]] = None,
+    ) -> AnalyzerBase.Results:
 
-        super().process(img)
-        img = self._pad_scale_image(img, (224, 224))
-        if 4 != len(img.shape):
-            img = numpy.expand_dims(img, axis=0)
+        img = self._pre_process(img, face)
 
         img_gray = cv2.cvtColor(img[0], cv2.COLOR_BGR2GRAY)
         img_gray = cv2.resize(img_gray, (48, 48))
