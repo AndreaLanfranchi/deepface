@@ -41,7 +41,7 @@ class Analyzer(AnalyzerBase):
     def process(self, img: numpy.ndarray) -> AnalyzerBase.Results:
 
         super().process(img)
-        img = self.pad_scale_image(img, (224, 224))
+        img = self._pad_scale_image(img, (224, 224))
         if 4 != len(img.shape):
             img = numpy.expand_dims(img, axis=0)
         estimates = self._model.predict(img, verbose=0)[0, :]

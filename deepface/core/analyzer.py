@@ -79,7 +79,7 @@ class Analyzer(ABC):
             raise ValueError("Invalid image or empty image")
 
 
-    def pad_scale_image(
+    def _pad_scale_image(
         self,
         img: numpy.ndarray,
         target_shape: Tuple[int, int],
