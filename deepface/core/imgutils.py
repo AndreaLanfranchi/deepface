@@ -11,8 +11,8 @@ import numpy
 import cv2
 
 kKiB: int = 1024
-KMiB: int = 1024 ** 2
-kGiB: int = 1024 ** 3
+KMiB: int = 1024**2
+kGiB: int = 1024**3
 kVALID_IMAGE_TYPES: List[str] = ["jpg", "jpeg", "png", "webp"]
 
 _kHTTP_PATTERN = re.compile(r"^http(s)?://.*", re.IGNORECASE)
@@ -20,6 +20,7 @@ _kBASE64_PATTERN = re.compile(r"^data:image\/.*", re.IGNORECASE)
 _kBASE64_PATTERN_EXT = re.compile(
     r"^data:image\/(jpeg|jpg|png|webp)?(;base64)$", re.IGNORECASE
 )
+
 
 def is_valid_image(img: numpy.ndarray) -> bool:
     """
@@ -69,7 +70,7 @@ def is_valid_image_file(
     -------
         `filename`: str Image file to test
         `check_ext`: bool Check the file extension. This further checks the
-            file extension to be one of the supported image types. 
+            file extension to be one of the supported image types.
             Default is False
         `max_size`: int Maximum file size in bytes. Default is 10 MiB
 
@@ -95,7 +96,7 @@ def is_valid_image_file(
     filename = filename.strip()
     if len(filename) == 0 or not os.path.isfile(filename):
         raise FileNotFoundError(f"File [{filename}] does not exist")
-    
+
     file_size: int = os.path.getsize(filename)
     if 0 == file_size or file_size > max_size:
         ret = False
@@ -389,7 +390,7 @@ def normalize_input(img: numpy.ndarray, mode: str = "base") -> numpy.ndarray:
         what: str = 'Invalid "mode" type. Expected str, '
         what += f"got {type(mode)}"
         raise TypeError(what)
-    
+
     # issue 131 declares that some normalization techniques improves the accuracy
     mode = mode.lower().strip()
     if mode == "base":

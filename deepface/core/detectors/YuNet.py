@@ -93,7 +93,7 @@ class Detector(DetectorBase):
             )
 
         detected_faces: List[DetectedFace] = []
-        img_height, img_width = img.shape[:2]
+        img_height, img_width, *_ = img.shape
         processed_img = img
 
         # resize image if it is too large (Yunet fails to detect faces on large input sometimes)
@@ -150,7 +150,7 @@ class Detector(DetectorBase):
 
                 bounding_box: BoundingBox = BoundingBox(
                     top_left=Point(x=x, y=y),
-                    bottom_right=Point(x=x + w, y=y + h),
+                    bottom_right=Point(x=x_range.end, y=y_range.end),
                 )
 
                 points: Optional[Dict[str, Optional[Point]]] = None
@@ -171,6 +171,12 @@ class Detector(DetectorBase):
                         "mrc": rm_point,
                         "mc": mc_point,
                     }
+
+                    # Remove any points that are outside the bounding box
+                    for key in list(points.keys()):
+                        pt: Optional[Point] = points[key]
+                        if pt is not None and pt not in bounding_box:
+                            points.pop(key)
 
                 try:
                     # This might raise an exception if the values are out of bounds

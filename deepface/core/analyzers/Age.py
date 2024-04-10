@@ -1,5 +1,3 @@
-from typing import Dict, Union
-
 import os
 import tensorflow
 import gdown
@@ -7,6 +5,7 @@ import numpy
 
 from deepface.commons import folder_utils
 from deepface.commons.logger import Logger
+from deepface.core import imgutils
 from deepface.core.analyzer import Analyzer as AnalyzerBase
 from deepface.core.exceptions import InsufficentVersionError
 from deepface.core.extractor import Extractor
@@ -19,6 +18,7 @@ if tensorflow_version_major < 2:
 # pylint: disable=wrong-import-position
 from tensorflow.keras.models import Model, Sequential
 from tensorflow.keras.layers import Convolution2D, Flatten, Activation
+
 # pylint: enable=wrong-import-position
 # pylint: enable=wrong-import-order
 
@@ -29,26 +29,29 @@ logger = Logger.get_instance()
 class Analyzer(AnalyzerBase):
 
     _model: Model  # The actual model used for the analysis
+    _classes: int  # The number of classes the model can predict
+    _output_indexes: numpy.ndarray  # The indexes of the output values of the model
 
     def __init__(self):
         self._name = str(__name__.rsplit(".", maxsplit=1)[-1])
+        self._classes = 101
+        self._output_indexes = numpy.array(list(range(0, self._classes)))
         self.__initialize()
 
-    def process(
-        self, img: numpy.ndarray, detail: bool = False
-    ) -> Dict[str, Union[str, Dict[str, float]]]:
+    def process(self, img: numpy.ndarray) -> AnalyzerBase.Results:
 
-        result = {}
-        attribute = self.name.lower()
+        super().process(img)
+        img = self.pad_scale_image(img, (224, 224))
+        if 4 != len(img.shape):
+            img = numpy.expand_dims(img, axis=0)
         estimates = self._model.predict(img, verbose=0)[0, :]
-        attribute_value = numpy.sum(estimates * self._output_indexes).astype(float)
-        result[attribute] = attribute_value
 
-        if detail:
-            details = {}
-            result[f"{attribute}_analysis"] = details
-
-        return result
+        attribute_name = self.name.lower()
+        attribute_value = str(
+            round(numpy.sum(estimates * self._output_indexes).astype(float))
+        )
+        weights = {str(i): float(estimates[i]) for i in range(0, self._classes) if estimates[i] != float(0)}
+        return AnalyzerBase.Results(attribute_name, attribute_value, weights)
 
     def __initialize(self):
 
@@ -61,12 +64,9 @@ class Analyzer(AnalyzerBase):
             url += f"download/v1.0/{file_name}"
             gdown.download(url, weight_file, quiet=False)
 
-        classes = 101  # TDOO: What is this magic number?
-        self._output_indexes = numpy.array(list(range(0, classes)))
-
         base_model: Sequential = Extractor.instance().base_model()
         base_model_output = Sequential()
-        base_model_output = Convolution2D(classes, (1, 1), name="predictions")(
+        base_model_output = Convolution2D(self._classes, (1, 1), name="predictions")(
             base_model.layers[-4].output
         )
         base_model_output = Flatten()(base_model_output)

@@ -152,7 +152,7 @@ def batch_extract_faces(
     else:
         sources = inputs
 
-    if len(sources) == 0:
+    if 0 == len(sources):
         raise ValueError("Empty list of images for batch processing")
 
     files: List[str] = []

@@ -114,13 +114,20 @@ class Extractor(ABC):
             bbox = face
         elif isinstance(face, DetectedFace):
             bbox = face.bounding_box
+        else:
+            what: str = "Invalid face argument type"
+            what += (
+                " expected [BoundingBox | DetectedFace | None], got "
+                + type(face).__name__
+            )
+            raise TypeError(what)
 
         if bbox.bottom_right.x > img_width or bbox.bottom_right.y > img_height:
             raise ValueError("Face bounding box exceeds image dimensions")
         img = img[
             bbox.top_left.y : bbox.bottom_right.y, bbox.top_left.x : bbox.bottom_right.x
         ]
-        
+
         height = bbox.height
         width = bbox.width
         scaling_factor: float = min(

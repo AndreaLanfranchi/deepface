@@ -155,7 +155,7 @@ class Detector(ABC):
             or len(self._name) == 0
         ):
             return "<undefined>"
-        return self._name
+        return self._name.lower().strip()
 
     @property
     def default_min_confidence(self) -> float:
@@ -246,8 +246,8 @@ class Detector(ABC):
         """
         `Detector` "lazy" factory method.
 
-        Params:
-        -------
+        Args:
+        -----
             `name_or_inst`: A string representing the name of the detector to instantiate
               or an instance of a `Detector` subclass. If None, the default detector will be used
 
@@ -273,7 +273,7 @@ class Detector(ABC):
 
         if not isinstance(name_or_inst, str):
             raise TypeError(
-                f"Invalid 'id' argument type [{type(name_or_inst).__name__}] : expected str"
+                f"Invalid 'name_or_inst' argument type [{type(name_or_inst).__name__}] : expected str"
             )
         if not isinstance(singleton, bool):
             raise TypeError(

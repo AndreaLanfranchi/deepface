@@ -19,24 +19,29 @@
 #     source=0,  # 0 for onboard camera
 # )
 
+from deepface.core.analyzer import Analyzer
 from deepface.infra import (
     detection,
     extraction,
 )
 
-# results_list = detection.batch_detect_faces(inputs=".", detector="yunet")
-# total_faces = int(0)
-# for results in results_list:
-#     print(f"Detected {len(results)} face(s) in {results.tag}")
-#     for detection in results.detections:
-#         print(f"Face detected at {detection.bounding_box.xywh} with confidence {detection.confidence}")
-#     total_faces += len(results)
+age_analyzer: Analyzer = Analyzer.instance("race")
+results_list = detection.batch_detect_faces(inputs=".", detector="yunet")
+total_faces = int(0)
+for results in results_list:
+    print(f"Detected {len(results)} face(s) in {results.tag}")
+    for detection in results.detections:
+        face = detection.crop(results.img)
+        age_results = age_analyzer.process(face)
+        print(age_results)
+        # print(f"Face detected at {detection.bounding_box.xywh} with confidence {detection.confidence}")
+    total_faces += len(results)
 
 # print(f"Total faces detected: {total_faces}")
 
-r = extraction.batch_extract_faces(inputs=r".\dataset")
-for tag, detections in r.items():
-    count: int = 0
-    if detections is not None:
-        count = len(detections)
-    print(f"{tag}: {count} face(s) detected")
+# r = extraction.batch_extract_faces(inputs=r".\dataset")
+# for tag, detections in r.items():
+#     count: int = 0
+#     if detections is not None:
+#         count = len(detections)
+#     print(f"{tag}: {count} face(s) detected")

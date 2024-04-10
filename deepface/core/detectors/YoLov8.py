@@ -135,8 +135,12 @@ class Detector(DetectorBase):
                 # 4: right corner of the mouth (from the viewer's perspective)
                 for i in range(0, len(item.keypoints.xy[0])):
                     xy = item.keypoints.xy[0][i].tolist()
+
                     xy_point = Point(x=int(round(xy[0])), y=int(round(xy[1])))
-                    xy_key:Optional[str] = None
+                    if xy_point not in bounding_box:
+                        continue
+
+                    xy_key: Optional[str] = None
                     match i:
                         case 0:
                             xy_key = "rec"

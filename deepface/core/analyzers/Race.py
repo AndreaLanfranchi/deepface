@@ -1,5 +1,3 @@
-from typing import Dict, Union
-
 import os
 import tensorflow
 import gdown
@@ -19,6 +17,7 @@ if tensorflow_version_major < 2:
 # pylint: disable=wrong-import-position
 from tensorflow.keras.models import Model, Sequential
 from tensorflow.keras.layers import Convolution2D, Flatten, Activation
+
 # pylint: enable=wrong-import-position
 # pylint: enable=wrong-import-order
 
@@ -36,25 +35,24 @@ class Analyzer(AnalyzerBase):
         self._name = str(__name__.rsplit(".", maxsplit=1)[-1])
         self.__initialize()
 
-    def process(
-        self, img: numpy.ndarray, detail: bool = False
-    ) -> Dict[str, Union[str, Dict[str, float]]]:
+    def process(self, img: numpy.ndarray) -> AnalyzerBase.Results:
 
-        result = {}
-        attribute = self.name.lower()
+        super().process(img)
+        img = self.pad_scale_image(img, (224, 224))
+        if 4 != len(img.shape):
+            img = numpy.expand_dims(img, axis=0)
 
         estimates = self._model.predict(img, verbose=0)[0, :]
-        result[attribute] = self._labels[numpy.argmax(estimates)]
+        attribute_name: str = self.name.lower()
+        attribute_value: str = self._labels[numpy.argmax(estimates)]
 
-        if detail:
-            details = {}
-            estimates_sum = numpy.sum(estimates)
-            for i, label in enumerate(self._labels):
-                estimate = round(estimates[i] * 100 / estimates_sum, 2)
-                details[label] = estimate
-            result[f"{attribute}_analysis"] = details
+        weights = {}
+        estimates_sum = numpy.sum(estimates)
+        for i, label in enumerate(self._labels):
+            estimate = float(round(estimates[i] * 100 / estimates_sum, 2))
+            weights[label] = estimate
 
-        return result
+        return AnalyzerBase.Results(attribute_name, attribute_value, weights)
 
     def __initialize(self):
 

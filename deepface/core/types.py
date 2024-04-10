@@ -505,13 +505,18 @@ class DetectedFace:
         if not is_valid_image(img):
             raise TypeError("Image must be a valid numpy array for a non empty image")
 
-        img_h, img_w = img.shape[:2]
+        img_h, img_w, *_ = img.shape
         if (
             self.bounding_box.top_right.x > img_w
             or self.bounding_box.bottom_right.y > img_h
         ):
-            raise OverflowError("Bounding box is out of bounds of the image")
-        return img[
+            what: str = "Bounding box exceeds image dimensions: \n"
+            what += f" x [{self.bounding_box.top_right.x}] : y [{self.bounding_box.bottom_right.y}] \n"
+            what += f" max x [{img_w}] : max y [{img_h}]"
+            raise OverflowError(what)
+
+        cropped = img[
             self.bounding_box.top_left.y : self.bounding_box.bottom_right.y,
             self.bounding_box.top_left.x : self.bounding_box.bottom_right.x,
         ]
+        return cropped
