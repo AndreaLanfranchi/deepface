@@ -126,7 +126,7 @@ class Detector(DetectorBase):
 
             points: Optional[Dict[str, Optional[Point]]] = None
             if key_points and item.keypoints is not None:
-
+                points = {}
                 # Indices (note we have to swap from viewer to image perspective):
                 # 0: left eye (from the viewer's perspective)
                 # 1: right eye (from the viewer's perspective)
@@ -157,10 +157,13 @@ class Detector(DetectorBase):
                             pass
 
                     if xy_key is not None:
-                        if points is None:
-                            points = {}
                         points[xy_key] = xy_point
 
+                # Remove any points that are outside the bounding box
+                for key in list(points.keys()):
+                    pt: Optional[Point] = points[key]
+                    if pt is not None and pt not in bounding_box:
+                        points.pop(key)
             try:
                 # This might raise an exception if the values are out of bounds
                 detected_faces.append(

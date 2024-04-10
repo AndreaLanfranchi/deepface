@@ -54,7 +54,7 @@ class Detector(DetectorBase):
 
     def __init__(self):
         self._name = str(__name__.rsplit(".", maxsplit=1)[-1])
-        self._KDEFAULT_MIN_CONFIDENCE = float(0.9)
+        self._KDEFAULT_MIN_CONFIDENCE = float(0.8)
         self._initialize()
 
     def _initialize(self) -> Any:

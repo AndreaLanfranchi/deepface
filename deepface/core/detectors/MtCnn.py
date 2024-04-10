@@ -54,7 +54,7 @@ class Detector(DetectorBase):
         # TODO: Verify if the image is in the right BGR format
         # before converting it to RGB
         img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        img_height, img_width = img_rgb.shape[:2]
+        img_height, img_width, *_ = img_rgb.shape
 
         detections = self._detector.detect_faces(img_rgb)
 

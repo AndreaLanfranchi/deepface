@@ -122,7 +122,7 @@ class Detector(DetectorBase):
             raise FaceNotFoundError("No face detected. Check the input image.")
 
         return DetectorBase.Results(
-            detector=str(self._name),
+            detector=str(self.name),
             img=img,
             tag=tag,
             detections=detected_faces,

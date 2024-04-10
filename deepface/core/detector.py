@@ -38,7 +38,7 @@ class Detector(ABC):
             if not isinstance(self.detector, str):
                 raise TypeError("Detector name must be a valid string")
             if self.detector not in Detector.get_available_detectors():
-                raise ValueError("Invalid or unknown detector")
+                raise ValueError(f"Invalid or unknown detector {self.detector}")
             if not imgutils.is_valid_image(self.img):
                 raise ValueError("Invalid or empty image")
             if self.tag is not None:

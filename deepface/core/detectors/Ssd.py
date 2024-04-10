@@ -143,6 +143,7 @@ class Detector(DetectorBase):
 
             points: Optional[Dict[str, Optional[Point]]] = None
             if key_points:
+                points = {}
                 cropped_img = img[
                     bounding_box.top_left.y : bounding_box.bottom_right.y,
                     bounding_box.top_left.x : bounding_box.bottom_right.x,
@@ -160,6 +161,12 @@ class Detector(DetectorBase):
                         y=eyes[1].y + bounding_box.top_left.y,
                     )
                     points = {"lec": le_point, "rec": re_point}
+
+                # Remove any points that are outside the bounding box
+                for key in list(points.keys()):
+                    pt: Optional[Point] = points[key]
+                    if pt is not None and pt not in bounding_box:
+                        points.pop(key)
 
             try:
                 # This might raise an exception if the values are out of bounds

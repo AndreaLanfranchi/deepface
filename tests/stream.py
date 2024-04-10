@@ -29,11 +29,15 @@ age_analyzer: Analyzer = Analyzer.instance("race")
 results_list = detection.batch_detect_faces(inputs=".", detector="yunet")
 total_faces = int(0)
 for results in results_list:
+    if 0 != len(results):
+        continue
     print(f"Detected {len(results)} face(s) in {results.tag}")
+    i:int = 0
     for detection in results.detections:
         face = detection.crop(results.img)
-        age_results = age_analyzer.process(face)
-        print(age_results)
+        attr_results = age_analyzer.process(face)
+        print(f"Face {i} attributes: {attr_results.name}=={attr_results.value}")
+        # print(attr_results)
         # print(f"Face detected at {detection.bounding_box.xywh} with confidence {detection.confidence}")
     total_faces += len(results)
 

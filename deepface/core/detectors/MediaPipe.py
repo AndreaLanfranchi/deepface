@@ -31,10 +31,11 @@ class Detector(DetectorBase):
 
     def __init__(self):
         self._name = str(__name__.rsplit(".", maxsplit=1)[-1])
-        self._KDEFAULT_MIN_CONFIDENCE = float(0.85)
+        self._KDEFAULT_MIN_CONFIDENCE = float(0.7)
         self._initialize()
 
     def _initialize(self):
+        
         #   min_detection_confidence: Minimum confidence value ([0.0, 1.0]) for face
         #     detection to be considered successful (default 0.5). See details in
         #     https://solutions.mediapipe.dev/face_detection#min_detection_confidence.
@@ -42,7 +43,11 @@ class Detector(DetectorBase):
         #     best for faces within 2 meters from the camera, and 1 for a full-range
         #     model best for faces within 5 meters. (default 0) See details in
         #     https://solutions.mediapipe.dev/face_detection#model_selection.
-        self._detector = FaceDetection(min_detection_confidence=0.7)
+        
+        self._detector = FaceDetection(
+            min_detection_confidence=self._KDEFAULT_MIN_CONFIDENCE,
+            model_selection=1,
+        )
 
     def process(
         self,
