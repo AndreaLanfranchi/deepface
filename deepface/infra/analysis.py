@@ -19,7 +19,7 @@ def analyze_faces(
     min_confidence: Optional[float] = None,
     key_points: bool = False,
     raise_notfound: bool = False,
-) -> Dict[str, Optional[List[Tuple[DetectedFace, List[Analyzer.Results]]]]]:
+) -> Dict[str, Optional[List[DetectedFace]]]:
     """
     Analyzes faces attributes in an image
 
@@ -65,7 +65,7 @@ def analyze_faces(
         Analyzer.instance(attr) for attr in attributes
     ]
 
-    results: Dict[str, Optional[List[Tuple[DetectedFace, List[Analyzer.Results]]]]] = {}
+    results: Dict[str, Optional[List[DetectedFace]]] = {}
     img, tag = imgutils.load_image(inp, tag)
     detector_instance = Detector.instance(detector)
     detector_results: Detector.Results = detector_instance.process(
@@ -81,18 +81,16 @@ def analyze_faces(
     if not detector_results:
         results[tag] = None
     else:
-        inner_results: List[Tuple[DetectedFace, List[Analyzer.Results]]] = []
         for detection in detector_results.detections:
-            analysis_results: List[Analyzer.Results] = []
+            inner_results: Dict[str, str] = {}
             for analyzer_instance in analyzer_instances:
-                analysis_results.append(
-                    analyzer_instance.process(
-                        detector_results.img, detection.bounding_box
-                    )
+                analisis_result = analyzer_instance.process(
+                    detector_results.img,
+                    detection.bounding_box,
                 )
-            inner_results.append((detection, analysis_results))
-
-        results[tag] = inner_results
+                inner_results[analyzer_instance.name] = analisis_result.value
+            detection.set_attributes(inner_results)
+        results[tag] = detector_results.detections
 
     return results
 
@@ -106,7 +104,7 @@ def batch_analyze_faces(
     key_points: bool = False,
     raise_notfound: bool = False,
     recurse: bool = True,
-) -> Dict[str, Optional[List[Tuple[DetectedFace, List[Analyzer.Results]]]]]:
+) -> Dict[str, Optional[List[DetectedFace]]]:
     """
     Analyzes faces attributes from a batch of images
 
@@ -142,7 +140,7 @@ def batch_analyze_faces(
         raise ValueError("Argument [inputs] cannot be None")
 
     detector_instance = Detector.instance(detector)
-    results: Dict[str, Optional[List[Tuple[DetectedFace, List[Analyzer.Results]]]]] = {}
+    results: Dict[str, Optional[List[DetectedFace]]] = {}
 
     if isinstance(inputs, numpy.ndarray):
         if not inputs.ndim == 4:

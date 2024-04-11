@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Union
 
 import os
 import numpy
@@ -19,7 +19,7 @@ def extract_faces(
     min_confidence: Optional[float] = None,
     key_points: bool = False,
     raise_notfound: bool = False,
-) -> Dict[str, Optional[List[Tuple[DetectedFace, List[float]]]]]:
+) -> Dict[str, Optional[List[DetectedFace]]]:
     """
     Extract faces from an image
 
@@ -58,7 +58,7 @@ def extract_faces(
         functions
     """
 
-    results: Dict[str, Optional[List[Tuple[DetectedFace, List[float]]]]] = {}
+    results: Dict[str, Optional[List[DetectedFace]]] = {}
     img, tag = imgutils.load_image(inp, tag=tag)
     detector_instance = Detector.instance(detector)
     detector_results: Detector.Results = detector_instance.process(
@@ -75,11 +75,11 @@ def extract_faces(
         results[tag] = None
     else:
         extractor_instance = Extractor.instance(extractor)
-        inner_results: List[Tuple[DetectedFace, List[float]]] = []
         for detection in detector_results.detections:
-            embedding = extractor_instance.process(img, detection.bounding_box)
-            inner_results.append((detection, embedding))
-        results[tag] = inner_results
+            extraction_result = extractor_instance.process(img, detection.bounding_box)
+            detection.set_embeddings(extraction_result)
+
+        results[tag] = detector_results.detections
 
     return results
 
@@ -93,7 +93,7 @@ def batch_extract_faces(
     key_points: bool = False,
     raise_notfound: bool = False,
     recurse: bool = True,
-) -> Dict[str, Optional[List[Tuple[DetectedFace, List[float]]]]]:
+) -> Dict[str, Optional[List[DetectedFace]]]:
     """
     Extract faces from a batch of images
 
@@ -142,7 +142,7 @@ def batch_extract_faces(
 
     detector_instance = Detector.instance(detector)
     extractor_instance = Extractor.instance(extractor)
-    results: Dict[str, Optional[List[Tuple[DetectedFace, List[float]]]]] = {}
+    results: Dict[str, Optional[List[DetectedFace]]] = {}
 
     if isinstance(inputs, numpy.ndarray):
         if not inputs.ndim == 4:

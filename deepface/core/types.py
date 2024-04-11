@@ -285,11 +285,12 @@ class DetectedFace:
     Attributes:
     -----------
 
-        confidence (float): The confidence score of the detection.
-        bounding_box (BoundingBox): The bounding box of the detected face.
-        key_points (Optional[Dict[str, Point]]): The key points of the detected face.
-        embeddings (Optional[List[float]]): The embeddings of the detected face.
+        `confidence` (float): The confidence score of the detection.
+        `bounding_box` (BoundingBox): The bounding box of the detected face.
+        `key_points` (Optional[Dict[str, Point]]): The key points of the detected face.
+        `embeddings` (Optional[List[float]]): The embeddings of the detected face.
             Embeddings are optionally provided by the extractor.
+        `attributes` (Optional[Dict[str, str]]): The attributes of the detected face.
 
     Notes:
     ------
@@ -501,7 +502,7 @@ class DetectedFace:
                 raise TypeError("Attribute Key must be a string")
             if not isinstance(value, str):
                 raise TypeError("Attribute Value must be a string")
-        
+
         if self.attributes is not None:
             self.attributes.update(attributes)
         else:
