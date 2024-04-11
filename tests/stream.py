@@ -8,22 +8,27 @@
 #                 )
 
 # Sample code to run the stream function using onboard camera
-from deepface import DeepFace
-DeepFace.stream(
-    db_path="dataset",
-    detector="fastmtcnn",
-    extractor="openface",
-    faces_count_threshold=2,
-    freeze_time_seconds=2,
-    valid_frames_count=2,
-    source=0,  # 0 for onboard camera
-)
+# from deepface import DeepFace
+# DeepFace.stream(
+#     db_path="dataset",
+#     detector="fastmtcnn",
+#     extractor="openface",
+#     faces_count_threshold=2,
+#     freeze_time_seconds=2,
+#     valid_frames_count=2,
+#     source=0,  # 0 for onboard camera
+# )
 
 # from deepface.core.analyzer import Analyzer
-# from deepface.infra import (
-#     detection,
-#     extraction,
-# )
+import warnings
+
+
+warnings.filterwarnings("ignore")
+from deepface.infra import (
+    analysis,
+    detection,
+    extraction,
+)
 
 # age_analyzer: Analyzer = Analyzer.instance("age")
 # gender_analyzer: Analyzer = Analyzer.instance("gender")
@@ -49,3 +54,6 @@ DeepFace.stream(
 #     if detections is not None:
 #         count = len(detections)
 #     print(f"{tag}: {count} face(s) detected")
+
+r = analysis.batch_analyze_faces(inputs=r".\dataset\couple.JPG", detector="fastmtcnn", attributes=None, key_points=True, raise_notfound=False)
+print(r)

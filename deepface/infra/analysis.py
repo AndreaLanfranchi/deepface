@@ -147,7 +147,7 @@ def batch_analyze_faces(
     if isinstance(inputs, numpy.ndarray):
         if not inputs.ndim == 4:
             raise ValueError("Expected 4D array for batch processing")
-        for i in tqdm(range(inputs.shape[0]), ascii=True, desc="Batch detecting"):
+        for i in tqdm(range(inputs.shape[0]), ascii=True, desc="Batch analyzing"):
             # TODO: if the following raises decide whether the skip the
             # offending image or let the exception to pop up
             item_results = analyze_faces(
@@ -190,7 +190,7 @@ def batch_analyze_faces(
             files.extend(file_list)
 
     if 0 != len(files):
-        for file in tqdm(files, ascii=True, desc="Batch extracting"):
+        for file in tqdm(files, ascii=True, desc="Batch analyzing"):
             item_results = analyze_faces(
                 file,
                 tag=file,
@@ -202,7 +202,7 @@ def batch_analyze_faces(
                 raise_notfound=raise_notfound,
             )
             results.update(item_results)
-            
+
     elif raise_notfound:
         raise FileNotFoundError("No valid image files found in the input")
 

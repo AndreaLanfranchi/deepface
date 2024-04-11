@@ -312,8 +312,9 @@ class DetectedFace:
 
     confidence: float = field(default=0.0)
     bounding_box: BoundingBox = field(default_factory=BoundingBox)
-    key_points: Optional[Dict[str, Optional[Point]]] = field(default=None)
+    key_points: Optional[Dict[str, Point]] = field(default=None)
     embeddings: Optional[List[float]] = field(default=None)
+    attributes: Optional[Dict[str, str]] = field(default=None)
 
     def __post_init__(self):
         assert isinstance(self.confidence, float)
@@ -326,6 +327,9 @@ class DetectedFace:
             if not isinstance(self.key_points, dict):
                 raise TypeError("Key points must be a dictionary")
 
+            if len(self.key_points) == 0:
+                raise ValueError("Key points must be non-empty or None")
+
             # Only allow the specified keys
             allowed_keys: List[str] = ["lec", "rec", "nt", "mlc", "mrc", "mc"]
             for key, value in self.key_points.items():
@@ -337,11 +341,9 @@ class DetectedFace:
                     what: str = f'Keypoint Key "{key}" is not one of'
                     what += f" the allowed keys {allowed_keys}"
                     raise ValueError(what)
-                if value is None:
-                    continue
                 if not isinstance(value, Point):
                     raise TypeError(
-                        "Keypoint Value must be an Optional[Point] object : got {type(value)}"
+                        "Keypoint Value must be a Point object : got {type(value)}"
                     )
                 if value not in self.bounding_box:
                     what: str = f'Key point "{key}"={value} is not inside'
@@ -380,6 +382,130 @@ class DetectedFace:
             for value in self.embeddings:
                 if not isinstance(value, float):
                     raise TypeError("Embedding value must be a float")
+
+        if self.attributes is not None:
+            if not isinstance(self.attributes, dict):
+                raise TypeError("Attributes must be a dictionary")
+            if len(self.attributes) == 0:
+                raise ValueError("Attributes must be non-empty dictionary")
+            for key, value in self.attributes.items():
+                if not isinstance(key, str):
+                    raise TypeError("Attribute Key must be a string")
+                if not isinstance(value, str):
+                    raise TypeError("Attribute Value must be a string")
+
+    def set_key_points(self, key_points: Dict[str, Point]):
+        """
+        Set the key points of the detected face.
+
+        Args:
+        ----
+            key_points (Dict[str, Point]): The key points of the detected face.
+
+        Raises:
+        -------
+            TypeError: If the key points are not a list of Point objects.
+            ValueError: If the key points are empty or not the correct length.
+        """
+
+        if not isinstance(key_points, dict):
+            raise TypeError("Key points must be a dictionary")
+        if len(key_points) == 0:
+            return
+
+        allowed_keys: List[str] = ["lec", "rec", "nt", "mlc", "mrc", "mc"]
+
+        for key, value in key_points.items():
+            if not isinstance(key, str):
+                raise TypeError("Key point Key must be a string")
+            if key not in allowed_keys:
+                what: str = f'Key point Key "{key}" is not one of the allowed keys'
+                what += f" {allowed_keys}"
+                raise ValueError(what)
+            if not isinstance(value, Point):
+                raise TypeError("Key point Value must be a Point object")
+            if value not in self.bounding_box:
+                what: str = f'Key point "{key}"={value} is not inside'
+                what += f" the bounding box xywh [{self.bounding_box.xywh}]"
+                raise ValueError(what)
+
+        le = key_points.get("lec", None)
+        re = key_points.get("rec", None)
+        if le is not None and re is not None:
+            if le == re:
+                what: str = "Left and right eyes must be different points."
+                what += f" Got left eye={le} and right eye={re}"
+                raise ValueError(what)
+            # Swap the left and right eyes if the left eye is to the right of the right eye
+            if le.x < re.x:
+                key_points["lec"] = re
+                key_points["rec"] = le
+
+        lm = key_points.get("mlc", None)
+        rm = key_points.get("mrc", None)
+        if lm is not None and rm is not None:
+            if lm == rm:
+                what: str = "Left and right mouth corners must be different points."
+                what += f" Got left mouth={lm} and right mouth={rm}"
+                raise ValueError(what)
+            # Swap the left and right mouth if the left mouth is to the right of the right mouth
+            if lm.x < rm.x:
+                key_points["mlc"] = rm
+                key_points["mrc"] = lm
+
+        object.__setattr__(self, "key_points", key_points)
+
+    def set_embeddings(self, embeddings: List[float]):
+        """
+        Set the embeddings of the detected face.
+
+        Args:
+        ----
+            embeddings (List[float]): The embeddings of the detected face.
+
+        Raises:
+        -------
+            TypeError: If the embeddings are not a list of floats.
+            ValueError: If the embeddings are empty.
+        """
+
+        if not isinstance(embeddings, list):
+            raise TypeError("Embeddings must be a list")
+        if len(embeddings) == 0:
+            return
+        for value in embeddings:
+            if not isinstance(value, float):
+                raise TypeError("Embedding value must be a float")
+        object.__setattr__(self, "embeddings", embeddings)
+
+    def set_attributes(self, attributes: Dict[str, str]):
+        """
+        Set the attributes of the detected face.
+
+        Args:
+        ----
+            attributes (Dict[str, str]): The attributes of the detected face.
+
+        Raises:
+        -------
+            TypeError: If the attributes are not a dictionary.
+            ValueError: If the attributes are empty.
+        """
+
+        if not isinstance(attributes, dict):
+            raise TypeError("Attributes must be a dictionary")
+        if len(attributes) == 0:
+            return
+        for key, value in attributes.items():
+            if not isinstance(key, str):
+                raise TypeError("Attribute Key must be a string")
+            if not isinstance(value, str):
+                raise TypeError("Attribute Value must be a string")
+        
+        if self.attributes is not None:
+            self.attributes.update(attributes)
+        else:
+            object.__setattr__(self, "attributes", attributes)
 
     @property
     def width(self) -> int:
