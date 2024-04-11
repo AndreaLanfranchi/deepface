@@ -420,8 +420,8 @@ class DetectedFace:
             if not isinstance(key, str):
                 raise TypeError("Key point Key must be a string")
             if key not in allowed_keys:
-                what: str = f'Key point Key "{key}" is not one of the allowed keys'
-                what += f" {allowed_keys}"
+                what: str = f'Key point Key "{key}" is not one of the allowed keys : '
+                what += f"{allowed_keys}"
                 raise ValueError(what)
             if not isinstance(value, Point):
                 raise TypeError("Key point Value must be a Point object")
@@ -507,6 +507,27 @@ class DetectedFace:
             self.attributes.update(attributes)
         else:
             object.__setattr__(self, "attributes", attributes)
+
+    def clear_attributes(self):
+        """
+        Clear the attributes of the detected face.
+        """
+
+        object.__setattr__(self, "attributes", None)
+
+    def clear_embeddings(self):
+        """
+        Clear the embeddings of the detected face.
+        """
+
+        object.__setattr__(self, "embeddings", None)
+
+    def clear_key_points(self):
+        """
+        Clear the key points of the detected face.
+        """
+
+        object.__setattr__(self, "key_points", None)
 
     @property
     def width(self) -> int:
@@ -637,9 +658,9 @@ class DetectedFace:
             self.bounding_box.top_right.x > img_w
             or self.bounding_box.bottom_right.y > img_h
         ):
-            what: str = "Bounding box exceeds image dimensions: \n"
-            what += f" x [{self.bounding_box.top_right.x}] : y [{self.bounding_box.bottom_right.y}] \n"
-            what += f" max x [{img_w}] : max y [{img_h}]"
+            what: str = "Bounding max values exceed image dimensions: \n"
+            what += f" box x={self.bounding_box.top_right.x}, y={self.bounding_box.bottom_right.y} \n"
+            what += f" max x={img_w}, y={img_h}"
             raise OverflowError(what)
 
         cropped = img[

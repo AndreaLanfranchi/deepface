@@ -55,5 +55,9 @@ from deepface.infra import (
 #         count = len(detections)
 #     print(f"{tag}: {count} face(s) detected")
 
+r = extraction.batch_extract_faces(inputs=r".\dataset\couple.jpg", detector="fastmtcnn", key_points=True, raise_notfound=False)
+print(r)
+
 r = analysis.batch_analyze_faces(inputs=r".\dataset\couple.JPG", detector="fastmtcnn", attributes=None, key_points=True, raise_notfound=False)
 print(r)
+
