@@ -202,7 +202,7 @@ class Analyzer(ABC):
             or len(self._name.strip()) == 0
         ):
             return "<undefined>"
-        return self._name.strip()
+        return self._name.strip().lower()
 
     @staticmethod
     def get_available_attributes() -> List[str]:
