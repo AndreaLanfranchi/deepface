@@ -35,6 +35,8 @@ def detect_faces(
 
         `key_points`: whether to detect key points
 
+        `raise_notfound`: if True, raise an exception if no faces are found
+
     Returns:
     --------
         detection results

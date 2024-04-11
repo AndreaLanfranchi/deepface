@@ -6,22 +6,22 @@ from tqdm import tqdm
 
 from deepface.core import imgutils
 from deepface.core.detector import Detector
-from deepface.core.extractor import Extractor
+from deepface.core.analyzer import Analyzer
 from deepface.core.types import BoxDimensions, DetectedFace
 
 
-def extract_faces(
+def analyze_faces(
     inp: Union[str, numpy.ndarray],
     tag: Optional[str] = None,
     detector: Optional[Union[str, Detector]] = None,
-    extractor: Optional[Union[str, Extractor]] = None,
+    attributes: Optional[Union[str, List[str]]] = None,
     min_dims: Optional[BoxDimensions] = None,
     min_confidence: Optional[float] = None,
     key_points: bool = False,
     raise_notfound: bool = False,
-) -> Dict[str, Optional[List[Tuple[DetectedFace, List[float]]]]]:
+) -> Dict[str, Optional[List[Tuple[DetectedFace, List[Analyzer.Results]]]]]:
     """
-    Extract faces from an image
+    Analyzes faces attributes in an image
 
     Args:
     -----
@@ -32,8 +32,8 @@ def extract_faces(
         `detector`: detector instance or string. The model to use for face
         detection. If None, the default detector is assumed
 
-        `extractor`: extractor instance or string. The model to use for face
-        extraction. If None, the default extractor is assumed
+        `attributes`: a list of attributes to analyze. If None, all available
+        attributes are analyzed
 
         `min_dims`: minimum dimensions for detected faces. Detected faces
         with bounding boxes smaller than this are ignored. If None, the
@@ -46,20 +46,27 @@ def extract_faces(
 
         `raise_notfound`: Whether to raise an exception if no faces are detected
 
-    Returns:
-    --------
-        A list of tuples containing the tag, the detected face and the
-        extracted face representation
-
-    Raises:
-    -------
-        ValueError: if the input is invalid
-        Any other exceptions raised by the detector or image loading
-        functions
     """
 
-    results: Dict[str, Optional[List[Tuple[DetectedFace, List[float]]]]] = {}
-    img, tag = imgutils.load_image(inp, tag=tag)
+    if attributes is None:
+        attributes = Analyzer.get_available_attributes()
+    if isinstance(attributes, str):
+        attributes = [
+            attributes,
+        ]
+    if not isinstance(attributes, list):
+        what: str = (
+            "Invalid `attributes` argument type. Expected [None | str | List[str]]"
+        )
+        what += f" but got {type(attributes)}"
+        raise TypeError(what)
+
+    analyzer_instances: List[Analyzer] = [
+        Analyzer.instance(attr) for attr in attributes
+    ]
+
+    results: Dict[str, Optional[List[Tuple[DetectedFace, List[Analyzer.Results]]]]] = {}
+    img, tag = imgutils.load_image(inp, tag)
     detector_instance = Detector.instance(detector)
     detector_results: Detector.Results = detector_instance.process(
         img=img,
@@ -74,28 +81,34 @@ def extract_faces(
     if not detector_results:
         results[tag] = None
     else:
-        extractor_instance = Extractor.instance(extractor)
-        inner_results: List[Tuple[DetectedFace, List[float]]] = []
+        inner_results: List[Tuple[DetectedFace, List[Analyzer.Results]]] = []
         for detection in detector_results.detections:
-            embedding = extractor_instance.process(img, detection.bounding_box)
-            inner_results.append((detection, embedding))
+            analysis_results: List[Analyzer.Results] = []
+            for analyzer_instance in analyzer_instances:
+                analysis_results.append(
+                    analyzer_instance.process(
+                        detector_results.img, detection.bounding_box
+                    )
+                )
+            inner_results.append((detection, analysis_results))
+
         results[tag] = inner_results
 
     return results
 
 
-def batch_extract_faces(
+def batch_analyze_faces(
     inputs: Union[str, List[str], numpy.ndarray],
     detector: Optional[Union[str, Detector]] = None,
-    extractor: Optional[Union[str, Extractor]] = None,
+    attributes: Optional[Union[str, List[str]]] = None,
     min_dims: Optional[BoxDimensions] = None,
     min_confidence: Optional[float] = None,
     key_points: bool = False,
     raise_notfound: bool = False,
     recurse: bool = True,
-) -> Dict[str, Optional[List[Tuple[DetectedFace, List[float]]]]]:
+) -> Dict[str, Optional[List[Tuple[DetectedFace, List[Analyzer.Results]]]]]:
     """
-    Extract faces from a batch of images
+    Analyzes faces attributes from a batch of images
 
     Args:
     -----
@@ -109,8 +122,8 @@ def batch_extract_faces(
         `detector`: detector instance or string. The model to use for face
         detection. If None, the default detector is assumed
 
-        `extractor`: extractor instance or string. The model to use for face
-        extraction. If None, the default extractor is assumed
+        `attributes`: a list of attributes to analyze. If None, all available
+        attributes are analyzed
 
         `min_dims`: minimum dimensions for detected faces. Detected faces
         with bounding boxes smaller than this are ignored. If None, the
@@ -123,26 +136,13 @@ def batch_extract_faces(
 
         `raise_notfound`: Whether to raise an exception if no faces are detected
 
-        `recurse`: if the input is a directory, recurse into subdirectories
-
-    Returns:
-    --------
-        A list of tuples containing the tag, the detected face and the
-        extracted face representation
-
-    Raises:
-    -------
-        ValueError: if the input is invalid
-        Any other exceptions raised by the detector or image loading
-        functions
     """
 
     if inputs is None:
         raise ValueError("Argument [inputs] cannot be None")
 
     detector_instance = Detector.instance(detector)
-    extractor_instance = Extractor.instance(extractor)
-    results: Dict[str, Optional[List[Tuple[DetectedFace, List[float]]]]] = {}
+    results: Dict[str, Optional[List[Tuple[DetectedFace, List[Analyzer.Results]]]]] = {}
 
     if isinstance(inputs, numpy.ndarray):
         if not inputs.ndim == 4:
@@ -150,11 +150,11 @@ def batch_extract_faces(
         for i in tqdm(range(inputs.shape[0]), ascii=True, desc="Batch detecting"):
             # TODO: if the following raises decide whether the skip the
             # offending image or let the exception to pop up
-            item_results = extract_faces(
+            item_results = analyze_faces(
                 inputs[i],
                 tag=f"{i}/{inputs.shape[0]}",
                 detector=detector_instance,
-                extractor=extractor_instance,
+                attributes=attributes,
                 min_dims=min_dims,
                 min_confidence=min_confidence,
                 key_points=key_points,
@@ -191,18 +191,18 @@ def batch_extract_faces(
 
     if 0 != len(files):
         for file in tqdm(files, ascii=True, desc="Batch extracting"):
-            item_results = extract_faces(
+            item_results = analyze_faces(
                 file,
                 tag=file,
                 detector=detector_instance,
-                extractor=extractor_instance,
+                attributes=attributes,
                 min_dims=min_dims,
                 min_confidence=min_confidence,
                 key_points=key_points,
                 raise_notfound=raise_notfound,
             )
             results.update(item_results)
-
+            
     elif raise_notfound:
         raise FileNotFoundError("No valid image files found in the input")
 
