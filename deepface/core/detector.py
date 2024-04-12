@@ -294,10 +294,6 @@ class Detector(ABC):
                 f"Invalid 'singleton' argument type [{type(singleton).__name__}] : expected bool"
             )
 
-        name_or_inst = name_or_inst.lower().strip()
-        if len(name_or_inst) == 0:
-            name_or_inst = Detector.default()
-
         global detectors_instances  # singleton design pattern
         if not "detectors_instances" in globals():
             detectors_instances = {}
