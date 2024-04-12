@@ -5,9 +5,13 @@ import numpy
 from tqdm import tqdm
 
 from deepface.core import imgutils
+from deepface.core.analyzer import Analyzer
 from deepface.core.detector import Detector
+from deepface.core.extractor import Extractor
 from deepface.core.types import BoxDimensions
+from deepface.commons.logger import Logger
 
+logger = Logger.get_instance()
 
 def detect_faces(
     inp: Union[str, numpy.ndarray],
@@ -17,6 +21,8 @@ def detect_faces(
     min_dims: Optional[BoxDimensions] = None,
     key_points: bool = True,
     raise_notfound: bool = False,
+    extractor: Optional[Union[str, Extractor]] = None,
+    attributes: Optional[List[str]] = None,
 ) -> Detector.Results:
     """
     Detect faces in an image
@@ -37,6 +43,12 @@ def detect_faces(
 
         `raise_notfound`: if True, raise an exception if no faces are found
 
+        `extractor`: extractor instance or name. If None no embedding is
+        extracted
+
+        `attributes`: list of attributes to analyze. If None, no attributes
+        are analyzed
+
     Returns:
     --------
         detection results
@@ -49,6 +61,19 @@ def detect_faces(
     """
 
     detector_instance = Detector.instance(detector)
+    extractor_instance = Extractor.instance(extractor) if extractor else None
+    attributes_instances: List[Analyzer] = []
+    if attributes:
+        if isinstance(attributes, str):
+            attributes = [attributes,]
+        if not isinstance(attributes, list):
+            what:str = "Invalid attributes argument type. Expected [List[str] | None]"
+            what += f" but got {type(attributes).__name__}"
+            raise TypeError(what)
+
+        for attribute in attributes:
+            attributes_instances.append(Analyzer.instance(attribute))
+
     img, tag = imgutils.load_image(inp, tag=tag)
     detection_results: Detector.Results = detector_instance.process(
         img=img,
@@ -58,6 +83,21 @@ def detect_faces(
         key_points=key_points,
         raise_notfound=raise_notfound,
     )
+
+    if extractor_instance or len(attributes_instances) > 0:
+        for detection in detection_results.detections:
+            cropped_face = detection.crop(detection_results.img)
+            try:
+                if len(attributes_instances) > 0:
+                    for attribute in attributes_instances:
+                        attribute_results = attribute.process(cropped_face)
+                        detection.set_attributes({attribute_results.name: attribute_results.value})
+                if extractor_instance:
+                    embeddings = extractor_instance.process(cropped_face)
+                    detection.set_embeddings(embeddings)
+            except Exception as e:
+                logger.warn(f"Error post-processing detected face: {e}")
+
     return detection_results
 
 
@@ -69,6 +109,8 @@ def batch_detect_faces(
     key_points: bool = True,
     raise_notfound: bool = False,
     recurse: bool = True,
+    extractor: Optional[Union[str, Extractor]] = None,
+    attributes: Optional[List[str]] = None,
 ) -> List[Detector.Results]:
     """
     Detect faces in a batch of images
@@ -81,7 +123,7 @@ def batch_detect_faces(
         - if the string is a file, it is considered an image file
         - if the string is a directory, all valid image files in the
           directory are considered
-      
+
         `detector`: detector instance or name. If None, the default detector
         is assumed
 
@@ -95,6 +137,10 @@ def batch_detect_faces(
         `raise_notfound`: if True, raise an exception if no faces are found
 
         `recurse`: if the input is a directory, recurse into subdirectories
+
+        `extractor`: extractor instance or name. If None no embedding is
+        extracted
+
 
     Returns:
     --------
@@ -129,6 +175,8 @@ def batch_detect_faces(
                     min_dims=min_dims,
                     key_points=key_points,
                     raise_notfound=raise_notfound,
+                    extractor=extractor,
+                    attributes=attributes,
                 )
             )
 
@@ -168,6 +216,9 @@ def batch_detect_faces(
                     min_confidence=min_confidence,
                     key_points=key_points,
                     min_dims=min_dims,
+                    raise_notfound=raise_notfound,
+                    extractor=extractor,
+                    attributes=attributes,
                 )
             )
 
