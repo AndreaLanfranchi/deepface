@@ -12,7 +12,7 @@ from deepface.core.types import BoxDimensions
 def detect_faces(
     inp: Union[str, numpy.ndarray],
     tag: Optional[str] = None,
-    detector: Optional[Union[str, Detector]] = None,
+    detector: Union[str, Detector] = "default",
     min_confidence: Optional[float] = None,
     min_dims: Optional[BoxDimensions] = None,
     key_points: bool = True,
@@ -50,7 +50,7 @@ def detect_faces(
 
     detector_instance = Detector.instance(detector)
     img, tag = imgutils.load_image(inp, tag=tag)
-    results: Detector.Results = detector_instance.process(
+    detection_results: Detector.Results = detector_instance.process(
         img=img,
         tag=tag,
         min_confidence=min_confidence,
@@ -58,12 +58,12 @@ def detect_faces(
         key_points=key_points,
         raise_notfound=raise_notfound,
     )
-    return results
+    return detection_results
 
 
 def batch_detect_faces(
     inputs: Union[str, List[str], numpy.ndarray],
-    detector: Optional[Union[str, Detector]] = None,
+    detector: Union[str, Detector] = "default",
     min_confidence: Optional[float] = None,
     min_dims: Optional[BoxDimensions] = None,
     key_points: bool = True,

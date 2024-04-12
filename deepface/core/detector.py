@@ -240,7 +240,7 @@ class Detector(ABC):
 
     @staticmethod
     def instance(
-        name_or_inst: Optional[Union[str, "Detector"]] = None,
+        name_or_inst: Union[str, "Detector"] = "default",
         singleton: bool = True,
     ) -> "Detector":
         """
@@ -249,9 +249,15 @@ class Detector(ABC):
         Args:
         -----
             `name_or_inst`: A string representing the name of the detector to instantiate
-              or an instance of a `Detector` subclass. If None, the default detector will be used
+              or an instance of a `Detector` subclass. When a `Detector` instance is given,
+              the same instance is returned. When a string is given this cases are handled:
+              - If the string equals `default`, the default detector is assumed
+              (see `Detector.default()` method) and returned
+              - If the string is a known detector name, an instance of the corresponding
+              detector is returned
 
-            `singleton (bool)`: If True, the factory will return the same instance for the same name
+            `singleton (bool)`: If True, the factory will return a singleton instance of the
+              detector. If False, a new instance is returned every time the factory is called
 
         Returns:
         --------
@@ -265,16 +271,24 @@ class Detector(ABC):
             `ImportError`: If the detector instance cannot be instantiated
         """
 
-        if name_or_inst is None:
-            name_or_inst = Detector.default()
-
         if isinstance(name_or_inst, Detector):
             return name_or_inst
 
         if not isinstance(name_or_inst, str):
-            raise TypeError(
-                f"Invalid 'name_or_inst' argument type [{type(name_or_inst).__name__}] : expected str"
-            )
+            what: str = "Invalid 'name_or_inst' argument type. Expected str "
+            what += f"got {type(name_or_inst).__name__}"
+            raise TypeError(what)
+
+        name_or_inst = name_or_inst.lower().strip()
+
+        if len(name_or_inst) == 0:
+            what: str = "Invalid 'name_or_inst' argument value."
+            what += " Expected a valid detector name or `default`. Got empty string"
+            raise ValueError(what)
+
+        if name_or_inst == "default":
+            name_or_inst = Detector.default()
+
         if not isinstance(singleton, bool):
             raise TypeError(
                 f"Invalid 'singleton' argument type [{type(singleton).__name__}] : expected bool"
