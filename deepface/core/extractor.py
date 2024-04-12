@@ -256,7 +256,7 @@ class Extractor(ABC):
             raise ValueError(what)
 
         if name_or_inst == "default":
-            name_or_inst = Extractor.default()
+            name_or_inst = Extractor.default().lower().strip()
 
         if not isinstance(singleton, bool):
             raise TypeError(

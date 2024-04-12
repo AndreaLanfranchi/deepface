@@ -287,7 +287,7 @@ class Detector(ABC):
             raise ValueError(what)
 
         if name_or_inst == "default":
-            name_or_inst = Detector.default()
+            name_or_inst = Detector.default().lower().strip()
 
         if not isinstance(singleton, bool):
             raise TypeError(

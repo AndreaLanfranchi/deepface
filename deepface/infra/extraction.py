@@ -13,8 +13,8 @@ from deepface.core.types import BoxDimensions, DetectedFace
 def extract_faces(
     inp: Union[str, numpy.ndarray],
     tag: Optional[str] = None,
-    detector: Optional[Union[str, Detector]] = None,
-    extractor: Optional[Union[str, Extractor]] = None,
+    detector: Union[str, Detector] = "default",
+    extractor: Union[str, Extractor] = "default",
     min_dims: Optional[BoxDimensions] = None,
     min_confidence: Optional[float] = None,
     key_points: bool = False,
@@ -30,10 +30,10 @@ def extract_faces(
         `tag`: tag for the image
 
         `detector`: detector instance or string. The model to use for face
-        detection. If None, the default detector is assumed
+        detection. The literal "default" is used to indicate the default
 
         `extractor`: extractor instance or string. The model to use for face
-        extraction. If None, the default extractor is assumed
+        extraction. The literal "default" is used to indicate the default
 
         `min_dims`: minimum dimensions for detected faces. Detected faces
         with bounding boxes smaller than this are ignored. If None, the
@@ -86,8 +86,8 @@ def extract_faces(
 
 def batch_extract_faces(
     inputs: Union[str, List[str], numpy.ndarray],
-    detector: Optional[Union[str, Detector]] = None,
-    extractor: Optional[Union[str, Extractor]] = None,
+    detector: Union[str, Detector] = "default",
+    extractor: Union[str, Extractor] = "default",
     min_dims: Optional[BoxDimensions] = None,
     min_confidence: Optional[float] = None,
     key_points: bool = False,
@@ -107,10 +107,10 @@ def batch_extract_faces(
           directory are considered
 
         `detector`: detector instance or string. The model to use for face
-        detection. If None, the default detector is assumed
+        detection. The literal "default" is used to indicate the default
 
         `extractor`: extractor instance or string. The model to use for face
-        extraction. If None, the default extractor is assumed
+        extraction. The literal "default" is used to indicate the default
 
         `min_dims`: minimum dimensions for detected faces. Detected faces
         with bounding boxes smaller than this are ignored. If None, the
