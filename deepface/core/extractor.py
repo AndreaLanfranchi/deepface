@@ -209,7 +209,7 @@ class Extractor(ABC):
 
     @staticmethod
     def instance(
-        name_or_inst: Optional[Union[str, "Extractor"]] = None,
+        name_or_inst: Union[str, "Extractor"] = "default",
         singleton: bool = True,
     ) -> "Extractor":
         """
@@ -218,9 +218,15 @@ class Extractor(ABC):
         Params:
         -------
             `name_or_inst`: A string representing the name of the extractor to instantiate
-              or an instance of a `Extractor` subclass. If None, the default detector will be used
+              or an instance of a `Extractor` subclass. When a `Extractor` instance is given,
+              the same instance is returned. When a string is given this cases are handled:
+              - If the string equals `default`, the default extractor is assumed
+              (see `Extractor.default()` method) and returned
+              - If the string is a known extractor name, an instance of the corresponding
+              extractor is returned
 
-            `singleton (bool)`: If True, the factory will return the same instance for the same name
+            `singleton (bool)`: If True, the factory will return a singleton instance of the
+              extractor. If False, a new instance is returned every time the factory is called
 
         Returns:
         --------
@@ -234,24 +240,28 @@ class Extractor(ABC):
             'ImportError': If the detector instance cannot be instantiated
         """
 
-        if name_or_inst is None:
-            name_or_inst = Extractor.default()
-
         if isinstance(name_or_inst, Extractor):
             return name_or_inst
 
         if not isinstance(name_or_inst, str):
-            raise TypeError(
-                f"Invalid 'name' argument type [{type(name_or_inst).__name__}] : expected str"
-            )
+            what: str = "Invalid 'name_or_inst' argument type. Expected str "
+            what += f"got {type(name_or_inst).__name__}"
+            raise TypeError(what)
+
+        name_or_inst = name_or_inst.lower().strip()
+
+        if len(name_or_inst) == 0:
+            what: str = "Invalid 'name_or_inst' argument value."
+            what += " Expected a valid extractor name or `default`. Got empty string"
+            raise ValueError(what)
+
+        if name_or_inst == "default":
+            name_or_inst = Extractor.default()
+
         if not isinstance(singleton, bool):
             raise TypeError(
                 f"Invalid 'singleton' argument type [{type(singleton).__name__}] : expected bool"
             )
-
-        name_or_inst = name_or_inst.lower().strip()
-        if len(name_or_inst) == 0:
-            name_or_inst = Extractor.default()
 
         global extractors_instances  # singleton design pattern
         if not "extractors_instances" in globals():

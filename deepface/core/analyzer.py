@@ -234,7 +234,14 @@ class Analyzer(ABC):
         Args:
         -----
             `name_or_inst`: A string representing the name of the analyzer to instantiate
-              or an instance of a `Analyzer` subclass.
+              or an instance of a `Analyzer` subclass. When a `Analyzer` instance is given,
+              the same instance is returned. When a string is given and a known analyzer
+              name, an instance of the corresponding analyzer is returned
+
+              Note: Unlike detectors and extractors, analyzers don't have a default
+
+            `singleton (bool)`: If True, the factory will return a singleton instance of the
+              extractor. If False, a new instance is returned every time the factory is called
 
         Return:
         -------
@@ -248,23 +255,24 @@ class Analyzer(ABC):
             'ImportError': If the analyzer instance cannot be instantiated
         """
 
-        if name_or_inst is None:
-            raise ValueError("Invalid 'name_or_inst' argument: None")
-
         if isinstance(name_or_inst, Analyzer):
             return name_or_inst
 
         if not isinstance(name_or_inst, str):
-            what: str = "Invalid 'name_or_inst' argument type"
-            raise TypeError(f"{what} [{type(name_or_inst).__name__}] : expected str")
+            what: str = "Invalid 'name_or_inst' argument type. Expected str "
+            what += f"got {type(name_or_inst).__name__}"
+            raise TypeError(what)
+
+        name_or_inst = name_or_inst.lower().strip()
+
+        if len(name_or_inst) == 0:
+            what: str = "Invalid 'name_or_inst' argument value."
+            what += " Expected a valid analyzer name. Got empty string"
+            raise ValueError(what)
 
         if not isinstance(singleton, bool):
             what: str = "Invalid 'singleton' argument type"
             raise TypeError(f"{what} [{type(singleton).__name__}] : expected bool")
-
-        name_or_inst = name_or_inst.lower().strip()
-        if len(name_or_inst) == 0:
-            raise ValueError("Empty analyzer attribute name")
 
         global analyzers_instances  # singleton design pattern
         if not "analyzers_instances" in globals():
