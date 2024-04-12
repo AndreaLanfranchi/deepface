@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Union
 
 import os
 import numpy
@@ -13,7 +13,7 @@ from deepface.core.types import BoxDimensions, DetectedFace
 def analyze_faces(
     inp: Union[str, numpy.ndarray],
     tag: Optional[str] = None,
-    detector: Optional[Union[str, Detector]] = None,
+    detector: Union[str, Detector] = "default",
     attributes: Optional[Union[str, List[str]]] = None,
     min_dims: Optional[BoxDimensions] = None,
     min_confidence: Optional[float] = None,
@@ -97,7 +97,7 @@ def analyze_faces(
 
 def batch_analyze_faces(
     inputs: Union[str, List[str], numpy.ndarray],
-    detector: Optional[Union[str, Detector]] = None,
+    detector: Union[str, Detector] = "default",
     attributes: Optional[Union[str, List[str]]] = None,
     min_dims: Optional[BoxDimensions] = None,
     min_confidence: Optional[float] = None,

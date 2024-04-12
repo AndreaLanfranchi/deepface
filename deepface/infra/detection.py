@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import Dict, List, Optional, Union
 
 import os
 import numpy
@@ -8,7 +8,7 @@ from deepface.core import imgutils
 from deepface.core.analyzer import Analyzer
 from deepface.core.detector import Detector
 from deepface.core.extractor import Extractor
-from deepface.core.types import BoxDimensions
+from deepface.core.types import BoxDimensions, DetectedFace
 from deepface.commons.logger import Logger
 
 logger = Logger.get_instance()
@@ -111,7 +111,7 @@ def batch_detect_faces(
     recurse: bool = True,
     extractor: Optional[Union[str, Extractor]] = None,
     attributes: Optional[List[str]] = None,
-) -> List[Detector.Results]:
+) -> Dict[str, Optional[List[DetectedFace]]]:
     """
     Detect faces in a batch of images
 
@@ -158,7 +158,7 @@ def batch_detect_faces(
         raise ValueError("Argument [inputs] cannot be None")
 
     detector_instance = Detector.instance(detector)
-    results: List[Detector.Results] = []
+    results: Dict[str, Optional[List[DetectedFace]]] = {}
 
     if isinstance(inputs, numpy.ndarray):
         if not inputs.ndim == 4:
@@ -166,19 +166,19 @@ def batch_detect_faces(
         for i in tqdm(range(inputs.shape[0]), ascii=True, desc="Batch detecting"):
             # TODO: if the following raises decide whether the skip the
             # offending image or let the exception to pop up
-            results.append(
-                detect_faces(
-                    inputs[i],
-                    tag= f"{i}/{inputs.shape[0]}",
-                    detector=detector_instance,
-                    min_confidence=min_confidence,
-                    min_dims=min_dims,
-                    key_points=key_points,
-                    raise_notfound=raise_notfound,
-                    extractor=extractor,
-                    attributes=attributes,
-                )
+            tag: str = f"{i}/{inputs.shape[0]}"
+            detection_results = detect_faces(
+                inputs[i],
+                tag= tag,
+                detector=detector_instance,
+                min_confidence=min_confidence,
+                min_dims=min_dims,
+                key_points=key_points,
+                raise_notfound=raise_notfound,
+                extractor=extractor,
+                attributes=attributes,
             )
+            results[tag] = detection_results.detections
 
         return results
 
@@ -208,18 +208,17 @@ def batch_detect_faces(
     if 0 != len(files):
         for file in tqdm(files, ascii=True, desc="Batch detecting"):
             file_name:str = file.strip()
-            results.append(
-                detect_faces(
-                    inp=file_name,
-                    tag=file_name,
-                    detector=detector_instance,
-                    min_confidence=min_confidence,
-                    key_points=key_points,
-                    min_dims=min_dims,
-                    raise_notfound=raise_notfound,
-                    extractor=extractor,
-                    attributes=attributes,
-                )
+            detection_results = detect_faces(
+                inp=file_name,
+                tag=file_name,
+                detector=detector_instance,
+                min_confidence=min_confidence,
+                min_dims=min_dims,
+                key_points=key_points,
+                raise_notfound=raise_notfound,
+                extractor=extractor,
+                attributes=attributes,
             )
+            results[file_name] = detection_results.detections
 
     return results
