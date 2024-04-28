@@ -112,9 +112,9 @@ class Detector(DetectorBase):
                 bottom_right=Point(x=x_range.end, y=y_range.end),
             )
 
-            points: Optional[Dict[str, Optional[Point]]] = None
+            points: Optional[Dict[str, Point]] = None
             if key_points:
-                points = dict[str, Optional[Point]]()
+                points = dict[str, Point]()
                 # For dlib’s 5-point facial landmark detector
                 # Left eye: parts 0, 1
                 # Right eye: parts 2, 3

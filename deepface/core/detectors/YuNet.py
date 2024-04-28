@@ -153,7 +153,7 @@ class Detector(DetectorBase):
                     bottom_right=Point(x=x_range.end, y=y_range.end),
                 )
 
-                points: Optional[Dict[str, Optional[Point]]] = None
+                points: Optional[Dict[str, Point]] = None
                 if key_points:
                     le_point = Point(x=x_le, y=y_le)
                     re_point = Point(x=x_re, y=y_re)

@@ -87,7 +87,7 @@ class Detector(DetectorBase):
                 bottom_right=Point(x=x_range.end, y=y_range.end),
             )
 
-            points: Optional[Dict[str, Optional[Point]]] = None
+            points: Optional[Dict[str, Point]] = None
             if key_points:
                 cropped_img = img[
                     bounding_box.top_left.y : bounding_box.bottom_right.y,

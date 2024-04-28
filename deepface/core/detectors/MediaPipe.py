@@ -116,10 +116,10 @@ class Detector(DetectorBase):
                 # 5 Right eye tragion
                 # pylint: enable=line-too-long
 
-                points: Optional[Dict[str, Optional[Point]]] = None
+                points: Optional[Dict[str, Point]] = None
                 relative_keypoints = detection.location_data.relative_keypoints
                 if key_points and relative_keypoints is not None and len(relative_keypoints) > 0:
-                    points = dict[str, Optional[Point]]()
+                    points = dict[str, Point]()
                     if len(relative_keypoints) >= 2:
                         x1 = int(min(round(relative_keypoints[1].x * img_width), img_width))
                         y1 = int(min(round(relative_keypoints[1].y * img_height), img_height))

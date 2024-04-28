@@ -124,9 +124,9 @@ class Detector(DetectorBase):
                 bottom_right=Point(x=x_range.end, y=y_range.end),
             )
 
-            points: Optional[Dict[str, Optional[Point]]] = None
+            points: Optional[Dict[str, Point]] = None
             if key_points and item.keypoints is not None:
-                points = {}
+                points = dict[str, Point]()
                 # Indices (note we have to swap from viewer to image perspective):
                 # 0: left eye (from the viewer's perspective)
                 # 1: right eye (from the viewer's perspective)

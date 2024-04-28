@@ -76,10 +76,10 @@ class Detector(DetectorBase):
                     bottom_right=Point(x=x + w, y=y + h),
                 )
 
-                points: Optional[Dict[str, Optional[Point]]] = None
+                points: Optional[Dict[str, Point]] = None
                 keypoints = current_detection.get("keypoints", None)
                 if key_points and keypoints is not None:
-                    points = {}
+                    points = dict[str, Point]()
                     left_xy: Optional[List[float]] = keypoints.get("left_eye")
                     right_xy: Optional[List[float]] = keypoints.get("right_eye")
                     if left_xy and right_xy:

@@ -71,10 +71,10 @@ class Detector(DetectorBase):
                 bottom_right=Point(x=x_range.end, y=y_range.end),
             )
 
-            points: Optional[Dict[str, Optional[Point]]] = None
+            points: Optional[Dict[str, Point]] = None
             if key_points:
                 landmarks: Dict[str, List[float]] = item["landmarks"]
-                points = {}
+                points = dict[str, Point]()
                 left_xy: Optional[List[float]] = landmarks.get("left_eye")
                 right_xy: Optional[List[float]] = landmarks.get("right_eye")
                 if left_xy and right_xy:
