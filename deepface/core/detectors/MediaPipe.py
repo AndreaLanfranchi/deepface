@@ -35,7 +35,7 @@ class Detector(DetectorBase):
         self._initialize()
 
     def _initialize(self):
-        
+
         #   min_detection_confidence: Minimum confidence value ([0.0, 1.0]) for face
         #     detection to be considered successful (default 0.5). See details in
         #     https://solutions.mediapipe.dev/face_detection#min_detection_confidence.
@@ -43,7 +43,7 @@ class Detector(DetectorBase):
         #     best for faces within 2 meters from the camera, and 1 for a full-range
         #     model best for faces within 5 meters. (default 0) See details in
         #     https://solutions.mediapipe.dev/face_detection#model_selection.
-        
+
         self._detector = FaceDetection(
             min_detection_confidence=self._KDEFAULT_MIN_CONFIDENCE,
             model_selection=1,
@@ -91,11 +91,13 @@ class Detector(DetectorBase):
                 rbb = detection.location_data.relative_bounding_box
                 x_range = RangeInt(
                     int(round(rbb.xmin * img_width)),
-                    int(round(rbb.xmin * img_width)) + int(round(rbb.width * img_width)),
+                    int(round(rbb.xmin * img_width))
+                    + int(round(rbb.width * img_width)),
                 )
                 y_range = RangeInt(
                     int(round(rbb.ymin * img_height)),
-                    int(round(rbb.ymin * img_height)) + int(round(rbb.height * img_height)),
+                    int(round(rbb.ymin * img_height))
+                    + int(round(rbb.height * img_height)),
                 )
                 if x_range.span <= min_dims.width or y_range.span <= min_dims.height:
                     continue  # Invalid or empty detection
@@ -118,26 +120,46 @@ class Detector(DetectorBase):
 
                 points: Optional[Dict[str, Point]] = None
                 relative_keypoints = detection.location_data.relative_keypoints
-                if key_points and relative_keypoints is not None and len(relative_keypoints) > 0:
+                if (
+                    key_points
+                    and relative_keypoints is not None
+                    and len(relative_keypoints) > 0
+                ):
                     points = dict[str, Point]()
                     if len(relative_keypoints) >= 2:
-                        x1 = int(min(round(relative_keypoints[1].x * img_width), img_width))
-                        y1 = int(min(round(relative_keypoints[1].y * img_height), img_height))
-                        x2 = int(min(round(relative_keypoints[0].x * img_width), img_width))
-                        y2 = int(min(round(relative_keypoints[0].y * img_height), img_height))
+                        x1 = int(
+                            min(round(relative_keypoints[1].x * img_width), img_width)
+                        )
+                        y1 = int(
+                            min(round(relative_keypoints[1].y * img_height), img_height)
+                        )
+                        x2 = int(
+                            min(round(relative_keypoints[0].x * img_width), img_width)
+                        )
+                        y2 = int(
+                            min(round(relative_keypoints[0].y * img_height), img_height)
+                        )
                         le_point = Point(x1, y1)
                         re_point = Point(x2, y2)
                         points = {"lec": le_point, "rec": re_point}
 
                     if len(relative_keypoints) >= 3:
-                        x = int(min(round(relative_keypoints[2].x * img_width), img_width))
-                        y = int(min(round(relative_keypoints[2].y * img_height), img_height))
+                        x = int(
+                            min(round(relative_keypoints[2].x * img_width), img_width)
+                        )
+                        y = int(
+                            min(round(relative_keypoints[2].y * img_height), img_height)
+                        )
                         n_point = Point(x, y)
                         points.update({"nt": n_point})
 
                     if len(relative_keypoints) >= 4:
-                        x = int(min(round(relative_keypoints[3].x * img_width), img_width))
-                        y = int(min(round(relative_keypoints[3].y * img_height), img_height))
+                        x = int(
+                            min(round(relative_keypoints[3].x * img_width), img_width)
+                        )
+                        y = int(
+                            min(round(relative_keypoints[3].y * img_height), img_height)
+                        )
                         cm_point = Point(x, y)
                         points.update({"mc": cm_point})
 
