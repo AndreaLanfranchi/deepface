@@ -6,9 +6,13 @@ import os
 import binascii
 import requests
 
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 import numpy
 import cv2
+
+from deepface.commons.logger import Logger
+
+logger = Logger.get_instance()
 
 kKiB: int = 1024
 KMiB: int = 1024**2
@@ -91,33 +95,50 @@ def is_valid_image_file(
 
     if not isinstance(filename, str):
         raise TypeError("Filename must be a string")
+    if not isinstance(check_ext, bool):
+        raise TypeError("Check_ext must be a boolean")
+    if not isinstance(max_size, int):
+        raise TypeError("Max_size must be an integer")
+    if max_size < 0:
+        raise ValueError("Max_size must be a positive integer")
 
     ret: bool = True
-    filename = filename.strip()
-    if len(filename) == 0 or not os.path.isfile(filename):
-        raise FileNotFoundError(f"File [{filename}] does not exist")
-
-    file_size: int = os.path.getsize(filename)
-    if 0 == file_size or file_size > max_size:
-        ret = False
-
-    if ret and check_ext:
-        _, ext = os.path.splitext(filename)
-        ext = ext.strip(".").lower()
-        if not ext in kVALID_IMAGE_TYPES:
-            ret = False
-    if not ret:
-        return ret
-
     try:
+        filename = filename.strip()
+        if 0 == len(filename) or not os.path.isfile(filename):
+            raise FileNotFoundError()
+
+        if check_ext == True:
+            _, ext = os.path.splitext(filename)
+            ext = ext.strip(".").lower()
+            if not ext in kVALID_IMAGE_TYPES:
+                raise UnidentifiedImageError()
+
+        file_size: int = os.path.getsize(filename)
+        if 0 == file_size:
+            raise IOError("empty file")
+        if max_size >  0 and file_size > max_size:
+            raise IOError("file too large")
+
         with Image.open(filename) as img:
             if img.format is None:
                 ret = False
             elif img.format.lower() not in kVALID_IMAGE_TYPES:
                 ret = False
-    except Exception as ex:
-        raise IOError(f"Error opening image file {filename}") from ex
 
+    except FileNotFoundError as ex:
+        logger.debug(f"File {filename} does not exist or is not a regular file")
+        ret = False
+    except UnidentifiedImageError as ex:
+        logger.debug(f"File {filename} is not a valid image file")
+        ret = False
+    except IOError as ex:
+        logger.debug(f"{filename}: {ex}")
+        ret = False
+    except Exception as ex:
+        logger.warn(f"Unexpected error on file {filename}: {ex}")
+        ret = False
+        
     return ret
 
 

@@ -78,8 +78,8 @@ class Stream(threading.Thread):
 
 def analysis(
     db_path: str,
-    detector: Optional[Union[str, Detector]] = None,
-    extractor: Optional[Union[str, Extractor]] = None,
+    detector: Union[str, Detector] = "default",
+    extractor: Union[str, Extractor] = "default",
     distance_metric: str = "cosine",
     attributes: Optional[List[str]] = None,
     source: Union[str, int] = int(0),

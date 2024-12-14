@@ -18,17 +18,16 @@
 #     valid_frames_count=2,
 #     source=0,  # 0 for onboard camera
 # )
+# exit()
 
 # from deepface.core.analyzer import Analyzer
+import os
+import time
 import warnings
 
 
 warnings.filterwarnings("ignore")
-from deepface.infra import (
-    analysis,
-    detection,
-    extraction,
-)
+from deepface.infra import analysis, detection, extraction, continuos_detection
 
 # age_analyzer: Analyzer = Analyzer.instance("age")
 # gender_analyzer: Analyzer = Analyzer.instance("gender")
@@ -55,14 +54,14 @@ from deepface.infra import (
 #         count = len(detections)
 #     print(f"{tag}: {count} face(s) detected")
 
-r = detection.batch_detect_faces(
-    inputs=r".\dataset\couple.jpg",
-    detector="fastmtcnn",
-    extractor="default",
-    attributes=["age", "gender"],
-    raise_notfound=False,
-)
-print(r)
+# r = detection.batch_detect_faces(
+#     inputs=r".\dataset\couple.jpg",
+#     detector="fastmtcnn",
+#     extractor="default",
+#     attributes=["age", "gender"],
+#     raise_notfound=False,
+# )
+# print(r)
 
 # r = extraction.batch_extract_faces(
 #     inputs=r".\dataset\couple.jpg",
@@ -80,3 +79,13 @@ print(r)
 #     raise_notfound=False,
 # )
 # print(r)
+
+o = continuos_detection.ContinuosFaceDetection(os.path.join(os.getcwd(), "dataset"), extractor="default", attributes=["gender"])
+o.start()
+try:
+    while True:
+        time.sleep(1)
+except KeyboardInterrupt:
+    pass
+finally:
+    o.stop()
